@@ -9,3 +9,4 @@
 * [anime1-downloader](https://github.com/maple3142/anime1-downloader)
 * [bahamut-articlelist-ex](https://github.com/maple3142/bahamut-articlelist-ex)
 * [video-game-music-batch-downloader](https://github.com/maple3142/video-game-music-batch-downloader)
+* [bahamail-signature](https://github.com/maple3142/bahamail-signature)
