@@ -1,11 +1,11 @@
-[submodule "scripts\\ani-gamer-toolbox"]
-	path = scripts\\ani-gamer-toolbox
+[submodule "scripts/ani-gamer-toolbox"]
+	path = scripts/ani-gamer-toolbox
 	url = https://github.com/maple3142/ani-gamer-toolbox.git
-[submodule "scripts\\anime1-downloader"]
-	path = scripts\\anime1-downloader
+[submodule "scripts/anime1-downloader"]
+	path = scripts/anime1-downloader
 	url = https://github.com/maple3142/anime1-downloader.git
-[submodule "scripts\\bahamut-articlelist-ex"]
-	path = scripts\\bahamut-articlelist-ex
+[submodule "scripts/bahamut-articlelist-ex"]
+	path = scripts/bahamut-articlelist-ex
 	url = https://github.com/maple3142/bahamut-articlelist-ex.git
 [submodule "scripts/video-game-music-batch-downloader"]
 	path = scripts/video-game-music-batch-downloader
