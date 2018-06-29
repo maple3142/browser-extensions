@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         巴哈姆特跨小屋自訂佈景主題
 // @namespace    https://blog.maple3142.net/
-// @version      0.1
+// @version      0.2
 // @description  可以套用一個人的小屋主題到每個人的小屋
 // @author       maple3142
 // @match        https://home.gamer.com.tw/homeindex.php?owner=*
@@ -44,15 +44,21 @@
 		return el
 	}
 
-	const target = $('link[href*=HOMECSSNEW]')
+	const target =
+		$('link[href*=HOMECSSNEW]') || $el('link', { rel: 'stylesheet', href: store.css, dataset: { notheme: true } })
 	const currentcss = target.href
 	target.href = store.css
+	document.body.appendChild(target)
 
 	const btn = $el('a', {
 		className: 'BH-slave_btnA',
 		textContent: '套用他的主題',
 		style: { float: 'right' },
 		onclick: e => {
+			if (target.dataset.notheme) {
+				alert('這個人沒有自訂主題')
+				return
+			}
 			store.css = currentcss
 			target.href = store.css
 		}
