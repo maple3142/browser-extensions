@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.3.8
+// @version      0.3.9
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -30,24 +30,25 @@
 		})
 	// type "__YTDL_LINK_DECSIG.toString().split('\n').join('')" in console to get fallback
 	const fallback = function anonymous(a) {
-		var gL = {
-			pk: function(a) {
-				a.reverse()
-			},
-			k9: function(a, b) {
+		var nL = {
+			oU: function(a, b) {
 				a.splice(0, b)
 			},
-			TA: function(a, b) {
+			bS: function(a, b) {
 				var c = a[0]
 				a[0] = a[b % a.length]
 				a[b % a.length] = c
+			},
+			G7: function(a) {
+				a.reverse()
 			}
 		}
 		a = a.split('')
-		gL.k9(a, 3)
-		gL.TA(a, 44)
-		gL.k9(a, 2)
-		gL.TA(a, 34)
+		nL.bS(a, 3)
+		nL.bS(a, 28)
+		nL.oU(a, 1)
+		nL.G7(a, 53)
+		nL.bS(a, 22)
 		return a.join('')
 	}
 	const getytplayer = async () => {
