@@ -23,7 +23,6 @@
                 }
             },
             set: (t, k, v) => {
-                console.log(k, v)
                 GM_setValue(k, JSON.stringify(v))
                 return v
             }
