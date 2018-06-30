@@ -51,7 +51,6 @@
 			},
 			responseType: 'blob',
 			onload: xhr => {
-				console.log(xhr.response)
 				const blob = xhr.response
 				const url = URL.createObjectURL(blob)
 				const img = new Image()

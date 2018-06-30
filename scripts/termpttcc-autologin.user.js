@@ -77,7 +77,6 @@ const closeWarning = true
 			insertText(ar[i].input)
 			ar[i].executed = true
 		}
-		console.log(skiplist)
 		if (skiplist.filter(x => x.executed).length === skiplist.length) E.off('update')
 	})
 	if (closeOnQuit) E.on('close', close)

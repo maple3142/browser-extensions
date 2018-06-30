@@ -56,7 +56,6 @@
 		addEventListener('load', () => {
 			p.then(ar => {
 				const imgs = $$('img.image')
-				console.log(imgs, ar)
 				for (let i = 0; i < ar.length; i++) {
 					imgs[i].src = imgs[i].dataset.src = ar[i]
 				}
