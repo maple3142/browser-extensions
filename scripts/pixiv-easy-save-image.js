@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv easy save image
 // @namespace    https://blog.maple3142.net/
-// @version      0.2
+// @version      0.2.1
 // @description  Save pixiv image with custom name format
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
@@ -12,6 +12,7 @@
 // @connect      pximg.net
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
+// @grant        GM_addStyle
 // ==/UserScript==
 
 ;(function() {
@@ -129,5 +130,25 @@
 			const id = /\d+/.exec(el.href)[0]
 			saveImage(FILENAME_TEMPLATE, id)
 		})
+	}
+
+	// support Patchouli
+	{
+		let times = 0
+		const it = setInterval(() => {
+			if (times >= 10) clearInterval(it)
+			if (typeof Patchouli !== 'undefined' && Patchouli._isMounted) {
+				$$('.image-flexbox').map(x => x.classList.add('work'))
+				const observer = new MutationObserver(
+					debounce(10)(mut => $$('.image-flexbox').map(x => x.classList.add('work')))
+					// add class=work to let them works
+				)
+				observer.observe(Patchouli.$el, { childList: true, subtree: true })
+				console.log('Pixiv easy save image: Patchouli detected!')
+				clearInterval(it)
+				GM_addStyle(`.image-item .work{margin-bottom:0px!important;}`) // disable default css
+			}
+			times++
+		}, 1000)
 	}
 })()
