@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.2.1
+// @version      0.2.2
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -114,11 +114,18 @@
 			}
 			start()
 		}
-	} else if (
-		['/', '/bookmark.php', '/new_illust.php', '/bookmark_new_illust.php'].some(x => x === location.pathname)
-	) {
-		const IMG_SELECTOR =
-			location.pathname === '/bookmark_new_illust.php' ? '.gtm-recommend-illust.gtm-thumbnail-link' : 'a.work'
+	}
+
+	// key shortcut
+	{
+		const SELECTOR_MAP = {
+			'/': 'a.work',
+			'/bookmark.php': 'a.work',
+			'/new_illust.php': 'a.work',
+			'/bookmark_new_illust.php': '.gtm-recommend-illust.gtm-thumbnail-link',
+			'/member_illust.php': () => /\d+/.exec($('.sticky>section>div>a[href]').href)[0]
+		}
+		const IMG_SELECTOR = SELECTOR_MAP[location.pathname]
 		const mouse = { x: 0, y: 0 }
 		const isInRect = pos => rect =>
 			pos.x >= rect.x && pos.x <= rect.x + rect.width && pos.y >= rect.y && pos.y <= rect.y + rect.height
@@ -129,9 +136,14 @@
 		})
 		addEventListener('keydown', e => {
 			if (e.which !== KEYCODE_TO_SAVE) return // 's' key
-			const el = $$(IMG_SELECTOR).filter(x => isMouseInRect(x.getBoundingClientRect()))[0]
-			if (!el) return
-			const id = /\d+/.exec(el.href)[0]
+			let id
+			if (typeof IMG_SELECTOR === 'string') {
+				const el = $$(IMG_SELECTOR).filter(x => isMouseInRect(x.getBoundingClientRect()))[0]
+				if (!el) return
+				id = /\d+/.exec(el.href)[0]
+			} else {
+				id = IMG_SELECTOR()
+			}
 			saveImage(FILENAME_TEMPLATE, id)
 		})
 	}
