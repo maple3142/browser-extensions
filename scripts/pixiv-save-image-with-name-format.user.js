@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Pixiv save image with name format
+// @name         Pixiv easy save image
 // @namespace    https://blog.maple3142.net/
 // @version      0.2
 // @description  Save pixiv image with custom name format
