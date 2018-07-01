@@ -1,8 +1,12 @@
 // ==UserScript==
 // @name         Pixiv easy save image
+// @name:zh-TW   Pixiv 簡單存圖
+// @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
 // @version      0.2.1
-// @description  Save pixiv image with custom name format
+// @description  Save pixiv image easily with custom name format and shortcut key.
+// @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
+// @description:zh-CN  透过快捷键与自订名称格式来简单的存图
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @include      /^https:\/\/www\.pixiv\.net/.*$/
