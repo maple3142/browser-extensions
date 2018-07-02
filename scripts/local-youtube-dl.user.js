@@ -3,12 +3,11 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.0
+// @version      0.4.1
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
-// @require      https://code.jquery.com/jquery-3.2.1.slim.min.js
 // @match        https://www.youtube.com/*
 // @run-at       document-start
 // @grant        GM_addStyle
@@ -17,6 +16,33 @@
 
 ;(function() {
 	'use strict'
+	const $ = (s, x = document) => x.querySelector(s)
+	const $$ = (s, x = document) => [...x.querySelectorAll(s)]
+	const isobj = o => o && typeof o === 'object' && !Array.isArray(o)
+	const deepmerge = (o, o1) => {
+		for (const k of Object.keys(o1)) {
+			if (isobj(o1[k])) {
+				if (!(k in o)) o[k] = o1[k]
+				else deepmerge(o[k], o1[k])
+			} else o[k] = o1[k]
+		}
+		return o
+	}
+	const $el = (tag, { props = {}, events = {}, children = [] } = {}) => {
+		const el = document.createElement(tag)
+		for (const k of Object.keys(props)) {
+			if (k in el && isobj(el[k])) deepmerge(el[k], props[k])
+			else if (k in el) el[k] = props[k]
+			else el.setAttribute(k, props[k])
+		}
+		for (const k of Object.keys(events)) {
+			el.addEventListener(k, events[k])
+		}
+		for (const c of children) {
+			el.appendChild(c)
+		}
+		return el
+	}
 	const xhrhead = url =>
 		new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest()
@@ -112,77 +138,115 @@ onmessage=async e=>{
 			ytdlWorker.postMessage({ id, decsigmeta })
 		})
 	}
-	const $box = $('<div>')
-		.attr('id', 'ytdl-box')
-		.css('z-index', '10000')
-	const boxel = $box.get(0)
-	const $toggle = $('<div>')
-		.attr('id', 'ytdl-box-toggle')
-		.css('text-align', 'center')
-		.text('Toggle Links')
-	const $content = $('<div>')
-		.attr('id', 'ytdl-content')
-		.css('height', 0)
-	const $id = $('<div>')
-	const $bbox = $('<div>').css('display', 'flex')
-	const $stream = $('<div>').css('flex', 1)
-	const $adaptive = $('<div>').css('flex', 1)
-	let hide = true
-	$box.append($toggle).append($content)
-	$toggle.on('click', e => {
-		if (hide) $content.css('height', $content[0].scrollHeight)
-		else $content.css('height', 0)
-		hide = !hide
-	})
-	$content.append($id).append($bbox.append($stream).append($adaptive))
+	class Component {
+		constructor(el) {
+			this.el = el
+			this.state = this.getInitialState()
+			this._render()
+		}
+		getInitialState() {
+			return {}
+		}
+		setState(newstate) {
+			Object.assign(this.state, newstate)
+			this._render()
+		}
+		render() {
+			throw new Error('Component must have a render function.')
+		}
+		_render() {
+			while (this.el.firstChild) this.el.removeChild(this.el.firstChild)
+			this.el.appendChild(this.render(this.state))
+		}
+	}
+	class App extends Component {
+		getInitialState() {
+			return {
+				hide: true,
+				id: '',
+				stream: [],
+				adaptive: []
+			}
+		}
+		toggleHide() {
+			this.setState({ hide: !this.state.hide })
+		}
+		render(state) {
+			return $el('div', {
+				props: { id: 'ytdl-box', style: { zIndex: 10000 } },
+				children: [
+					$el('div', {
+						props: {
+							id: 'ytdl-box-toggle',
+							style: { textAlign: 'center' },
+							textContent: 'Toggle Links'
+						},
+						events: {
+							click: this.toggleHide.bind(this)
+						}
+					}),
+					$el('div', {
+						props: { id: 'ytdl-content', style: { display: state.hide ? 'none' : 'block' } },
+						children: [
+							$el('div', {
+								props: { id: 'ytdl-id', style: { textAlign: 'center' }, textContent: state.id }
+							}),
+							$el('div', {
+								props: { id: 'ytdl-bbox', style: { display: 'flex' } },
+								children: [
+									$el('div', {
+										props: { id: 'ytdl-stream', style: { flex: '1' } },
+										children: state.stream.map(x =>
+											$el('a', {
+												props: {
+													textContent: x.quality || x.type,
+													href: x.url,
+													title: x.type,
+													target: '_blank',
+													className: 'ytdl-link-btn'
+												}
+											})
+										)
+									}),
+									$el('div', {
+										props: { id: 'ytdl-adaptive', style: { flex: '1' } },
+										children: state.adaptive.map(x =>
+											$el('a', {
+												props: {
+													textContent:
+														(x.quality_label ? x.quality_label + ':' : '') + x.type,
+													href: x.url,
+													title: x.type,
+													target: '_blank',
+													className: 'ytdl-link-btn'
+												}
+											})
+										)
+									})
+								]
+							})
+						]
+					})
+				]
+			})
+		}
+	}
+	const container = $el('div')
+	const app = new App(container)
 	const load = async id => {
 		const ytplayer = await getytplayer()
 		const decsig = await getdecsig(ytplayer.config.assets.js)
 		return workerGetVideo(id, decsig.meta)
 			.then(data => {
 				console.log('load new: %s', id)
-				$id.empty().append(
-					$('<div>')
-						.addClass('ytdl-link-title')
-						.text(id)
-				)
-				$stream.empty().append(
-					$('<div>')
-						.addClass('ytdl-link-title')
-						.text('Stream')
-				)
-				data.stream
-					.map(x =>
-						$('<a>')
-							.text(x.quality || x.type)
-							.attr('href', x.url)
-							.attr('title', x.type)
-							.attr('target', '_blank')
-							.addClass('ytdl-link-btn')
-					)
-					.forEach($li => $stream.append($li))
-				$adaptive.empty().append(
-					$('<div>')
-						.addClass('ytdl-link-title')
-						.text('Adaptive')
-				)
-				data.adaptive
-					.map(x =>
-						$('<a>')
-							.text((x.quality_label ? x.quality_label + ':' : '') + x.type)
-							.attr('href', x.url)
-							.attr('title', x.type)
-							.attr('target', '_blank')
-							.addClass('ytdl-link-btn')
-					)
-					.forEach($li => $adaptive.append($li))
+				app.setState({ id, stream: data.stream, adaptive: data.adaptive })
 			})
 			.catch(err => console.error('load', err))
 	}
 	let prevurl = null
 	setInterval(() => {
-		const el = document.querySelector('#info-contents')
-		if (el && !el.contains(boxel)) el.appendChild(boxel)
+		const el = $('#info-contents')
+		if (el && !el.contains(container)) el.appendChild(container)
 		if (location.href !== prevurl && location.pathname === '/watch') {
 			prevurl = location.href
 			const q = parseQuery(location.search.slice(1))
@@ -197,10 +261,6 @@ user-select: none;
 }
 #ytdl-box-toggle:hover{
 color: blue;
-}
-#ytdl-content{
-overflow: hidden;
-transition: ease 1s;
 }
 .ytdl-link-title{
 text-align: center;
