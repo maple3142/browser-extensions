@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Pixiv raw image 403 Forbidden Fix
+// @name         i.pximg.net 403 Forbidden Fix
 // @namespace    https://blog.maple3142.net/
 // @version      0.2
 // @description  Fix Pixiv raw image 403
