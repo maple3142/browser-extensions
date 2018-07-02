@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.2.3
+// @version      0.2.4
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -60,6 +60,8 @@
 		fetch(`/ajax/illust/${id}`, { credentials: 'same-origin' })
 			.then(r => r.json())
 			.then(r => r.body)
+	const getPximg = url =>
+		gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer: 'https://www.pixiv.net/' } })
 	const saveImage = (format, id) => {
 		getIllustData(id)
 			.then(data => {
@@ -70,15 +72,38 @@
 					.pop()
 					.split('.')
 					.pop()
-				return Promise.all([
-					fname + '.' + ext,
-					gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer: 'https://www.pixiv.net/' } })
-				])
+				if (data.pageCount === 1) {
+					return Promise.all([
+						Promise.all([
+							fname + '.' + ext,
+							gmxhr({
+								method: 'GET',
+								url,
+								responseType: 'blob',
+								headers: { Referer: 'https://www.pixiv.net/' }
+							})
+						])
+					])
+				} else {
+					const len = data.pageCount / 10 + 1
+					const ar = []
+					for (let i = 0; i < data.pageCount; i++) {
+						ar.push(
+							Promise.all([
+								`${fname}_#${(i + 1).toString().padStart(len, '0')}.${ext}`,
+								getPximg(url.replace('p0', `p${i}`))
+							])
+						)
+					}
+					return Promise.all(ar)
+				}
 			})
-			.then(([f, xhr]) => {
-				const url = URL.createObjectURL(xhr.response)
-				download(url, f)
-				URL.revokeObjectURL(xhr.response)
+			.then(results => {
+				results.forEach(([f, xhr]) => {
+					const url = URL.createObjectURL(xhr.response)
+					download(url, f)
+					URL.revokeObjectURL(xhr.response)
+				})
 			})
 	}
 
@@ -123,8 +148,8 @@
 			'/': 'a.work,a._work',
 			'/bookmark.php': 'a.work',
 			'/new_illust.php': 'a.work',
-			'/bookmark_new_illust.php': '.gtm-recommend-illust.gtm-thumbnail-link',
-			'/member_illust.php': () => /\d+/.exec($('.sticky>section>div>a[href]').href)[0],
+			'/bookmark_new_illust.php': 'a.work,.gtm-recommend-illust.gtm-thumbnail-link',
+			'/member_illust.php': 'figure>div[role=presentation]>div>a',
 			'/ranking.php': 'a.work'
 		}
 		const IMG_SELECTOR = SELECTOR_MAP[location.pathname]
@@ -142,11 +167,11 @@
 			if (typeof IMG_SELECTOR === 'string') {
 				const el = $$(IMG_SELECTOR).filter(x => isMouseInRect(x.getBoundingClientRect()))[0]
 				if (!el) return
-				id = /\d+/.exec(el.href)[0]
+				id = /\d+/.exec(el.href.split('/').pop())[0]
 			} else {
-				id = IMG_SELECTOR()
+				id = IMG_SELECTOR(mouse)
 			}
-			saveImage(FILENAME_TEMPLATE, id)
+			if (id) saveImage(FILENAME_TEMPLATE, id)
 		})
 	}
 
