@@ -3,16 +3,17 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.2.2
+// @version      0.2.3
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
-// @include      /^https:\/\/www\.pixiv\.net/.*$/
+// @match        https://www.pixiv.net/
 // @match        https://www.pixiv.net/bookmark.php*
 // @match        https://www.pixiv.net/new_illust.php*
 // @match        https://www.pixiv.net/bookmark_new_illust.php*
+// @match        https://www.pixiv.net/ranking.php*
 // @connect      pximg.net
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
@@ -119,11 +120,12 @@
 	// key shortcut
 	{
 		const SELECTOR_MAP = {
-			'/': 'a.work',
+			'/': 'a.work,a._work',
 			'/bookmark.php': 'a.work',
 			'/new_illust.php': 'a.work',
 			'/bookmark_new_illust.php': '.gtm-recommend-illust.gtm-thumbnail-link',
-			'/member_illust.php': () => /\d+/.exec($('.sticky>section>div>a[href]').href)[0]
+			'/member_illust.php': () => /\d+/.exec($('.sticky>section>div>a[href]').href)[0],
+			'/ranking.php': 'a.work'
 		}
 		const IMG_SELECTOR = SELECTOR_MAP[location.pathname]
 		const mouse = { x: 0, y: 0 }
