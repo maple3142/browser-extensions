@@ -3,12 +3,13 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.1
+// @version      0.4.2
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
 // @match        https://www.youtube.com/*
+// @require      https://cdnjs.cloudflare.com/ajax/libs/hyperapp/1.2.6/hyperapp.js
 // @run-at       document-start
 // @grant        GM_addStyle
 // @license      MIT
@@ -138,108 +139,70 @@ onmessage=async e=>{
 			ytdlWorker.postMessage({ id, decsigmeta })
 		})
 	}
-	class Component {
-		constructor(el) {
-			this.el = el
-			this.state = this.getInitialState()
-			this._render()
-		}
-		getInitialState() {
-			return {}
-		}
-		setState(newstate) {
-			Object.assign(this.state, newstate)
-			this._render()
-		}
-		render() {
-			throw new Error('Component must have a render function.')
-		}
-		_render() {
-			while (this.el.firstChild) this.el.removeChild(this.el.firstChild)
-			this.el.appendChild(this.render(this.state))
-		}
+
+	const { app, h } = hyperapp
+	const state = {
+		hide: true,
+		id: '',
+		stream: [],
+		adaptive: []
 	}
-	class App extends Component {
-		getInitialState() {
-			return {
-				hide: true,
-				id: '',
-				stream: [],
-				adaptive: []
-			}
-		}
-		toggleHide() {
-			this.setState({ hide: !this.state.hide })
-		}
-		render(state) {
-			return $el('div', {
-				props: { id: 'ytdl-box', style: { zIndex: 10000 } },
-				children: [
-					$el('div', {
-						props: {
-							id: 'ytdl-box-toggle',
-							style: { textAlign: 'center' },
-							textContent: 'Toggle Links'
-						},
-						events: {
-							click: this.toggleHide.bind(this)
-						}
-					}),
-					$el('div', {
-						props: { id: 'ytdl-content', style: { display: state.hide ? 'none' : 'block' } },
-						children: [
-							$el('div', {
-								props: { id: 'ytdl-id', style: { textAlign: 'center' }, textContent: state.id }
-							}),
-							$el('div', {
-								props: { id: 'ytdl-bbox', style: { display: 'flex' } },
-								children: [
-									$el('div', {
-										props: { id: 'ytdl-stream', style: { flex: '1' } },
-										children: state.stream.map(x =>
-											$el('a', {
-												props: {
-													textContent: x.quality || x.type,
-													href: x.url,
-													title: x.type,
-													target: '_blank',
-													className: 'ytdl-link-btn'
-												}
-											})
-										)
-									}),
-									$el('div', {
-										props: { id: 'ytdl-adaptive', style: { flex: '1' } },
-										children: state.adaptive.map(x =>
-											$el('a', {
-												props: {
-													textContent:
-														(x.quality_label ? x.quality_label + ':' : '') + x.type,
-													href: x.url,
-													title: x.type,
-													target: '_blank',
-													className: 'ytdl-link-btn'
-												}
-											})
-										)
-									})
-								]
-							})
-						]
-					})
-				]
-			})
-		}
+	const actions = {
+		togglehide: () => state => ({ hide: !state.hide }),
+		setstate: newstate => state => newstate
 	}
+	const view = (state, actions) =>
+		h('div', { id: 'ytdl-box', style: { zIndex: 10000 } }, [
+			h(
+				'div',
+				{ onclick: () => actions.togglehide(), id: 'ytdl-box-toggle', className: 't-center' },
+				'Toggle Links'
+			),
+			h('div', { className: state.hide ? 'hide' : '' }, [
+				h('div', { className: 't-center' }, state.id),
+				h('div', { className: 'd-flex' }, [
+					h(
+						'div',
+						{ className: 'f-1' },
+						[h('div', { className: 'ytdl-link-title' }, 'Stream')].concat(
+							state.stream.map(x =>
+								h(
+									'a',
+									{ href: x.url, title: x.type, target: '_blank', className: 'ytdl-link-btn' },
+									x.quality || x.type
+								)
+							)
+						)
+					),
+					h(
+						'div',
+						{ className: 'f-1' },
+						[h('div', { className: 'ytdl-link-title' }, 'Adaptive')].concat(
+							state.adaptive.map(x =>
+								h(
+									'a',
+									{ href: x.url, title: x.type, target: '_blank', className: 'ytdl-link-btn' },
+									(x.quality_label ? x.quality_label + ':' : '') + x.type
+								)
+							)
+						)
+					)
+				])
+			])
+		])
 	const container = $el('div')
-	const app = new App(container)
+	const $app = app(state, actions, view, container)
 	const load = async id => {
 		const ytplayer = await getytplayer()
 		const decsig = await getdecsig(ytplayer.config.assets.js)
 		return workerGetVideo(id, decsig.meta)
 			.then(data => {
 				console.log('load new: %s', id)
-				app.setState({ id, stream: data.stream, adaptive: data.adaptive })
+				$app.setstate({
+					id,
+					stream: data.stream,
+					adaptive: data.adaptive
+				})
 			})
 			.catch(err => console.error('load', err))
 	}
@@ -254,6 +217,18 @@ onmessage=async e=>{
 		}
 	}, 1000)
 	GM_addStyle(`
+.hide{
+display: none;
+}
+.t-center{
+text-align: center;
+}
+.d-flex{
+display: flex;
+}
+.f-1{
+flex: 1;
+}
 #ytdl-box-toggle{
 margin: 3px;
 user-select: none;
