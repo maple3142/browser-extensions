@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.5
+// @version      0.5.1
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -26,7 +26,7 @@
 				if ($('#imgurupl').length) return //exists, ignore it
 				$origUpl.after(`
 <div id="bahaimgur">
-<input type="file" accept="image/*" id="imgurupl">
+<input type="file" accept="image/*" id="imgurupl" style="width: 220px;">
 <button id="imguruplbtn">上傳imgur</button>
 </div>
 `)
@@ -85,7 +85,7 @@
 			const $origUrlinput = $('#bhImgModeInsertUrl')
 			if ($origUrlinput.css('display') === 'block') {
 				if ($('#bahaimgur_cvt').length) return
-				$('#bhImgImageUrl').after(`<button id="bahaimgur_cvt">轉換成imgur網址</button>`)
+				$('#bhImgImageUrl').after(`<button id="bahaimgur_cvt" style="margin: 5px;">轉換成imgur網址</button>`)
 
 				$('#bahaimgur_cvt').on('click', e => {
 					e.preventDefault()
