@@ -3,20 +3,21 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.3.9
+// @version      0.4.0
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
 // @require      https://code.jquery.com/jquery-3.2.1.slim.min.js
 // @match        https://www.youtube.com/*
+// @run-at       document-start
 // @grant        GM_addStyle
 // @license      MIT
 // ==/UserScript==
 
 ;(function() {
 	'use strict'
-	const xhrget = url =>
+	const xhrhead = url =>
 		new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest()
 			xhr.open('HEAD', url)
@@ -28,29 +29,6 @@
 			xhr.onerror = rej
 			xhr.send()
 		})
-	// type "__YTDL_LINK_DECSIG.toString().split('\n').join('')" in console to get fallback
-	const fallback = function anonymous(a) {
-		var nL = {
-			oU: function(a, b) {
-				a.splice(0, b)
-			},
-			bS: function(a, b) {
-				var c = a[0]
-				a[0] = a[b % a.length]
-				a[b % a.length] = c
-			},
-			G7: function(a) {
-				a.reverse()
-			}
-		}
-		a = a.split('')
-		nL.bS(a, 3)
-		nL.bS(a, 28)
-		nL.oU(a, 1)
-		nL.G7(a, 53)
-		nL.bS(a, 22)
-		return a.join('')
-	}
 	const getytplayer = async () => {
 		if (ytplayer && ytplayer.config) return ytplayer
 		const html = await fetch(location.href).then(r => r.text())
@@ -62,7 +40,7 @@
 		return ytplayer
 	}
 	const getdecsig = async path => {
-		return xhrget('https://www.youtube.com' + path)
+		return xhrhead('https://www.youtube.com' + path)
 			.then(data => {
 				const fnname = /\"signature\"\),.+?\.set\(.+?,(.+?)\(/.exec(data)[1]
 				const [_, argname, fnbody] = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
@@ -71,9 +49,10 @@
 				//console.log(helpername)
 				const helper = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)[0]
 				//console.log(helper)
-				return new Function([argname], helper + ';' + fnbody)
+				const fn = new Function([argname], helper + ';' + fnbody)
+				fn.meta = { argname, helper, fnbody }
+				return fn
 			})
-			.catch(e => fallback)
 			.then(fn => (unsafeWindow.__YTDL_LINK_DECSIG = fn))
 	}
 	const parseQuery = s =>
@@ -83,9 +62,7 @@
 				.map(x => x.split('='))
 				.map(p => ({ [p[0]]: decodeURIComponent(p[1]) }))
 		)
-	const getVideo = async id => {
-		const ytplayer = await getytplayer()
-		const decsig = await getdecsig(ytplayer.config.assets.js)
+	const getVideo = async (id, decsig) => {
 		return fetch(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
 			.then(r => r.text())
 			.then(async data => {
@@ -115,6 +92,26 @@
 				return { stream, adaptive }
 			})
 	}
+	const ytdlWorkerCode = `
+const parseQuery=${parseQuery.toString()};
+const getVideo=${getVideo.toString()};
+onmessage=async e=>{
+	const {argname,helper,fnbody}=e.data.decsigmeta;
+	const decsig=new Function([argname],helper+';'+fnbody);
+	const result=await getVideo(e.data.id,decsig);
+	postMessage(result)
+}`
+	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
+	const workerGetVideo = (id, decsigmeta) => {
+		return new Promise((res, rej) => {
+			const callback = e => {
+				ytdlWorker.removeEventListener('message', callback)
+				res(e.data)
+			}
+			ytdlWorker.addEventListener('message', callback)
+			ytdlWorker.postMessage({ id, decsigmeta })
+		})
+	}
 	const $box = $('<div>')
 		.attr('id', 'ytdl-box')
 		.css('z-index', '10000')
@@ -138,8 +135,10 @@
 		hide = !hide
 	})
 	$content.append($id).append($bbox.append($stream).append($adaptive))
-	const load = id =>
-		getVideo(id)
+	const load = async id => {
+		const ytplayer = await getytplayer()
+		const decsig = await getdecsig(ytplayer.config.assets.js)
+		return workerGetVideo(id, decsig.meta)
 			.then(data => {
 				console.log('load new: %s', id)
 				$id.empty().append(
@@ -179,6 +178,7 @@
 					.forEach($li => $adaptive.append($li))
 			})
 			.catch(err => console.error('load', err))
+	}
 	let prevurl = null
 	setInterval(() => {
 		const el = document.querySelector('#info-contents')
