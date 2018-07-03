@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.2.5
+// @version      0.3.0
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -22,8 +22,11 @@
 
 ;(function() {
 	'use strict'
-	const FILENAME_TEMPLATE = '{{title}}-{{userName}}-{{id}}'
-	const KEYCODE_TO_SAVE = 83 // 's' key
+	const FORMAT = {
+		single: '{{title}}-{{userName}}-{{id}}',
+		multiple: '{{title}}-{{userName}}-{{id}}-p{{#}}'
+	}
+	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
 
 	const $ = s => document.querySelector(s)
 	const $$ = s => [...document.querySelectorAll(s)]
@@ -62,10 +65,11 @@
 			.then(r => r.body)
 	const getPximg = url =>
 		gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer: 'https://www.pixiv.net/' } })
-	const saveImage = (format, id) => {
+	const saveImage = ({ single, multiple }, id) =>
 		getIllustData(id)
 			.then(data => {
-				const fname = format.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
+				const f = data.pageCount === 1 ? single : multiple
+				const fname = f.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
 				const url = data.urls.original
 				const ext = url
 					.split('/')
@@ -88,24 +92,21 @@
 					const len = data.pageCount / 10 + 1
 					const ar = []
 					for (let i = 0; i < data.pageCount; i++) {
+						const num = (i + 1).toString().padStart(len, '0')
 						ar.push(
-							Promise.all([
-								`${fname}_#${(i + 1).toString().padStart(len, '0')}.${ext}`,
-								getPximg(url.replace('p0', `p${i}`))
-							])
+							Promise.all([`${fname.replace('{{#}}', num)}.${ext}`, getPximg(url.replace('p0', `p${i}`))])
 						)
 					}
 					return Promise.all(ar)
 				}
 			})
 			.then(results => {
-				results.forEach(([f, xhr]) => {
+				for (const [f, xhr] of results) {
 					const url = URL.createObjectURL(xhr.response)
 					download(url, f)
 					URL.revokeObjectURL(xhr.response)
-				})
+				}
 			})
-	}
 
 	if (location.pathname === '/member_illust.php') {
 		//ajax change
@@ -125,7 +126,7 @@
 					const n = menu.children.length
 					const item = $el('li', {
 						role: 'menuitem',
-						onclick: () => saveImage(FILENAME_TEMPLATE, params.get('illust_id'))
+						onclick: () => saveImage(FORMAT, params.get('illust_id'))
 					})
 					item.className = menu.children[n - 2].className
 					const text = $el('span', { textContent: '⬇' })
@@ -163,7 +164,7 @@
 			} else {
 				id = selector()
 			}
-			if (id) saveImage(FILENAME_TEMPLATE, id)
+			if (id) saveImage(FORMAT, id)
 		})
 	}
 
