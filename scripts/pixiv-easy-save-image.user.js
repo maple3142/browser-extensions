@@ -80,12 +80,7 @@
 					return Promise.all([
 						Promise.all([
 							fname + '.' + ext,
-							gmxhr({
-								method: 'GET',
-								url,
-								responseType: 'blob',
-								headers: { Referer: 'https://www.pixiv.net/' }
-							})
+							getPximg(url)
 						])
 					])
 				} else {
