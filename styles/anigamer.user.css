@@ -1,0 +1,78 @@
+@-moz-document domain(ani.gamer.com.tw) {
+	.sky {
+		background-color: #00B4D8;
+	}
+	.sky .material-icons {
+		color: #FFFFFF;
+	}
+	.sky>.container-player {
+		padding-top: 5px;
+	}
+	.search>button {
+		background: inherit;
+	}
+	.search>button>i {
+		color: #00B4D8 !important;
+	}
+	.search>input {
+		width: 210px !important;
+	}
+	.search *:hover, .search *:focus {
+		background: #FFFFFF !important;
+	}
+	.anime-title {
+		min-height: 0px;
+	}
+	.mainmenu>.container-player li {
+		border-radius: 10px 10px 0px 0px;
+		background: none!important;
+	}
+	.mainmenu>.container-player li:hover {
+		background: #007ed8!important;
+	}
+	.mainmenu>.container-player li>a:hover {
+		color: #FFFFFF;
+	}
+	.newanime__order>.material-icons {
+		width: 26px;
+		overflow: hidden;
+	}
+	.newanime__order:not(.is-order)>.material-icons::before {
+		content: "add";
+	}
+	.bahago img {
+		filter: contrast(0%);
+	}
+	.index_new>.title>h1, .old_list>.title>h1, .news_list>.title>h1 {
+		border: none;
+		padding-right: 0px;
+	}
+	.fb-like {
+		display: none;
+	}
+	.whilebg {
+		display: none;
+	}
+	.premium-info:hover {
+		transform: none;
+		box-shadow: none;
+	}
+	.history {
+		font-size: 110%;
+	}
+	.anime_name button, .animelook i, .news_big i, .class_list li>a {
+		border-radius: 10px;
+	}
+	.data_type li {
+		background: #5c5c5c;
+		padding-right: 5px;
+		color: white;
+		font-size: .8em;
+	}
+	.data_type span {
+		margin-right: 5px;
+	}
+	.mes:hover i, .rss:hover i, .like:hover i {
+		color: #FFF049;
+	}
+}
