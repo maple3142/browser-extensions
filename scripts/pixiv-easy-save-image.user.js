@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.3.1
+// @version      0.3.2
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -107,38 +107,22 @@
 			})
 
 	if (location.pathname === '/member_illust.php') {
-		//ajax change
-		let lasturl
-		setInterval(() => {
-			if (location.href == lasturl) return
-			lasturl = location.href
-			main()
-		}, 1000)
-
-		function main() {
-			const params = new URLSearchParams(location.search)
-			const observer = new MutationObserver(
-				debounce(10)(mut => {
-					const menu = $('ul[role=menu]')
-					if (!menu) return
-					const n = menu.children.length
-					const item = $el('li', {
-						role: 'menuitem',
-						onclick: () => saveImage(FORMAT, params.get('illust_id'))
-					})
-					item.className = menu.children[n - 2].className
-					const text = $el('span', { textContent: '⬇' })
-					item.appendChild(text)
-					menu.insertBefore(item, menu.children[n - 1])
+		const observer = new MutationObserver(
+			debounce(10)(mut => {
+				const menu = $('ul[role=menu]')
+				if (!menu) return
+				const n = menu.children.length
+				const item = $el('li', {
+					role: 'menuitem',
+					onclick: () => saveImage(FORMAT, new URLSearchParams(location.search).get('illust_id'))
 				})
-			)
-			const start = () => {
-				const el = $('.sticky')
-				if (!el) setTimeout(start, 1000)
-				else observer.observe($('.sticky'), { childList: true, subtree: true })
-			}
-			start()
-		}
+				item.className = menu.children[n - 2].className
+				const text = $el('span', { textContent: '⬇' })
+				item.appendChild(text)
+				menu.insertBefore(item, menu.children[n - 1])
+			})
+		)
+		observer.observe(document.body, { childList: true, subtree: true })
 	}
 
 	// key shortcut
