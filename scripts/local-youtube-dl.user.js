@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.2
+// @version      0.4.3
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -148,23 +148,23 @@ onmessage=async e=>{
 		adaptive: []
 	}
 	const actions = {
-		togglehide: () => state => ({ hide: !state.hide }),
-		setstate: newstate => state => newstate
+		toggleHide: () => state => ({ hide: !state.hide }),
+		setState: newstate => state => newstate
 	}
 	const view = (state, actions) =>
 		h('div', { id: 'ytdl-box', style: { zIndex: 10000 } }, [
 			h(
 				'div',
-				{ onclick: () => actions.togglehide(), id: 'ytdl-box-toggle', className: 't-center' },
+				{ onclick: () => actions.toggleHide(), id: 'ytdl-box-toggle', className: 't-center' },
 				'Toggle Links'
 			),
 			h('div', { className: state.hide ? 'hide' : '' }, [
-				h('div', { className: 't-center' }, state.id),
+				h('div', { className: 't-center fs-140' }, state.id),
 				h('div', { className: 'd-flex' }, [
 					h(
 						'div',
 						{ className: 'f-1' },
-						[h('div', { className: 'ytdl-link-title' }, 'Stream')].concat(
+						[h('div', { className: 't-center fs-140' }, 'Stream')].concat(
 							state.stream.map(x =>
 								h(
 									'a',
@@ -177,7 +177,7 @@ onmessage=async e=>{
 					h(
 						'div',
 						{ className: 'f-1' },
-						[h('div', { className: 'ytdl-link-title' }, 'Adaptive')].concat(
+						[h('div', { className: 't-center fs-140' }, 'Adaptive')].concat(
 							state.adaptive.map(x =>
 								h(
 									'a',
@@ -198,7 +198,7 @@ onmessage=async e=>{
 		return workerGetVideo(id, decsig.meta)
 			.then(data => {
 				console.log('load new: %s', id)
-				$app.setstate({
+				$app.setState({
 					id,
 					stream: data.stream,
 					adaptive: data.adaptive
@@ -212,8 +212,10 @@ onmessage=async e=>{
 		if (el && !el.contains(container)) el.appendChild(container)
 		if (location.href !== prevurl && location.pathname === '/watch') {
 			prevurl = location.href
-			const q = parseQuery(location.search.slice(1))
-			load(q.v)
+			$app.setState({
+				hide: true
+			})
+			load(new URLSearchParams(location.search).get('v'))
 		}
 	}, 1000)
 	GM_addStyle(`
@@ -229,6 +231,9 @@ display: flex;
 .f-1{
 flex: 1;
 }
+.fs-140{
+font-size: 140%;
+}
 #ytdl-box-toggle{
 margin: 3px;
 user-select: none;
@@ -236,11 +241,6 @@ user-select: none;
 }
 #ytdl-box-toggle:hover{
 color: blue;
-}
-.ytdl-link-title{
-text-align: center;
-font-size: 140%;
-margin: 1px;
 }
 .ytdl-link-btn{
 display: block;
