@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         term.ptt.cc 自動登入
 // @namespace    https://blog.maple3142.net/
-// @version      0.2.4
+// @version      0.3.0
 // @description  自動登入 term.ptt.cc + 自動跳過一些畫面
 // @author       maple3142
 // @match        https://term.ptt.cc/
@@ -80,25 +80,10 @@ const closeWarning = true
 		if (skiplist.filter(x => x.executed).length === skiplist.length) E.off('update')
 	})
 	if (closeOnQuit) E.on('close', close)
-
-	// I don't know why closing warning vanished after I override WebSocket...
-	// Don't ask me how did that happened, it is a magic.
-	const _WebSocket = WebSocket
-	const XWebSocket = function(...args) {
-		const instance = new WebSocket(...args)
-		XWebSocket.instances.push(instance)
-		instance._close = instance.close
-		instance.close = (...args) => {
-			XWebSocket.instances = XWebSocket.instances.filter(x => x !== instance)
-			instance._close(...args)
-		}
-		return instance
+	if (!closeWarning) {
+		unsafeWindow.addEventListener = (fn => (...args) => {
+			if (args[0] === 'beforeunload') return
+			fn(...args)
+		})(unsafeWindow.addEventListener.bind(unsafeWindow))
 	}
-	XWebSocket.instances = []
-	unsafeWindow.WebSocket = XWebSocket
-	unsafeWindow.onload = () =>
-		unsafeWindow.addEventListener('beforeunload', () => {
-			XWebSocket.instances[0] ? XWebSocket.instances[0].close() : null
-			return closeWarning ? 'c8763' : null
-		})
 })()
