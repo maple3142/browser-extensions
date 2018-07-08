@@ -1,0 +1,132 @@
+@-moz-document domain(share.dmhy.org) {
+	.nav_title {
+		padding: 5px;
+	}
+	.jmd {
+		display: none;
+	}
+	* {
+		font-size: 102%;
+	}
+	.jmd_base {
+		display: table !important;
+		word-break: keep-all;
+	}
+	.jmd_base th {
+		padding: 1px;
+		width: 6%;
+		background-color: #7E99BE;
+		color: white;
+	}
+	.jmd_base tr:nth-child(even) {
+		background-color: #cdf
+	}
+	.jmd_base tr::nth-child(odd) {
+		background-color: #fff;
+	}
+	.jmd_base a {
+		margin: 5px;
+		line-height: 20px;
+	}
+	.tablesorter tr {
+		height: 60px;
+	}
+	a:hover {
+		color: #d99b3e;
+	}
+	.arrow-magnet:hover {
+		background: url(/images/icons.gif) no-repeat scroll -34px -40px;
+	}
+	.share {
+		display: none;
+	}
+	.topic-title h3 {
+		text-align: center;
+	}
+	.topic-title .info {
+		float: none;
+		margin-top: 0;
+	}
+	.topic-title .info li {
+		background-color: #7E99BE;
+		color: #FFFFFF;
+		text-shadow: none;
+		position: relative;
+		padding-left: 5px;
+		max-height: 25px;
+		overflow: hidden;
+	}
+	.topic-title .info li>* {
+		padding: 0 0 0 5px;
+		margin: 0 0 0 5px;
+		background-color: #FFFFFF;
+		color: #247;
+		height: 100%;
+		width: 100%;
+		position: absolute;
+		line-height: 21px;
+	}
+	.topics_cult div {
+		display: flex;
+		align-items: center;
+	}
+	.topics_cult div p {
+		margin-right: 5px;
+		max-width: 90px !important;
+		min-height: 122px;
+		display: flex;
+		align-items: center;
+		overflow: visible !important;
+	}
+	.topics_cult div p img {
+		max-width: 90px !important;
+		height: auto !important;
+	}
+	.topics_cult div a {
+		word-break: keep-all;
+	}
+	.title {
+		word-break: keep-all !important;
+	}
+	.title .tag {
+		padding: 3px;
+	}
+	.topic-main {
+		display: flex;
+		flex-direction: column;
+		flex-flow: column;
+	}
+	.topic-main>*:not(#resource-tabs):not(.topic-title) {
+		order: 2;
+	}
+	.topic-title {
+		order: 0;
+	}
+	#resource-tabs {
+		order: 1;
+	}
+	#resource-tabs:before {
+		content: "下載";
+		background-color: #247;
+		width: 100%;
+		display: block;
+		color: #FFFFFF;
+		text-align: center;
+		padding: 5px;
+	}
+	#resource-tabs>.ui-tabs-nav {
+		display: none;
+	}
+	.topic-nfo:before {
+		content: "簡介";
+		background-color: #247;
+		width: 100%;
+		display: block;
+		color: #FFFFFF;
+		text-align: center;
+		padding: 5px;
+	}
+	.topic-nfo>strong {
+		display: none;
+	}
+}
