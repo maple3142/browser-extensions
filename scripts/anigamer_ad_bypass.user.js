@@ -5,18 +5,18 @@
 // @description  bypass anigamer ad
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
-// @grant        none
+// @grant        unsafeWindow
 // ==/UserScript==
 
 ;(() => {
 	'use strict'
 	const $ = s => document.querySelector(s)
-	function tryClick() {
-		const el = $('#adult')
-		if (el) el.click()
-		setTimeout(tryClick, 10)
-	}
+	const $$ = s => [...document.querySelectorAll(s)]
+	let hasFailed = false
 	async function test() {
+		if ($('#adult')) {
+			$('#adult').click()
+		}
 		await fetch(
 			`/ajax/token.php?adID=${getAd()[0]}&sn=${animefun.videoSn}&device=${animefun.getdeviceid()}&hash=${
 				animefun.uuid
@@ -30,13 +30,17 @@
 			credentials: 'same-origin'
 		}).then(r => r.json())
 		if (src) {
-			require(['order!init'], w => w.initialize())
-			$('.vast-skip-button').remove()
+			if (hasFailed) location.reload()
 		} else {
 			console.log('failed')
+			hasFailed = true
 			setTimeout(test, 100)
 		}
 	}
-	tryClick()
 	test()
+
+	console.error = (fn => (...args) => {
+		if (args[0].includes('AD ERROR: VAST Error')) location.reload()
+		fn(...args)
+	})(console.error)
 })()
