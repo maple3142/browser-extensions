@@ -17,7 +17,6 @@
 		setTimeout(tryClick, 10)
 	}
 	async function test() {
-		const p = new URLSearchParams(location.search)
 		await fetch(
 			`/ajax/token.php?adID=${getAd()[0]}&sn=${animefun.videoSn}&device=${animefun.getdeviceid()}&hash=${
 				animefun.uuid
