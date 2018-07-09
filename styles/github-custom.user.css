@@ -4,10 +4,10 @@
 		background: #FFFFFF url(https://user-images.githubusercontent.com/9370547/42454349-db0179ca-83c1-11e8-8ca3-1962007d9e66.png) no-repeat scroll 0px -43px;
 		background-size: 100% auto;
 	}
-	.numbers-summary>li, .js-recent-activity-container .Box-row, .news div:not(.js-recent-activity-container) .Box, .js-navigation-item, .pinned-repo-item, .issue-listing .Box-row {
+	.numbers-summary>li, .js-recent-activity-container .Box-row, .news div:not(.js-recent-activity-container) .Box, .pinned-repo-item, .issues-listing .Box-row, #notification-center .notifications-list .js-notification {
 		transition: .1s ease;
 	}
-	.numbers-summary>li:hover, .js-recent-activity-container .Box-row:hover, .news div:not(.js-recent-activity-container) .Box:hover, .js-navigation-item:hover, .pinned-repo-item:hover, .issue-listing .Box-row:hover {
+	.numbers-summary>li:hover, .js-recent-activity-container .Box-row:hover, .news div:not(.js-recent-activity-container) .Box:hover, .pinned-repo-item:hover, .issues-listing .Box-row:hover, #notification-center .notifications-list .js-notification:hover {
 		background-color: #fff9cb !important;
 	}
 	.js-recent-activity-container .Box-row:first-of-type {
