@@ -8,7 +8,7 @@
 // @grant        unsafeWindow
 // ==/UserScript==
 
-;(() => {
+;(function() {
 	'use strict'
 	const sn = animefun.videoSn
 	const device = animefun.getdeviceid()
