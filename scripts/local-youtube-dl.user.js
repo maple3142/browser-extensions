@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.3
+// @version      0.5.0
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -17,6 +17,28 @@
 
 ;(function() {
 	'use strict'
+	const LANG_FALLBACK = 'en'
+	const LOCALE = {
+		en: {
+			togglelinks: 'Toggle Links',
+			stream: 'Stream',
+			adaptive: 'Adaptive',
+			videoid: 'Video Id: {{id}}'
+		},
+		'zh-tw': {
+			togglelinks: '顯示/隱藏連結',
+			stream: '串流 Stream',
+			adaptive: '自適應 Adaptive',
+			videoid: '影片 Id: {{id}}'
+		},
+		'zh-cn': {
+			togglelinks: '显示/隐藏连结',
+			stream: '串流 Stream',
+			adaptive: '自适应 Adaptive',
+			videoid: '影片 Id: {{id}}'
+		}
+	}
+	const format = s => d => s.replace(/{{(\w+?)}}/g, (m, g1) => d[g1])
 	const $ = (s, x = document) => x.querySelector(s)
 	const $el = (tag, opts) => {
 		const el = document.createElement(tag)
@@ -124,26 +146,28 @@ onmessage=async e=>{
 		hide: true,
 		id: '',
 		stream: [],
-		adaptive: []
+		adaptive: [],
+		lang: LOCALE[navigator.language.toLowerCase()] || LOCALE[LANG_FALLBACK]
 	}
 	const actions = {
 		toggleHide: () => state => ({ hide: !state.hide }),
-		setState: newstate => state => newstate
+		setState: newstate => state => newstate,
+		setLang: lang => state => ({ lang: LOCALE[lang.toLowerCase()] || LOCALE[LANG_FALLBACK] })
 	}
 	const view = (state, actions) =>
 		h('div', { id: 'ytdl-box', style: { zIndex: 10000 } }, [
 			h(
 				'div',
 				{ onclick: () => actions.toggleHide(), id: 'ytdl-box-toggle', className: 't-center' },
-				'Toggle Links'
+				state.lang.togglelinks
 			),
 			h('div', { className: state.hide ? 'hide' : '' }, [
-				h('div', { className: 't-center fs-140' }, state.id),
+				h('div', { className: 't-center fs-140' }, format(state.lang.videoid, state)),
 				h('div', { className: 'd-flex' }, [
 					h(
 						'div',
 						{ className: 'f-1' },
-						[h('div', { className: 't-center fs-140' }, 'Stream')].concat(
+						[h('div', { className: 't-center fs-140' }, state.lang.stream)].concat(
 							state.stream.map(x =>
 								h(
 									'a',
@@ -156,7 +180,7 @@ onmessage=async e=>{
 					h(
 						'div',
 						{ className: 'f-1' },
-						[h('div', { className: 't-center fs-140' }, 'Adaptive')].concat(
+						[h('div', { className: 't-center fs-140' }, state.lang.adaptive)].concat(
 							state.adaptive.map(x =>
 								h(
 									'a',
@@ -171,6 +195,7 @@ onmessage=async e=>{
 		])
 	const container = $el('div')
 	const $app = app(state, actions, view, container)
+	unsafeWindow.$app = $app
 	const load = async id => {
 		const ytplayer = await getytplayer()
 		const decsig = await getdecsig(ytplayer.config.assets.js)
