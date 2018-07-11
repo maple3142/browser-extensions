@@ -18,30 +18,9 @@
 ;(function() {
 	'use strict'
 	const $ = (s, x = document) => x.querySelector(s)
-	const $$ = (s, x = document) => [...x.querySelectorAll(s)]
-	const isobj = o => o && typeof o === 'object' && !Array.isArray(o)
-	const deepmerge = (o, o1) => {
-		for (const k of Object.keys(o1)) {
-			if (isobj(o1[k])) {
-				if (!(k in o)) o[k] = o1[k]
-				else deepmerge(o[k], o1[k])
-			} else o[k] = o1[k]
-		}
-		return o
-	}
-	const $el = (tag, { props = {}, events = {}, children = [] } = {}) => {
+	const $el = (tag, opts) => {
 		const el = document.createElement(tag)
-		for (const k of Object.keys(props)) {
-			if (k in el && isobj(el[k])) deepmerge(el[k], props[k])
-			else if (k in el) el[k] = props[k]
-			else el.setAttribute(k, props[k])
-		}
-		for (const k of Object.keys(events)) {
-			el.addEventListener(k, events[k])
-		}
-		for (const c of children) {
-			el.appendChild(c)
-		}
+		Object.assign(el, opts)
 		return el
 	}
 	const xhrhead = url =>
