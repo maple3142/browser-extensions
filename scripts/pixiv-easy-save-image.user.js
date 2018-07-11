@@ -18,6 +18,8 @@
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {

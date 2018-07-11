@@ -13,6 +13,8 @@
 // @run-at       document-start
 // @grant        GM_addStyle
 // @license      MIT
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {

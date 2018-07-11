@@ -7,6 +7,8 @@
 // @match        https://store.steampowered.com/app/*
 // @run-at       document-start
 // @grant        none
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {

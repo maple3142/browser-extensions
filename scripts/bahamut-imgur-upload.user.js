@@ -9,6 +9,8 @@
 // @require      https://code.jquery.com/jquery-3.2.1.min.js
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function($) {

@@ -8,6 +8,8 @@
 // @run-at       document-start
 // @grant        unsafeWindow
 // @grant        window.close
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 const ID = ''

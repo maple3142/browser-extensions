@@ -12,6 +12,8 @@
 // @match        https://www.pixiv.net/member_illust.php?mode=manga&illust_id=*
 // @run-at       document-start
 // @grant        unsafeWindow
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {

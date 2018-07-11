@@ -6,6 +6,8 @@
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
 // @grant        none
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {

@@ -11,6 +11,8 @@
 // @match        https://gnn.gamer.com.tw/*
 // @require      https://unpkg.com/medium-zoom@0/dist/medium-zoom.min.js
 // @grant        none
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function($) {

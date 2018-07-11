@@ -5,6 +5,8 @@
 // @description  在巴哈姆特哈拉區右側的動漫電玩通顯示答案
 // @author       maple3142
 // @match        https://forum.gamer.com.tw/B.php*
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {

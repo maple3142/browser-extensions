@@ -8,6 +8,8 @@
 // @match        https://guild.gamer.com.tw/?sign=1
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 /*
