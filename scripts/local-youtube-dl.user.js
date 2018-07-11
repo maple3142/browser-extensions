@@ -155,7 +155,7 @@ onmessage=async e=>{
 		setLang: lang => state => ({ lang: LOCALE[lang.toLowerCase()] || LOCALE[LANG_FALLBACK] })
 	}
 	const view = (state, actions) =>
-		h('div', { id: 'ytdl-box', style: { zIndex: 10000 } }, [
+		h('div', { id: 'ytdl-box'}, [
 			h(
 				'div',
 				{ onclick: () => actions.toggleHide(), id: 'ytdl-box-toggle', className: 't-center' },
@@ -237,6 +237,9 @@ flex: 1;
 }
 .fs-140{
 font-size: 140%;
+}
+#ytdl-box{
+border-bottom: 1px solid var(--yt-border-color);
 }
 #ytdl-box-toggle{
 margin: 3px;
