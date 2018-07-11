@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.0
+// @version      0.5.1
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -162,12 +162,12 @@ onmessage=async e=>{
 				state.lang.togglelinks
 			),
 			h('div', { className: state.hide ? 'hide' : '' }, [
-				h('div', { className: 't-center fs-140' }, format(state.lang.videoid, state)),
+				h('div', { className: 't-center fs-14px' }, format(state.lang.videoid, state)),
 				h('div', { className: 'd-flex' }, [
 					h(
 						'div',
 						{ className: 'f-1' },
-						[h('div', { className: 't-center fs-140' }, state.lang.stream)].concat(
+						[h('div', { className: 't-center fs-14px' }, state.lang.stream)].concat(
 							state.stream.map(x =>
 								h(
 									'a',
@@ -180,7 +180,7 @@ onmessage=async e=>{
 					h(
 						'div',
 						{ className: 'f-1' },
-						[h('div', { className: 't-center fs-140' }, state.lang.adaptive)].concat(
+						[h('div', { className: 't-center fs-14px' }, state.lang.adaptive)].concat(
 							state.adaptive.map(x =>
 								h(
 									'a',
@@ -212,7 +212,7 @@ onmessage=async e=>{
 	}
 	let prevurl = null
 	setInterval(() => {
-		const el = $('#info-contents')
+		const el = $('#info-contents') || $('#watch-header')
 		if (el && !el.contains(container)) el.appendChild(container)
 		if (location.href !== prevurl && location.pathname === '/watch') {
 			prevurl = location.href
@@ -235,8 +235,8 @@ display: flex;
 .f-1{
 flex: 1;
 }
-.fs-140{
-font-size: 140%;
+.fs-14px{
+font-size: 14px;
 }
 #ytdl-box{
 border-bottom: 1px solid var(--yt-border-color);
