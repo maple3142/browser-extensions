@@ -142,7 +142,6 @@
 
 				// old image box
 				if (isOldImgBoxChecked(1) && !$('#imgurold_upl').length) {
-					const $cancelbtn = $('#bhImgBtnCancel')
 					const $uplbtn = $('<button>')
 						.text('上傳 imgur')
 						.css('margin-left', '3px')
@@ -167,12 +166,12 @@
 							})
 							.then(r => {
 								insertUrlToField(r.data.link)
-								$cancelbtn.click()
+								egg.lightbox.close()
 							})
 							.catch(e => {
 								console.error(e)
 								alert('上傳失敗')
-								$cancelbtn.click()
+								egg.lightbox.close()
 							})
 					})
 				} else if (isOldImgBoxChecked(3) && !$('#imgurold_cvt').length) {
@@ -217,6 +216,7 @@
 						e.preventDefault()
 						e.stopPropagation()
 						insertUrlToField($('#bhImgImageUrl').val())
+						egg.lightbox.close()
 					}
 				})
 			})
