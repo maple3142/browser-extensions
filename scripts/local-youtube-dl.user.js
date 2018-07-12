@@ -13,8 +13,6 @@
 // @run-at       document-start
 // @grant        GM_addStyle
 // @license      MIT
-// @compatible   firefox >=52
-// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {
@@ -79,9 +77,10 @@
 				//console.log(helpername)
 				const helper = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)[0]
 				//console.log(helper)
-				const fn = new Function([argname], helper + ';' + fnbody)
-				fn.meta = { argname, helper, fnbody }
-				return fn
+				return {
+					args: [argname],
+					body: helper + ';' + fnbody
+				}
 			})
 			.then(fn => (unsafeWindow.__YTDL_LINK_DECSIG = fn))
 	}
@@ -126,20 +125,20 @@
 const parseQuery=${parseQuery.toString()};
 const getVideo=${getVideo.toString()};
 onmessage=async e=>{
-	const {argname,helper,fnbody}=e.data.decsigmeta;
-	const decsig=new Function([argname],helper+';'+fnbody);
-	const result=await getVideo(e.data.id,decsig);
-	postMessage(result)
+const {args,body}=e.data.decsig;
+const decsig=new Function(args,body);
+const result=await getVideo(e.data.id,decsig);
+postMessage(result)
 }`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
-	const workerGetVideo = (id, decsigmeta) => {
+	const workerGetVideo = (id, decsig) => {
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
 				res(e.data)
 			}
 			ytdlWorker.addEventListener('message', callback)
-			ytdlWorker.postMessage({ id, decsigmeta })
+			ytdlWorker.postMessage({ id, decsig })
 		})
 	}
 
@@ -157,7 +156,7 @@ onmessage=async e=>{
 		setLang: lang => state => ({ lang: LOCALE[lang.toLowerCase()] || LOCALE[LANG_FALLBACK] })
 	}
 	const view = (state, actions) =>
-		h('div', { id: 'ytdl-box'}, [
+		h('div', { id: 'ytdl-box' }, [
 			h(
 				'div',
 				{ onclick: () => actions.toggleHide(), id: 'ytdl-box-toggle', className: 't-center' },
@@ -201,7 +200,7 @@ onmessage=async e=>{
 	const load = async id => {
 		const ytplayer = await getytplayer()
 		const decsig = await getdecsig(ytplayer.config.assets.js)
-		return workerGetVideo(id, decsig.meta)
+		return workerGetVideo(id, decsig)
 			.then(data => {
 				console.log('load new: %s', id)
 				$app.setState({
