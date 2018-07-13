@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.1
+// @version      0.5.2
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -67,22 +67,12 @@
 		}
 		return ytplayer
 	}
-	const getdecsig = async path => {
-		return xhrhead('https://www.youtube.com' + path)
-			.then(data => {
-				const fnname = /\"signature\"\),.+?\.set\(.+?,(.+?)\(/.exec(data)[1]
-				const [_, argname, fnbody] = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
-				//console.log(fnbody)
-				const helpername = /;(.+?)\..+?\(/.exec(fnbody)[1]
-				//console.log(helpername)
-				const helper = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)[0]
-				//console.log(helper)
-				return {
-					args: [argname],
-					body: helper + ';' + fnbody
-				}
-			})
-			.then(fn => (unsafeWindow.__YTDL_LINK_DECSIG = fn))
+	const parsedecsig = data => {
+		const fnname = /\"signature\"\),.+?\.set\(.+?,(.+?)\(/.exec(data)[1]
+		const [_, argname, fnbody] = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
+		const helpername = /;(.+?)\..+?\(/.exec(fnbody)[1]
+		const helper = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)[0]
+		return new Function([argname], helper + ';' + fnbody)
 	}
 	const parseQuery = s =>
 		Object.assign(
@@ -122,23 +112,23 @@
 			})
 	}
 	const ytdlWorkerCode = `
-const parseQuery=${parseQuery.toString()};
-const getVideo=${getVideo.toString()};
+const parseQuery=${parseQuery.toString()}
+const parsedecsig=${parsedecsig.toString()}
+const getVideo=${getVideo.toString()}
 onmessage=async e=>{
-const {args,body}=e.data.decsig;
-const decsig=new Function(args,body);
-const result=await getVideo(e.data.id,decsig);
+const decsig=parsedecsig(e.data.decsigcode)
+const result=await getVideo(e.data.id,decsig)
 postMessage(result)
 }`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
-	const workerGetVideo = (id, decsig) => {
+	const workerGetVideo = (id, decsigcode) => {
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
 				res(e.data)
 			}
 			ytdlWorker.addEventListener('message', callback)
-			ytdlWorker.postMessage({ id, decsig })
+			ytdlWorker.postMessage({ id, decsigcode })
 		})
 	}
 
@@ -199,8 +189,8 @@ postMessage(result)
 	unsafeWindow.$app = $app
 	const load = async id => {
 		const ytplayer = await getytplayer()
-		const decsig = await getdecsig(ytplayer.config.assets.js)
-		return workerGetVideo(id, decsig)
+		const decsigcode = await xhrhead('https://www.youtube.com' + ytplayer.config.assets.js)
+		return workerGetVideo(id, decsigcode)
 			.then(data => {
 				console.log('load new: %s', id)
 				$app.setState({
