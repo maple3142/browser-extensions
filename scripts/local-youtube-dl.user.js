@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.2
+// @version      0.5.3
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -58,7 +58,7 @@
 			xhr.send()
 		})
 	const getytplayer = async () => {
-		if (ytplayer && ytplayer.config) return ytplayer
+		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
 		const html = await fetch(location.href).then(r => r.text())
 		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
 		let config = eval(d[1])
@@ -74,6 +74,7 @@
 		const helper = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)[0]
 		return new Function([argname], helper + ';' + fnbody)
 	}
+	const getdecsig = path => xhrhead('https://www.youtube.com' + path).then(parsedecsig)
 	const parseQuery = s =>
 		Object.assign(
 			...s
@@ -113,22 +114,24 @@
 	}
 	const ytdlWorkerCode = `
 const parseQuery=${parseQuery.toString()}
+const xhrhead=${xhrhead.toString()}
 const parsedecsig=${parsedecsig.toString()}
+const getdecsig=${getdecsig.toString()}
 const getVideo=${getVideo.toString()}
-onmessage=async e=>{
-const decsig=parsedecsig(e.data.decsigcode)
+self.onmessage=async e=>{
+const decsig=await getdecsig(e.data.path)
 const result=await getVideo(e.data.id,decsig)
 postMessage(result)
 }`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
-	const workerGetVideo = (id, decsigcode) => {
+	const workerGetVideo = (id, path) => {
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
 				res(e.data)
 			}
 			ytdlWorker.addEventListener('message', callback)
-			ytdlWorker.postMessage({ id, decsigcode })
+			ytdlWorker.postMessage({ id, path })
 		})
 	}
 
@@ -189,8 +192,7 @@ postMessage(result)
 	unsafeWindow.$app = $app
 	const load = async id => {
 		const ytplayer = await getytplayer()
-		const decsigcode = await xhrhead('https://www.youtube.com' + ytplayer.config.assets.js)
-		return workerGetVideo(id, decsigcode)
+		return workerGetVideo(id, ytplayer.config.assets.js)
 			.then(data => {
 				console.log('load new: %s', id)
 				$app.setState({
@@ -198,6 +200,7 @@ postMessage(result)
 					stream: data.stream,
 					adaptive: data.adaptive
 				})
+				if (ytplayer.config.args.host_language) $app.setLang(ytplayer.config.args.host_language)
 			})
 			.catch(err => console.error('load', err))
 	}
