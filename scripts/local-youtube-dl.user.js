@@ -3,15 +3,17 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.3
+// @version      0.5.4
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
-// @match        https://www.youtube.com/*
+// @match        https://*.youtube.com/*
+// @connect      youtube.com
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hyperapp/1.2.6/hyperapp.js
 // @run-at       document-start
 // @grant        GM_addStyle
+// @grant        GM_xmlhttpRequest
 // @license      MIT
 // ==/UserScript==
 
@@ -45,6 +47,7 @@
 		Object.assign(el, opts)
 		return el
 	}
+	const gmxhr = o => new Promise((res, rej) => GM_xmlhttpRequest({ ...o, onload: res, onerror: rej }))
 	const xhrhead = url =>
 		new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest()
@@ -59,7 +62,10 @@
 		})
 	const getytplayer = async () => {
 		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
-		const html = await fetch(location.href).then(r => r.text())
+		const html = await gmxhr({
+			method: 'GET',
+			url: 'https://www.youtube.com' + location.pathname + location.search
+		}).then(r => r.responseText)
 		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
 		let config = eval(d[1])
 		unsafeWindow.ytplayer = {
@@ -160,7 +166,7 @@ postMessage(result)
 				h('div', { className: 'd-flex' }, [
 					h(
 						'div',
-						{ className: 'f-1' },
+						{ className: 'f-1 of-h' },
 						[h('div', { className: 't-center fs-14px' }, state.lang.stream)].concat(
 							state.stream.map(x =>
 								h(
@@ -173,7 +179,7 @@ postMessage(result)
 					),
 					h(
 						'div',
-						{ className: 'f-1' },
+						{ className: 'f-1 of-h' },
 						[h('div', { className: 't-center fs-14px' }, state.lang.adaptive)].concat(
 							state.adaptive.map(x =>
 								h(
@@ -206,7 +212,7 @@ postMessage(result)
 	}
 	let prevurl = null
 	setInterval(() => {
-		const el = $('#info-contents') || $('#watch-header')
+		const el = $('#info-contents') || $('#watch-header') || $('ytm-item-section-renderer>lazy-list')
 		if (el && !el.contains(container)) el.appendChild(container)
 		if (location.href !== prevurl && location.pathname === '/watch') {
 			prevurl = location.href
@@ -231,6 +237,9 @@ flex: 1;
 }
 .fs-14px{
 font-size: 14px;
+}
+.of-h{
+overflow: hidden;
 }
 #ytdl-box{
 border-bottom: 1px solid var(--yt-border-color);
