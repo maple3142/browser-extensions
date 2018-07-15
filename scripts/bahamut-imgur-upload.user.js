@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.1
+// @version      0.6.2
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -13,6 +13,15 @@
 
 ;(function($) {
 	'use strict'
+	/*
+	 * ALBUM_TO_UPLOAD 是你想要上傳的目標相簿 id
+	 * 例如相簿 https://imgur.com/a/C8763 的 id 是 C8763
+	 * 請把他貼到 GM_getValue('ALBUM_TO_UPLOAD','') 後面的引號中，變成 GM_getValue('ALBUM_TO_UPLOAD','C8763')
+	 * 這樣可以確保 id 不會在腳本更新後被清除，不過如果要修改的需要自己去腳本管理器的儲存空間修改
+	 * Tampermonkey 直接在編輯頁面上面的 Storage 頁面修改就好，其他我就不知道了
+	*/
+	const ALBUM_TO_UPLOAD = GM_getValue('ALBUM_TO_UPLOAD', '')
+	if (ALBUM_TO_UPLOAD) GM_setValue('ALBUM_TO_UPLOAD', ALBUM_TO_UPLOAD)
 
 	const debounce = delay => fn => {
 		let de = false
@@ -23,17 +32,28 @@
 			setTimeout(() => (de = false), delay)
 		}
 	}
+	const insertToRte = c => {
+		// copy from utility_fx.js
+		let a
+		a = bahaRte.win.getSelection()
+		a.getRangeAt &&
+			a.rangeCount &&
+			((a = a.getRangeAt(0)), a.deleteContents(), (c = a.createContextualFragment(c)), a.insertNode(c))
+	}
 	const insertUrlToField = url => {
 		if (unsafeWindow.bahaRte != null) {
-			//full rte editor
-			bahaRte.toolbar.insertUploadedImage(url)
+			// full rte editor
+			const ht = $('<div>')
+				.append($('<img>').attr('src', url))
+				.html()
+			insertToRte(ht)
 		} else if ($('#balaTextId').length) {
-			//guild/bala reply
+			// guild/bala reply
 			const id = $('#balaTextId').html()
 			const $tx = $('#' + id)
 			$tx.val($tx.val() + url)
 		} else if ($('#msgtalk').length) {
-			//guild/bala new
+			// guild/bala new
 			const $msgtalk = $('#msgtalk')
 			$msgtalk.val($msgtalk.val() + urlk)
 		} else if (
@@ -41,6 +61,7 @@
 			typeof Forum.C !== 'undefined' &&
 			typeof Forum.C.quills !== 'undefined'
 		) {
+			// quick reply
 			const q = Forum.C.quills[0]
 			const { index } = q.getSelection() || {}
 			q.insertEmbed(index || 0, 'image', url)
@@ -224,11 +245,15 @@
 		observer.observe(document.body, { attributes: true, childList: true, characterData: true, subtree: true })
 	}
 	function upload(image) {
+		const data = { image }
+		if (ALBUM_TO_UPLOAD) {
+			data.album = ALBUM_TO_UPLOAD
+		}
 		return $
 			.ajax({
 				type: 'POST',
 				url: 'https://api.imgur.com/3/image',
-				data: { image },
+				data,
 				headers: {
 					Authorization: `Bearer ${GM_getValue('access_token')}`
 				},
