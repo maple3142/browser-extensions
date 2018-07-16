@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv 一鍵收藏 EX
 // @namespace    https://blog.maple3142.net/
-// @version      0.1
+// @version      0.2
 // @description  強化版的 pixiv 一鍵收藏，支援收藏與取消
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
@@ -17,7 +17,7 @@
 			.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(o[k])}`)
 			.join('&')
 	const getData = id =>
-		fetch(`https://www.pixiv.net/ajax/illust/${id}`, {
+		fetch(`https://www.pixiv.net/ajax/illust/${id}/bookmarkData`, {
 			method: 'GET',
 			credentials: 'include'
 		}).then(r => r.json())
@@ -38,7 +38,12 @@
 			comment: '',
 			tags: '',
 			tt: globalInitData.token
-		}).then(r => r.json())
+		})
+			.then(r => r.json())
+			.then(r => {
+				if (r.error) throw new Error(r)
+				return r
+			})
 	const unBookmark = id =>
 		getData(id).then(d =>
 			doPost('https://www.pixiv.net/bookmark_setting.php')({
@@ -56,7 +61,6 @@
 			el.dataset.oneclick = '1'
 			const [border, heart] = $$('path', el)
 			el.dataset.bookmarked = '0'
-			console.log(el)
 			if (!el.classList.contains('gtm-main-bookmark')) {
 				el.dataset.bookmarked = '1'
 			}
@@ -64,19 +68,20 @@
 				e.preventDefault()
 				e.stopPropagation()
 				if (el.dataset.bookmarked === '0') {
-					doBookmark(new URLSearchParams(location.search).get('illust_id')).then(r => {
-						if (r.error) alert('Failed to bookmark!')
-						else {
+					doBookmark(new URLSearchParams(location.search).get('illust_id'))
+						.then(r => {
 							border.style.fill = heart.style.fill = '#FF4060'
 							el.dataset.bookmarked = '1'
-						}
-					})
+						})
+						.catch(() => alert('Failed to bookmark!'))
 				} else {
-					unBookmark(new URLSearchParams(location.search).get('illust_id')).then(r => {
-						heart.style.fill = '#FFFFFF'
-						border.style.fill = '#333'
-						el.dataset.bookmarked = '0'
-					})
+					unBookmark(new URLSearchParams(location.search).get('illust_id'))
+						.then(r => {
+							heart.style.fill = '#FFFFFF'
+							border.style.fill = '#333'
+							el.dataset.bookmarked = '0'
+						})
+						.catch(() => alert('Failed to unbookmark!'))
 				}
 			})
 		}
