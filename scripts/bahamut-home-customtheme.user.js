@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         巴哈姆特跨小屋自訂佈景主題
 // @namespace    https://blog.maple3142.net/
-// @version      0.3
+// @version      0.4
 // @description  可以套用一個人的小屋主題到每個人的小屋
 // @author       maple3142
 // @match        https://home.gamer.com.tw/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {
@@ -44,12 +46,11 @@
 		return el
 	}
 
-	const target =
-		$('link[href*=HOMECSSNEW]') || $el('link', { rel: 'stylesheet', href: store.css, dataset: { notheme: true } })
+	const target = $('link[href*=HOMECSSNEW]') || $el('link', { rel: 'stylesheet', dataset: { notheme: true } })
 	const currentcss = target.href
-	if (target.href !== store.css) {
+	if (currentcss !== store.css) {
 		target.href = store.css
-		document.body.appendChild(target)
+		document.head.appendChild(target)
 	}
 
 	const btn = $el('a', {

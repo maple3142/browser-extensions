@@ -6,6 +6,8 @@
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @grant        none
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // ==/UserScript==
 
 ;(function() {
