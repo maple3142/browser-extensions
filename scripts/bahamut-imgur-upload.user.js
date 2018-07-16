@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.2
+// @version      0.6.3
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -49,7 +49,9 @@
 			insertToRte(ht)
 		} else if ($('#balaTextId').length) {
 			// guild/bala reply
-			const id = $('#balaTextId').html()
+			const id = $('#balaTextId')
+				.html()
+				.trim()
 			const $tx = $('#' + id)
 			$tx.val($tx.val() + url)
 		} else if ($('#msgtalk').length) {
@@ -70,7 +72,8 @@
 			prompt('暫時還不支援這種編輯器，不過可以複製下方的網址來貼上', url)
 		}
 	}
-	const isOldImgBoxChecked = i => jQuery(`input[name=bhImgMode][value=${i}]`).prop('checked')
+	unsafeWindow.balaInsertImage = () => (insertUrlToField($('#bhImgImageUrl').val()), egg.lightbox.close()) // polyfill original buggy image insert
+	const isOldImgBoxChecked = i => $(`input[name=bhImgMode][value=${i}]`).prop('checked')
 	if (location.hostname === 'blog.maple3142.net') {
 		const access_token = /access_token=(.*?)&/.exec(location.hash)[1]
 		if (access_token) {
@@ -82,7 +85,7 @@
 				// new image box
 				if ($('.tab-menu__item1.active').css('display') === 'block') {
 					// 上傳圖片 tab1 打開了
-					if ($('#imgur_uplbtn').length) return //exists, ignore it
+					if ($('#imgur_uplbtn').length) return // ignore it if exists
 					const $uplbtn = $('<button>')
 						.addClass('btn')
 						.addClass('btn-insert')
@@ -232,14 +235,6 @@
 							})
 					})
 				}
-				$('#bhImgBtnOk').on('click', e => {
-					if (isOldImgBoxChecked(3)) {
-						e.preventDefault()
-						e.stopPropagation()
-						insertUrlToField($('#bhImgImageUrl').val())
-						egg.lightbox.close()
-					}
-				})
 			})
 		)
 		observer.observe(document.body, { attributes: true, childList: true, characterData: true, subtree: true })
