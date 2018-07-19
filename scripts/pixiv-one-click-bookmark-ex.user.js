@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv 一鍵收藏 EX
 // @namespace    https://blog.maple3142.net/
-// @version      0.2
+// @version      0.3
 // @description  強化版的 pixiv 一鍵收藏，支援收藏與取消
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
@@ -57,23 +57,23 @@
 				del: 1
 			})
 		)
+	const bookmarked = new WeakMap()
 	new MutationObserver(mut => {
 		const el = $('figure>div>div>section>div>a[href*=bookmark_add]')
-		if (el && !el.dataset.oneclick) {
-			el.dataset.oneclick = '1'
+		if (el && !bookmarked.has(el)) {
+			bookmarked.set(el, false)
 			const [border, heart] = $$('path', el)
-			el.dataset.bookmarked = '0'
 			if (!el.classList.contains('gtm-main-bookmark')) {
-				el.dataset.bookmarked = '1'
+				bookmarked.set(el, true)
 			}
 			el.addEventListener('click', e => {
 				e.preventDefault()
 				e.stopPropagation()
-				if (el.dataset.bookmarked === '0') {
+				if (!bookmarked.get(el)) {
 					doBookmark(new URLSearchParams(location.search).get('illust_id'))
 						.then(r => {
 							border.style.fill = heart.style.fill = '#FF4060'
-							el.dataset.bookmarked = '1'
+							bookmarked.set(el, true)
 						})
 						.catch(() => alert('Failed to bookmark!'))
 				} else {
@@ -81,7 +81,7 @@
 						.then(r => {
 							heart.style.fill = '#FFFFFF'
 							border.style.fill = '#333'
-							el.dataset.bookmarked = '0'
+							bookmarked.set(el, false)
 						})
 						.catch(() => alert('Failed to unbookmark!'))
 				}
