@@ -1,0 +1,44 @@
+@-moz-document domain(greasyfork.org) {
+	body, #Frame, .FilterMenu>.Active>a, .list-option.list-current {
+		background-color: #212121 !important;
+		background: #212121 !important;
+	}
+	#Panel ul>li>a:hover, .list-option a:hover {
+		background: #212121 !important;
+		box-shadow: none !important;
+	}
+	body>div.width-constraint, .script-list, #script-info, .list-option-group>ul, .list-option, #user-profile, code, .text-content, .script-author-description, #Panel, #Panel>*, #Panel>*>*, #Content {
+		background: #464646 !important;
+		background-color: #464646 !important;
+	}
+	body>div.width-constraint {
+		padding: 20px;
+	}
+	#main-header {
+		background-color: #98FFFF;
+	}
+	*, .DiscussionForm label {
+		color: #eaeaea;
+	}
+	a, .MeMenu * {
+		color: #98FFFF !important;
+	}
+	a:visited {
+		color: #5BDEDE;
+	}
+	header *, .Head *, #install-area a {
+		color: #FFFFFF !important;
+	}
+	select, select[name=locale], select[name=locale]>option, input, .Button, .CodeRay .code pre {
+		color: #000000 !important;
+	}
+	.PageControls a {
+		background-color: #0D1A1A;
+	}
+	.PageControls a:hover {
+		background-color: #1D3A3A;
+	}
+	#main-header, #Head {
+		padding: 15px !important;
+	}
+}
