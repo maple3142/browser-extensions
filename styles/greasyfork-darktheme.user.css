@@ -44,4 +44,7 @@
 	.Item.Read {
 		background-color: #212121;
 	}
+	.HasNew {
+		background-color: #0000FF;
+	}
 }
