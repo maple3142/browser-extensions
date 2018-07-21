@@ -7,7 +7,7 @@
 		background: #212121 !important;
 		box-shadow: none !important;
 	}
-	body>div.width-constraint, .script-list, #script-info, .list-option-group>ul, .list-option, #user-profile, code, .text-content, .script-author-description, #Panel, #Panel>*, #Panel>*>*, #Content {
+	body>div.width-constraint, .script-list, #script-info, .list-option-group>ul, .list-option, #user-profile, code, .text-content, .script-author-description, #Panel, #Panel>*, #Panel>*>*, #Content, .user-list {
 		background: #464646 !important;
 		background-color: #464646 !important;
 	}
@@ -32,10 +32,10 @@
 	select, select[name=locale], select[name=locale]>option, input, .Button, .CodeRay .code pre {
 		color: #000000 !important;
 	}
-	.PageControls a {
+	.PageControls a, .pagination a[href] {
 		background-color: #0D1A1A;
 	}
-	.PageControls a:hover {
+	.PageControls a:hover, .pagination a[href]:hover {
 		background-color: #1D3A3A;
 	}
 	#main-header, #Head {
@@ -46,5 +46,18 @@
 	}
 	.HasNew {
 		background-color: #0000FF;
+	}
+	#script-meta>div>span {
+		color: #98FFFF !important;
+		background-color: #464646;
+	}
+	#script-links>.current>span {
+		color: #5BDEDE;
+	}
+	#script-content canvas {
+		background-color: darkgray;
+	}
+	pangu {
+		opacity: 0;
 	}
 }
