@@ -20,13 +20,13 @@
 	*, .DiscussionForm label {
 		color: #eaeaea;
 	}
-	a, .MeMenu * {
+	a, .MeMenu *, .BoxNewDiscussion a.Primary {
 		color: #98FFFF !important;
 	}
 	a:visited {
-		color: #5BDEDE;
+		color: #5BDEDE !important;
 	}
-	header *, .Head *, #install-area a {
+	header *, header *:visited, .Head *, .Head *:visited, #install-area a {
 		color: #FFFFFF !important;
 	}
 	select, select[name=locale], select[name=locale]>option, input, .Button, .CodeRay .code pre {
@@ -40,5 +40,8 @@
 	}
 	#main-header, #Head {
 		padding: 15px !important;
+	}
+	.Item.Read {
+		background-color: #212121;
 	}
 }
