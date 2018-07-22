@@ -29,7 +29,7 @@
 	header *, header *:visited, .Head *, .Head *:visited, #install-area a {
 		color: #FFFFFF !important;
 	}
-	select, select[name=locale], select[name=locale]>option, input, .Button, .CodeRay .code pre {
+	select, select[name=locale], select[name=locale]>option, input, textarea, button, .Button, .CodeRay .code pre {
 		color: #000000 !important;
 	}
 	.PageControls a, .pagination a[href] {
@@ -50,9 +50,6 @@
 	#script-meta>div>span {
 		color: #98FFFF !important;
 		background-color: #464646;
-	}
-	#script-links>.current>span {
-		color: #5BDEDE;
 	}
 	#script-content canvas {
 		background-color: darkgray;
