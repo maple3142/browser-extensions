@@ -1,14 +1,3 @@
-/* ==UserStyle==
-@name         Greasy Fork Dark Theme
-@namespace    https://openusercss.org/theme/5b51f573d2829c0b00d2df3c
-@homepageURL  https://openusercss.org/theme/5b51f573d2829c0b00d2df3c
-@version      0.0.2
-@license      MIT
-@description  Dark theme for [greasyfork.org](greasyfork.org).
-@author       maple3142 (https://openusercss.org/profile/5b3b73d9143ad90b0042a7cc)
-@preprocessor uso
-==/UserStyle== */
-
 @-moz-document domain(greasyfork.org) {
 	body, #Frame, .FilterMenu>.Active>a, .list-option.list-current {
 		background-color: #212121 !important;
@@ -18,7 +7,7 @@
 		background: #212121 !important;
 		box-shadow: none !important;
 	}
-	body>div.width-constraint, .script-list, #script-info, .list-option-group>ul, .list-option, #user-profile, code, .text-content, .script-author-description, #Panel, #Panel>*, #Panel>*>*, #Content, .user-list {
+	body>div.width-constraint, .script-list, #script-info, .list-option-group>ul, .list-option, #user-profile, code, .text-content, .script-author-description, #Panel, #Panel>*, #Panel>*>*, #Content, .user-list, :target, .external-login-form, #new_user, .editor-file-preview {
 		background: #464646 !important;
 		background-color: #464646 !important;
 	}
@@ -37,10 +26,10 @@
 	a:visited {
 		color: #5BDEDE !important;
 	}
-	header *, header *:visited, .Head *, .Head *:visited, #install-area a {
+	header *, header *:visited, .Head *, .Head *:visited, #install-area a, form.new_user input[type="submit"] {
 		color: #FFFFFF !important;
 	}
-	.notice, select, select[name=locale], select[name=locale]>option, input, textarea, button, .Button, .CodeRay .code pre {
+	.notice, select, select>option, select[name=locale], select[name=locale]>option, input, textarea, button, .Button, .CodeRay .code pre {
 		color: #000000 !important;
 	}
 	.PageControls a, .pagination a[href] {
