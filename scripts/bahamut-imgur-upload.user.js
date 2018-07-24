@@ -9,6 +9,7 @@
 // @require      https://code.jquery.com/jquery-3.2.1.min.js
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @license      MIT
 // ==/UserScript==
 
 ;(function($) {

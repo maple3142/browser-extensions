@@ -20,6 +20,7 @@
 // @grant        GM_addStyle
 // @compatible   firefox >=52
 // @compatible   chrome >=55
+// @license      MIT
 // ==/UserScript==
 
 ;(function() {

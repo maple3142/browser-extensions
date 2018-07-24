@@ -17,6 +17,7 @@
 // @require      https://unpkg.com/medium-zoom@0.4.0/dist/medium-zoom.min.js
 // @compatible   firefox >=52
 // @compatible   chrome >=55
+// @license      MIT
 // ==/UserScript==
 
 ;(function() {

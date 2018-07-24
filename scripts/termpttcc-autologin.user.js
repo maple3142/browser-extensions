@@ -10,6 +10,7 @@
 // @grant        window.close
 // @compatible   firefox >=52
 // @compatible   chrome >=55
+// @license      MIT
 // ==/UserScript==
 
 const ID = ''
