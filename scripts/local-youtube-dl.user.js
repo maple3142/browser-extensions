@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.5
+// @version      0.5.6
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -19,6 +19,12 @@
 
 ;(function() {
 	'use strict'
+	const DEBUG = false
+	const create$p = console =>
+		Object.keys(console)
+			.map(k => [k, (...args) => (DEBUG ? console[k]('YTDL: ' + args[0], ...args.slice(1)) : void 0)])
+			.reduce((acc, [k, fn]) => ((acc[k] = fn), acc), {})
+	const $p = create$p(console)
 
 	const LANG_FALLBACK = 'en'
 	const LOCALE = {
@@ -71,6 +77,7 @@
 		})
 	const getytplayer = async () => {
 		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
+		$p.log('No ytplayer is founded')
 		const html = await gmxhr({
 			method: 'GET',
 			url: 'https://www.youtube.com' + location.pathname + location.search
@@ -80,6 +87,7 @@
 		unsafeWindow.ytplayer = {
 			config
 		}
+		$p.log('ytplayer fetched: %o', unsafeWindow.ytplayer)
 		return ytplayer
 	}
 	const parsedecsig = data => {
@@ -102,6 +110,7 @@
 			.then(r => r.text())
 			.then(async data => {
 				const obj = parseQuery(data)
+				$p.log(`video ${id} data: %o`, obj)
 				if (obj.status === 'fail') {
 					throw obj
 				}
@@ -124,10 +133,13 @@
 							.map(x => ({ ...x, url: x.url + `&signature=${x.s}` }))
 					}
 				}
+				$p.log(`video ${id} result: %o`, { stream, adaptive })
 				return { stream, adaptive }
 			})
 	}
 	const ytdlWorkerCode = `
+const DEBUG=${DEBUG}
+const $p=(${create$p.toString()})(console)
 const parseQuery=${parseQuery.toString()}
 const xhrhead=${xhrhead.toString()}
 const parsedecsig=${parsedecsig.toString()}
@@ -140,9 +152,11 @@ postMessage(result)
 }`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
 	const workerGetVideo = (id, path) => {
+		$p.log(`workerGetVideo start: ${id} ${path}`)
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
+				$p.log('workerGetVideo end: %o', e.data)
 				res(e.data)
 			}
 			ytdlWorker.addEventListener('message', callback)
@@ -159,11 +173,13 @@ postMessage(result)
 		lang: findLang(navigator.language),
 		strings: LOCALE[findLang(navigator.language)]
 	}
+	$p.log(`default language: ${state.lang}`)
 	const actions = {
 		toggleHide: () => state => ({ hide: !state.hide }),
 		setState: newstate => state => newstate,
 		setLang: lang => state => {
 			const target = findLang(lang)
+			$p.log(`language change to: ${target}`)
 			return {
 				lang: target,
 				strings: LOCALE[target]
@@ -212,12 +228,12 @@ postMessage(result)
 		])
 	const container = $el('div')
 	const $app = app(state, actions, view, container)
-	unsafeWindow.$app = $app
+	if (DEBUG) unsafeWindow.$app = $app
 	const load = async id => {
 		const ytplayer = await getytplayer()
 		return workerGetVideo(id, ytplayer.config.assets.js)
 			.then(data => {
-				console.log('load new: %s', id)
+				$p.log('video loaded: %s', id)
 				$app.setState({
 					id,
 					stream: data.stream,
@@ -225,7 +241,7 @@ postMessage(result)
 				})
 				if (ytplayer.config.args.host_language) $app.setLang(ytplayer.config.args.host_language)
 			})
-			.catch(err => console.error('load', err))
+			.catch(err => $p.error('load', err))
 	}
 	let prevurl = null
 	setInterval(() => {
@@ -236,7 +252,9 @@ postMessage(result)
 			$app.setState({
 				hide: true
 			})
-			load(new URLSearchParams(location.search).get('v'))
+			const id = new URLSearchParams(location.search).get('v')
+			$p.log(`start loading new video: ${id}`)
+			load(id)
 		}
 	}, 1000)
 	GM_addStyle(`
