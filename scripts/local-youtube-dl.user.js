@@ -19,6 +19,7 @@
 
 ;(function() {
 	'use strict'
+
 	const LANG_FALLBACK = 'en'
 	const LOCALE = {
 		en: {
@@ -33,13 +34,21 @@
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 Id: {{id}}'
 		},
-		'zh-cn': {
+		zh: {
 			togglelinks: '显示/隐藏连结',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
 			videoid: '影片 Id: {{id}}'
 		}
 	}
+	const findLang = l => {
+		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
+		l = l.toLowerCase()
+		if (l in LOCALE) return l
+		else if (l.length > 2) return findLang(l.split('-')[0])
+		else return LANG_FALLBACK
+	}
+
 	const format = s => d => s.replace(/{{(\w+?)}}/g, (m, g1) => d[g1])
 	const $ = (s, x = document) => x.querySelector(s)
 	const $el = (tag, opts) => {
@@ -147,27 +156,35 @@ postMessage(result)
 		id: '',
 		stream: [],
 		adaptive: [],
-		lang: LOCALE[navigator.language.toLowerCase()] || LOCALE[LANG_FALLBACK]
+		lang: findLang(navigator.language),
+		strings: LOCALE[findLang(navigator.language)]
 	}
 	const actions = {
 		toggleHide: () => state => ({ hide: !state.hide }),
 		setState: newstate => state => newstate,
-		setLang: lang => state => ({ lang: LOCALE[lang.toLowerCase()] || LOCALE[LANG_FALLBACK] })
+		setLang: lang => state => {
+			const target = findLang(lang)
+			return {
+				lang: target,
+				strings: LOCALE[target]
+			}
+		},
+		getState: () => state => state
 	}
 	const view = (state, actions) =>
 		h('div', { id: 'ytdl-box' }, [
 			h(
 				'div',
 				{ onclick: () => actions.toggleHide(), id: 'ytdl-box-toggle', className: 't-center' },
-				state.lang.togglelinks
+				state.strings.togglelinks
 			),
 			h('div', { className: state.hide ? 'hide' : '' }, [
-				h('div', { className: 't-center fs-14px' }, format(state.lang.videoid, state)),
+				h('div', { className: 't-center fs-14px' }, format(state.strings.videoid, state)),
 				h('div', { className: 'd-flex' }, [
 					h(
 						'div',
 						{ className: 'f-1 of-h' },
-						[h('div', { className: 't-center fs-14px' }, state.lang.stream)].concat(
+						[h('div', { className: 't-center fs-14px' }, state.strings.stream)].concat(
 							state.stream.map(x =>
 								h(
 									'a',
@@ -180,7 +197,7 @@ postMessage(result)
 					h(
 						'div',
 						{ className: 'f-1 of-h' },
-						[h('div', { className: 't-center fs-14px' }, state.lang.adaptive)].concat(
+						[h('div', { className: 't-center fs-14px' }, state.strings.adaptive)].concat(
 							state.adaptive.map(x =>
 								h(
 									'a',
