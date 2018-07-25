@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.6
+// @version      0.5.7
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -29,7 +29,7 @@
 	const LANG_FALLBACK = 'en'
 	const LOCALE = {
 		en: {
-			togglelinks: 'Toggle Links',
+			togglelinks: 'Show/Hide Links',
 			stream: 'Stream',
 			adaptive: 'Adaptive',
 			videoid: 'Video Id: {{id}}'
