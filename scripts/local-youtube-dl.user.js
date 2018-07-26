@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.7
+// @version      0.5.8
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -11,9 +11,8 @@
 // @match        https://*.youtube.com/*
 // @connect      youtube.com
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hyperapp/1.2.6/hyperapp.js
-// @run-at       document-start
-// @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
+// @grant        GM.xmlHttpRequest
 // @license      MIT
 // ==/UserScript==
 
@@ -62,7 +61,9 @@
 		Object.assign(el, opts)
 		return el
 	}
-	const gmxhr = o => new Promise((res, rej) => GM_xmlhttpRequest({ ...o, onload: res, onerror: rej }))
+	const gmxhr = (fn => o => new Promise((res, rej) => fn({ ...o, onload: res, onerror: rej })))(
+		typeof GM_xmlhttpRequest === 'undefined' ? GM.xmlHttpRequest : GM_xmlhttpRequest
+	)
 	const xhrhead = url =>
 		new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest()
@@ -257,7 +258,7 @@ postMessage(result)
 			load(id)
 		}
 	}, 1000)
-	GM_addStyle(`
+	const css = `
 .hide{
 display: none;
 }
@@ -304,5 +305,6 @@ text-decoration: none;
 a.ytdl-link-btn:hover{
 color: blue;
 }
-`)
+`
+	document.body.appendChild($el('style', { textContent: css }))
 })()
