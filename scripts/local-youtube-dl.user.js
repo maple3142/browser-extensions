@@ -96,16 +96,11 @@
 		const [_, argname, fnbody] = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
 		const helpername = /;(.+?)\..+?\(/.exec(fnbody)[1]
 		const helper = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)[0]
-		return new Function([argname], helper + ';' + fnbody)
+		$p.log(`parsedecsig result: ${argname} => { ${helper}\n${fnbody}}`)
+		return new Function([argname], helper + '\n' + fnbody)
 	}
 	const getdecsig = path => xhrhead('https://www.youtube.com' + path).then(parsedecsig)
-	const parseQuery = s =>
-		Object.assign(
-			...s
-				.split('&')
-				.map(x => x.split('='))
-				.map(p => ({ [p[0]]: decodeURIComponent(p[1]) }))
-		)
+	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
 		return fetch(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
 			.then(r => r.text())
@@ -138,6 +133,11 @@
 				return { stream, adaptive }
 			})
 	}
+	const workerMessageHandler = async e => {
+		const decsig = await getdecsig(e.data.path)
+		const result = await getVideo(e.data.id, decsig)
+		self.postMessage(result)
+	}
 	const ytdlWorkerCode = `
 const DEBUG=${DEBUG}
 const $p=(${create$p.toString()})(console)
@@ -146,11 +146,7 @@ const xhrhead=${xhrhead.toString()}
 const parsedecsig=${parsedecsig.toString()}
 const getdecsig=${getdecsig.toString()}
 const getVideo=${getVideo.toString()}
-self.onmessage=async e=>{
-const decsig=await getdecsig(e.data.path)
-const result=await getVideo(e.data.id,decsig)
-postMessage(result)
-}`
+self.onmessage=${workerMessageHandler.toString()}`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
 	const workerGetVideo = (id, path) => {
 		$p.log(`workerGetVideo start: ${id} ${path}`)
@@ -253,7 +249,7 @@ postMessage(result)
 			$app.setState({
 				hide: true
 			})
-			const id = new URLSearchParams(location.search).get('v')
+			const id = parseQuery(location.search).v
 			$p.log(`start loading new video: ${id}`)
 			load(id)
 		}
