@@ -186,10 +186,10 @@ self.onmessage=${workerMessageHandler.toString()}`
 		getState: () => state => state
 	}
 	const view = (state, actions) =>
-		h('div', { id: 'ytdl-box' }, [
+		h('div', { className: 'box' }, [
 			h(
 				'div',
-				{ onclick: () => actions.toggleHide(), id: 'ytdl-box-toggle', className: 't-center' },
+				{ onclick: () => actions.toggleHide(), className: 'box-toggle t-center fs-14px' },
 				state.strings.togglelinks
 			),
 			h('div', { className: state.hide ? 'hide' : '' }, [
@@ -202,7 +202,12 @@ self.onmessage=${workerMessageHandler.toString()}`
 							state.stream.map(x =>
 								h(
 									'a',
-									{ href: x.url, title: x.type, target: '_blank', className: 'ytdl-link-btn' },
+									{
+										href: x.url,
+										title: x.type,
+										target: '_blank',
+										className: 'ytdl-link-btn fs-14px'
+									},
 									x.quality || x.type
 								)
 							)
@@ -215,7 +220,12 @@ self.onmessage=${workerMessageHandler.toString()}`
 							state.adaptive.map(x =>
 								h(
 									'a',
-									{ href: x.url, title: x.type, target: '_blank', className: 'ytdl-link-btn' },
+									{
+										href: x.url,
+										title: x.type,
+										target: '_blank',
+										className: 'ytdl-link-btn fs-14px'
+									},
 									(x.quality_label ? x.quality_label + ':' : '') + x.type
 								)
 							)
@@ -224,7 +234,10 @@ self.onmessage=${workerMessageHandler.toString()}`
 				])
 			])
 		])
+	const shadowHost = $el('div')
+	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'open' }) : shadowHost // no shadow dom
 	const container = $el('div')
+	shadow.appendChild(container)
 	const $app = app(state, actions, view, container)
 	if (DEBUG) unsafeWindow.$app = $app
 	const load = async id => {
@@ -244,7 +257,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 	let prevurl = null
 	setInterval(() => {
 		const el = $('#info-contents') || $('#watch-header') || $('ytm-item-section-renderer>lazy-list')
-		if (el && !el.contains(container)) el.appendChild(container)
+		if (el && !el.contains(shadowHost)) el.appendChild(shadowHost)
 		if (location.href !== prevurl && location.pathname === '/watch') {
 			prevurl = location.href
 			$app.setState({
@@ -257,51 +270,52 @@ self.onmessage=${workerMessageHandler.toString()}`
 	}, 1000)
 	const css = `
 .hide{
-display: none;
+	display: none;
 }
 .t-center{
-text-align: center;
+	text-align: center;
 }
 .d-flex{
-display: flex;
+	display: flex;
 }
 .f-1{
-flex: 1;
+	flex: 1;
 }
 .fs-14px{
-font-size: 14px;
+	font-size: 14px;
 }
 .of-h{
-overflow: hidden;
+	overflow: hidden;
 }
-#ytdl-box{
-border-bottom: 1px solid var(--yt-border-color);
+.box{
+	border-bottom: 1px solid var(--yt-border-color);
+	font-family: Arial;
 }
-#ytdl-box-toggle{
-margin: 3px;
-user-select: none;
--moz-user-select: -moz-none;
+.box-toggle{
+	margin: 3px;
+	user-select: none;
+	-moz-user-select: -moz-none;
 }
-#ytdl-box-toggle:hover{
-color: blue;
+.box-toggle:hover{
+	color: blue;
 }
 .ytdl-link-btn{
-display: block;
-border: 1px solid !important;
-border-radius: 3px;
-text-decoration: none !important;
-outline: 0;
-text-align: center;
-padding: 2px;
-margin: 5px;
-color: black;
+	display: block;
+	border: 1px solid !important;
+	border-radius: 3px;
+	text-decoration: none !important;
+	outline: 0;
+	text-align: center;
+	padding: 2px;
+	margin: 5px;
+	color: black;
 }
 a.ytdl-link-btn{
-text-decoration: none;
+	text-decoration: none;
 }
 a.ytdl-link-btn:hover{
-color: blue;
+	color: blue;
 }
 `
-	document.body.appendChild($el('style', { textContent: css }))
+	shadow.appendChild($el('style', { textContent: css }))
 })()
