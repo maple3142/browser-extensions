@@ -7,7 +7,7 @@
 		background: #212121 !important;
 		box-shadow: none !important;
 	}
-	body>div.width-constraint, .script-list, #script-info, .list-option-group>ul, .list-option, #user-profile, code, .text-content, .script-author-description, #Panel, #Panel>*, #Panel>*>*, #Content, .user-list, :target, .external-login-form, #new_user, .editor-file-preview {
+	body>div.width-constraint, .script-list, #script-info, .list-option-group>ul, .list-option, #user-profile, code, .text-content, .script-author-description, #Panel, #Panel>*, #Panel>*>*, #Content, .user-list, :target, .external-login-form, #new_user, .editor-file-preview, .Flyout {
 		background: #464646 !important;
 		background-color: #464646 !important;
 	}
@@ -20,10 +20,10 @@
 	*, .DiscussionForm label {
 		color: #eaeaea;
 	}
-	a, .MeMenu *, .BoxNewDiscussion a.Primary {
+	a, .MeMenu *, .BoxNewDiscussion a.Primary, li[role=presentation]>a[role=menuitem] {
 		color: #98FFFF !important;
 	}
-	a:visited {
+	a:visited, .MeMenu *:visited, .BoxNewDiscussion a.Primary:visited, li[role=presentation]>a[role=menuitem]:visited {
 		color: #5BDEDE !important;
 	}
 	header *, header *:visited, .Head *, .Head *:visited, #install-area a, form.new_user input[type="submit"] {
