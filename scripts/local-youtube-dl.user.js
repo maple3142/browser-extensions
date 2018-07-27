@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.8
+// @version      0.5.9
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -64,10 +64,11 @@
 	const gmxhr = (fn => o => new Promise((res, rej) => fn({ ...o, onload: res, onerror: rej })))(
 		typeof GM_xmlhttpRequest === 'undefined' ? GM.xmlHttpRequest : GM_xmlhttpRequest
 	)
-	const xhrhead = url =>
+	const xhrget = url =>
+		// not sure why `fetch` doesn't work here
 		new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest()
-			xhr.open('HEAD', url)
+			xhr.open('GET', url)
 			xhr.onreadystatechange = () => {
 				if (xhr.readyState === xhr.DONE) {
 					res(xhr.responseText)
@@ -99,7 +100,7 @@
 		$p.log(`parsedecsig result: ${argname} => { ${helper}\n${fnbody}}`)
 		return new Function([argname], helper + '\n' + fnbody)
 	}
-	const getdecsig = path => xhrhead('https://www.youtube.com' + path).then(parsedecsig)
+	const getdecsig = path => xhrget('https://www.youtube.com' + path).then(parsedecsig)
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
 		return fetch(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
@@ -142,7 +143,7 @@
 const DEBUG=${DEBUG}
 const $p=(${create$p.toString()})(console)
 const parseQuery=${parseQuery.toString()}
-const xhrhead=${xhrhead.toString()}
+const xhrget=${xhrget.toString()}
 const parsedecsig=${parsedecsig.toString()}
 const getdecsig=${getdecsig.toString()}
 const getVideo=${getVideo.toString()}
