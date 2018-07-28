@@ -235,7 +235,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 			])
 		])
 	const shadowHost = $el('div')
-	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'open' }) : shadowHost // no shadow dom
+	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'closed' }) : shadowHost // no shadow dom
 	const container = $el('div')
 	shadow.appendChild(container)
 	const $app = app(state, actions, view, container)
