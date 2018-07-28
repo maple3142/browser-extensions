@@ -34,13 +34,13 @@
 			videoid: 'Video Id: {{id}}'
 		},
 		'zh-tw': {
-			togglelinks: '顯示/隱藏連結',
+			togglelinks: '顯示 / 隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 Id: {{id}}'
 		},
 		zh: {
-			togglelinks: '显示/隐藏连结',
+			togglelinks: '显示 / 隐藏连结',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
 			videoid: '影片 Id: {{id}}'
