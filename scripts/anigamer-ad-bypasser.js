@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Anigamer ad bypasser
+// @name         跳過動畫瘋廣告
 // @namespace    https://blog.maple3142.net/
-// @version      0.1
-// @description  Bypass ani.gamer.com.tw ads
+// @version      0.2
+// @description  RT
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
 // @grant        none
