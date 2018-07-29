@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv 一鍵收藏 EX
 // @namespace    https://blog.maple3142.net/
-// @version      0.4s
+// @version      0.4
 // @description  強化版的 pixiv 一鍵收藏，支援收藏與取消
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
