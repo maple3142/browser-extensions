@@ -3,17 +3,20 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.3.2
+// @version      0.4.0
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
 // @author       maple3142
+// @require      https://greasyfork.org/scripts/370765-gif-js-for-user-js/code/gifjs%20for%20userjs.js?version=616920
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
 // @match        https://www.pixiv.net/bookmark.php*
 // @match        https://www.pixiv.net/new_illust.php*
 // @match        https://www.pixiv.net/bookmark_new_illust.php*
 // @match        https://www.pixiv.net/ranking.php*
+// @match        https://www.pixiv.net/search.php*
 // @connect      pximg.net
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
@@ -60,52 +63,100 @@
 		a.click()
 		document.body.removeChild(a)
 	}
+	const blobToImg = blob =>
+		new Promise((res, rej) => {
+			const src = URL.createObjectURL(blob)
+			const img = $el('img', { src })
+			img.onload = () => {
+				URL.revokeObjectURL(src)
+				res(img)
+			}
+			img.onerror = e => {
+				URL.revokeObjectURL(src)
+				rej(e)
+			}
+		})
 	const gmxhr = o => new Promise((res, rej) => GM_xmlhttpRequest({ ...o, onload: res, onerror: rej }))
-
-	const getIllustData = id =>
-		fetch(`/ajax/illust/${id}`, { credentials: 'same-origin' })
-			.then(r => r.json())
-			.then(r => r.body)
-	const getPximg = url =>
-		gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer: 'https://www.pixiv.net/' } })
+	const getJSON = url => fetch(url, { credentials: 'same-origin' }).then(r => r.json())
+	const getJSONBody = url => getJSON(url).then(r => r.body)
+	const getIllustData = id => getJSONBody(`/ajax/illust/${id}`)
+	const getUgoiraMeta = id => getJSONBody(`/ajax/illust/${id}/ugoira_meta`)
+	const getCrossOriginBlob = (url, Referer = 'https://www.pixiv.net/') =>
+		gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer } })
 	const saveImage = ({ single, multiple }, id) =>
 		getIllustData(id)
 			.then(data => {
-				const f = data.pageCount === 1 ? single : multiple
-				const fname = f.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
-				const url = data.urls.original
-				const ext = url
-					.split('/')
-					.pop()
-					.split('.')
-					.pop()
-				if (data.pageCount === 1) {
-					return Promise.all([Promise.all([fname + '.' + ext, getPximg(url)])])
-				} else {
-					const rgxr = /{{#(\d+)}}/.exec(multiple)
-					let offset = 0
-					if (rgxr) {
-						offset = parseInt(rgxr[1])
+				const { illustType } = data
+				switch (illustType) {
+					case 0:
+					case 1:
+						{
+							// normal
+							const f = data.pageCount === 1 ? single : multiple
+							const fname = f.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
+							const url = data.urls.original
+							const ext = url
+								.split('/')
+								.pop()
+								.split('.')
+								.pop()
+							if (data.pageCount === 1) {
+								return Promise.all([Promise.all([fname + '.' + ext, getCrossOriginBlob(url)])])
+							} else {
+								const rgxr = /{{#(\d+)}}/.exec(multiple)
+								let offset = 0
+								if (rgxr) {
+									offset = parseInt(rgxr[1])
+								}
+								const len = (data.pageCount + offset) / 10 + 1
+								const ar = []
+								for (let i = offset; i < data.pageCount + offset; i++) {
+									const num = i.toString().padStart(len, '0')
+									ar.push(
+										Promise.all([
+											`${fname.replace(/{{#(\d+)?}}/g, num)}.${ext}`,
+											getCrossOriginBlob(url.replace('p0', `p${i}`)).then(xhr => xhr.response)
+										])
+									)
+								}
+								return Promise.all(ar)
+							}
+						}
+						break
+					case 2: {
+						// ugoira
+						const fname = single.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
+						const gif = new GIF({ workers: 10, quality: 10 })
+						const ugoiraMeta = getUgoiraMeta(id)
+						const ugoiraZip = ugoiraMeta.then(data => fetch(data.src).then(r => r.blob()))
+						const gifFrames = ugoiraZip
+							.then(JSZip.loadAsync)
+							.then(({ files }) =>
+								Promise.all(Object.values(files).map(f => f.async('blob').then(blobToImg)))
+							)
+						return Promise.all([ugoiraMeta, gifFrames])
+							.then(
+								([data, frames]) =>
+									new Promise((res, rej) => {
+										{
+											for (let i = 0; i < frames.length; i++) {
+												gif.addFrame(frames[i], { delay: data.frames[i].delay })
+											}
+											gif.on('finished', res)
+											gif.on('error', rej)
+											gif.render()
+										}
+									})
+							)
+							.then(gifBlob => [[fname + '.gif', gifBlob]])
 					}
-					const len = (data.pageCount + offset) / 10 + 1
-					const ar = []
-					for (let i = offset; i < data.pageCount + offset; i++) {
-						const num = i.toString().padStart(len, '0')
-						ar.push(
-							Promise.all([
-								`${fname.replace(/{{#(\d+)?}}/g, num)}.${ext}`,
-								getPximg(url.replace('p0', `p${i}`))
-							])
-						)
-					}
-					return Promise.all(ar)
 				}
 			})
 			.then(results => {
-				for (const [f, xhr] of results) {
-					const url = URL.createObjectURL(xhr.response)
+				for (const [f, blob] of results) {
+					const url = URL.createObjectURL(blob)
 					download(url, f)
-					URL.revokeObjectURL(xhr.response)
+					URL.revokeObjectURL(url)
 				}
 			})
 
@@ -136,7 +187,8 @@
 			'/new_illust.php': 'a.work:hover',
 			'/bookmark_new_illust.php': 'a.work:hover,.gtm-recommend-illust.gtm-thumbnail-link:hover',
 			'/member_illust.php': 'figure>div[role=presentation]>div>a:hover',
-			'/ranking.php': 'a.work:hover'
+			'/ranking.php': 'a.work:hover',
+			'/search.php': '#js-react-search-mid a:hover,a.work:hover'
 		}
 		const selector = SELECTOR_MAP[location.pathname]
 		addEventListener('keydown', e => {
