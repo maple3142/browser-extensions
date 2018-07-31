@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.0
+// @version      0.4.1
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -82,7 +82,7 @@
 	const getIllustData = id => getJSONBody(`/ajax/illust/${id}`)
 	const getUgoiraMeta = id => getJSONBody(`/ajax/illust/${id}/ugoira_meta`)
 	const getCrossOriginBlob = (url, Referer = 'https://www.pixiv.net/') =>
-		gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer } })
+		gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer } }).then(xhr => xhr.response)
 	const saveImage = ({ single, multiple }, id) =>
 		getIllustData(id)
 			.then(data => {
@@ -115,7 +115,7 @@
 									ar.push(
 										Promise.all([
 											`${fname.replace(/{{#(\d+)?}}/g, num)}.${ext}`,
-											getCrossOriginBlob(url.replace('p0', `p${i}`)).then(xhr => xhr.response)
+											getCrossOriginBlob(url.replace('p0', `p${i}`))
 										])
 									)
 								}
@@ -126,7 +126,8 @@
 					case 2: {
 						// ugoira
 						const fname = single.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
-						const gif = new GIF({ workers: 10, quality: 10 })
+						const numCpu = navigator.hardwareConcurrency || 4
+						const gif = new GIF({ workers: numCpu * 4, quality: 10 })
 						const ugoiraMeta = getUgoiraMeta(id)
 						const ugoiraZip = ugoiraMeta.then(data => fetch(data.src).then(r => r.blob()))
 						const gifFrames = ugoiraZip
