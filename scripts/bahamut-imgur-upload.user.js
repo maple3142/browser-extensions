@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.3
+// @version      0.7.0
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -9,7 +9,6 @@
 // @require      https://code.jquery.com/jquery-3.2.1.min.js
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @license      MIT
 // ==/UserScript==
 
 ;(function($) {
@@ -33,6 +32,10 @@
 			setTimeout(() => (de = false), delay)
 		}
 	}
+	const qs = o =>
+		Object.keys(o)
+			.map(k => k + '=' + encodeURIComponent(o[k]))
+			.join('&')
 	const insertToRte = c => {
 		// copy from utility_fx.js
 		let a
@@ -81,48 +84,49 @@
 			GM_setValue('access_token', access_token)
 		}
 	} else {
+		if (typeof Dropzone !== 'undefined') {
+			// hook dropzone instances
+			Dropzone.instances = []
+			const _Dropzone = Dropzone
+			const Dropzone$ = function(...o) {
+				const i = new _Dropzone(...o)
+				_Dropzone.instances.push(i)
+				return i
+			}
+			unsafeWindow.Dropzone = Object.assign(Dropzone$, _Dropzone)
+		}
 		const observer = new MutationObserver(
 			debounce(10)(_ => {
 				// new image box
 				if ($('.tab-menu__item1.active').css('display') === 'block') {
 					// 上傳圖片 tab1 打開了
+					let imgurEnable = false
+					const dz = Dropzone.instances[Dropzone.instances.length - 1]
+					if (dz.hooked) return
+					dz.hooked = true
+					dz.on('sending', (e, xhr, fd) => {
+						if (imgurEnable) dzupload(xhr)
+					})
+					const originalcb = dz._callbacks.success[1]
+					dz._callbacks.success[1] = (file, r) => {
+						originalcb.apply(dz, [file, [r.data.link]])
+					}
 					if ($('#imgur_uplbtn').length) return // ignore it if exists
 					const $uplbtn = $('<button>')
 						.addClass('btn')
 						.addClass('btn-insert')
 						.addClass('btn-primary')
-						.addClass('is-disabled')
+						.addClass('unchecked')
 						.attr('id', 'imgur_uplbtn')
-						.text('上傳到 imgur')
-					const $uplfile = $('input[name=upic1]')
+						.text('imgur 模式: 停用')
 					const $cancelbtn = $('.dialogify .btn:contains(取消)')
 					$('.dialogify .btn.btn-insert.btn-primary').before($uplbtn)
-					$uplfile.on('change', e => {
-						if (e.target.files[0]) $uplbtn.removeClass('is-disabled')
-					})
 					$uplbtn.on('click', e => {
 						e.preventDefault()
 						e.stopPropagation()
-						if (!chk_isAuthorized()) {
-							login()
-							return
-						}
-						const file = $uplfile[0].files[0]
-						if (!file) return //no file
-						readbase64(file)
-							.then(image => {
-								$uplbtn.text('上傳中...').addClass('is-disabled')
-								return upload(image.split('base64,')[1])
-							})
-							.then(r => {
-								insertUrlToField(r.data.link)
-								$cancelbtn.click()
-							})
-							.catch(e => {
-								console.error(e)
-								alert('上傳失敗')
-								$cancelbtn.click()
-							})
+						imgurEnable = !imgurEnable
+						if (imgurEnable) $uplbtn.removeClass('unchecked').text('imgur 模式: 啟用')
+						else $uplbtn.addClass('unchecked').text('imgur 模式: 停用')
 					})
 				} else {
 					$('#imgur_uplbtn').remove()
@@ -137,7 +141,6 @@
 						.addClass('btn-primary')
 						.text('轉換為 imgur 網址')
 					$urlinput.after($cvtbutton)
-
 					$cvtbutton.on('click', e => {
 						e.preventDefault()
 						if (!chk_isAuthorized()) {
@@ -184,11 +187,8 @@
 						}
 						const file = $uplfile[0].files[0]
 						if (!file) return //no file
-						readbase64(file)
-							.then(image => {
-								$uplbtn.text('上傳中...')
-								return upload(image.split('base64,')[1])
-							})
+						$uplbtn.text('上傳中...')
+						upload(file)
 							.then(r => {
 								insertUrlToField(r.data.link)
 								egg.lightbox.close()
@@ -240,16 +240,23 @@
 		)
 		observer.observe(document.body, { attributes: true, childList: true, characterData: true, subtree: true })
 	}
-	function upload(image) {
-		const data = { image }
+	function getInitialUploadData() {
+		const data = new FormData()
 		if (ALBUM_TO_UPLOAD) {
-			data.album = ALBUM_TO_UPLOAD
+			data.append('album', ALBUM_TO_UPLOAD)
 		}
+		return data
+	}
+	function upload(image) {
+		const data = getInitialUploadData()
+		data.append('image', image)
 		return $
 			.ajax({
 				type: 'POST',
 				url: 'https://api.imgur.com/3/image',
 				data,
+				processData: false,
+				contentType: false,
 				headers: {
 					Authorization: `Bearer ${GM_getValue('access_token')}`
 				},
@@ -259,6 +266,19 @@
 				if (!r.success) throw new Error(r)
 				return r
 			})
+	}
+	function dzupload(xhr) {
+		const data = getInitialUploadData()
+		const fd$ = new Promise(res => {
+			xhr._send = xhr.send
+			xhr.send = res
+		})
+		return fd$.then(fd => {
+			xhr.open('POST', 'https://api.imgur.com/3/image')
+			xhr.setRequestHeader('Authorization', `Bearer ${GM_getValue('access_token')}`)
+			data.append('image', fd.get('dzfile'))
+			xhr._send(data)
+		})
 	}
 	function chk_isAuthorized() {
 		return GM_getValue('access_token', null) !== null
@@ -270,12 +290,7 @@
 			'height=700,width=700'
 		)
 	}
-	function readbase64(file) {
-		return new Promise((res, rej) => {
-			const reader = new FileReader()
-			reader.onload = e => res(e.target.result)
-			reader.onerror = err => rej(err)
-			reader.readAsDataURL(file)
-		})
-	}
+	const css = document.createElement('style')
+	css.textContent = `.btn.unchecked{box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);opacity:0.5;}`
+	document.body.appendChild(css)
 })(jQuery.noConflict())
