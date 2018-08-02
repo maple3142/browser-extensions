@@ -32,11 +32,10 @@
 			},
 			body: qs(data)
 		}).then(r => r.json())
-	const resultHandler = r => {
+	const rpcCall = mode => o => doPost('/rpc/index.php')({ ...o, mode, tt: globalToken }).then(r => {
 		if (r.error) throw new Error(r.message)
 		return r
-	}
-	const rpcCall = mode => o => doPost('/rpc/index.php')({ ...o, mode, tt: globalToken }).then(resultHandler)
+	})
 	const save_illust_bookmark = rpcCall('save_illust_bookmark')
 	const delete_illust_bookmark = rpcCall('delete_illust_bookmark')
 	const doBookmark = id =>
