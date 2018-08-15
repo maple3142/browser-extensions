@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.0
+// @version      0.6.1
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -168,6 +168,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 		id: '',
 		stream: [],
 		adaptive: [],
+		dark: false,
 		lang: findLang(navigator.language),
 		strings: LOCALE[findLang(navigator.language)]
 	}
@@ -183,10 +184,11 @@ self.onmessage=${workerMessageHandler.toString()}`
 				strings: LOCALE[target]
 			}
 		},
+		setDark: dark => state => ({ dark }),
 		getState: () => state => state
 	}
 	const view = (state, actions) =>
-		h('div', { className: 'box' }, [
+		h('div', { className: 'box' + (state.dark ? ' dark' : '') }, [
 			h(
 				'div',
 				{ onclick: () => actions.toggleHide(), className: 'box-toggle t-center fs-14px' },
@@ -268,6 +270,12 @@ self.onmessage=${workerMessageHandler.toString()}`
 			load(id)
 		}
 	}, 1000)
+	// listen to dark mode toggle
+	const $html = $('html')
+	new MutationObserver(() => {
+		$app.setDark($html.getAttribute('dark') === 'true')
+	}).observe($html, { attributes: true })
+	$app.setDark($html.getAttribute('dark') === 'true')
 	const css = `
 .hide{
 	display: none;
@@ -315,6 +323,18 @@ a.ytdl-link-btn{
 }
 a.ytdl-link-btn:hover{
 	color: blue;
+}
+.box.dark{
+	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+}
+.box.dark .ytdl-link-btn{
+	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+}
+.box.dark .ytdl-link-btn:hover{
+	color: rgba(200, 200, 255, 0.8);
+}
+.box.dark .box-toggle:hover{
+	color: rgba(200, 200, 255, 0.8);
 }
 `
 	shadow.appendChild($el('style', { textContent: css }))
