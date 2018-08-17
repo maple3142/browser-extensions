@@ -11,6 +11,19 @@
 		background: #464646 !important;
 		background-color: #464646 !important;
 	}
+	.Preview {
+		background: #565656;
+	}
+	.notice, #Panel .PanelCategories .Active a {
+		background: #788991;
+	}
+	.Overlay .Body {
+		background: none;
+	}
+	#Panel .PanelCategories a:focus {
+		background: none;
+		box-shadow: none;
+	}
 	body>div.width-constraint {
 		padding: 20px;
 	}
