@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.1
+// @version      0.6.2
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -93,12 +93,24 @@
 		return ytplayer
 	}
 	const parsedecsig = data => {
-		const fnname = /\"signature\"\),.+?\.set\(.+?,(.+?)\(/.exec(data)[1]
-		const [_, argname, fnbody] = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
-		const helpername = /;(.+?)\..+?\(/.exec(fnbody)[1]
-		const helper = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)[0]
-		$p.log(`parsedecsig result: ${argname} => { ${helper}\n${fnbody}}`)
-		return new Function([argname], helper + '\n' + fnbody)
+		try {
+			const fnnameresult = /\"signature\"\),.+?\.set\(.+?,(.+?)\(/.exec(data)
+			const fnname = fnnameresult[1]
+			const _argnamefnbodyresult = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
+			const [_, argname, fnbody] = _argnamefnbodyresult
+			const helpernameresult = /;(.+?)\..+?\(/.exec(fnbody)
+			const helpername = helpernameresult[1]
+			const helperresult = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)
+			const helper = helperresult[0]
+			$p.log(`parsedecsig result: ${argname} => { ${helper}\n${fnbody}}`)
+			return new Function([argname], helper + '\n' + fnbody)
+		} catch (e) {
+			$p.error('parsedecsig error: %o', e)
+			$p.info('script content: %s', data)
+			$p.info(
+				'If you encounter this error, please copy the full "script content" to https://pastebin.com/ for me.'
+			)
+		}
 	}
 	const getdecsig = path => xhrget('https://www.youtube.com' + path).then(parsedecsig)
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
