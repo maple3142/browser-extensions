@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.2
+// @version      0.6.3
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -143,7 +143,7 @@
 					}
 				}
 				$p.log(`video ${id} result: %o`, { stream, adaptive })
-				return { stream, adaptive }
+				return { stream, adaptive, meta: obj }
 			})
 	}
 	const workerMessageHandler = async e => {
@@ -217,7 +217,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 								h(
 									'a',
 									{
-										href: x.url,
+										href: x.url + '&title=' + state.meta.title,
 										title: x.type,
 										target: '_blank',
 										className: 'ytdl-link-btn fs-14px'
@@ -235,7 +235,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 								h(
 									'a',
 									{
-										href: x.url,
+										href: x.url + '&title=' + state.meta.title,
 										title: x.type,
 										target: '_blank',
 										className: 'ytdl-link-btn fs-14px'
@@ -262,7 +262,8 @@ self.onmessage=${workerMessageHandler.toString()}`
 				$app.setState({
 					id,
 					stream: data.stream,
-					adaptive: data.adaptive
+					adaptive: data.adaptive,
+					meta: data.meta
 				})
 				if (ytplayer.config.args.host_language) $app.setLang(ytplayer.config.args.host_language)
 			})
