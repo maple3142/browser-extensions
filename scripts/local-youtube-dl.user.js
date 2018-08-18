@@ -9,10 +9,7 @@
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
 // @match        https://*.youtube.com/*
-// @connect      youtube.com
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hyperapp/1.2.6/hyperapp.js
-// @grant        GM_xmlhttpRequest
-// @grant        GM.xmlHttpRequest
 // @license      MIT
 // ==/UserScript==
 
@@ -61,9 +58,6 @@
 		Object.assign(el, opts)
 		return el
 	}
-	const gmxhr = (fn => o => new Promise((res, rej) => fn({ ...o, onload: res, onerror: rej })))(
-		typeof GM_xmlhttpRequest === 'undefined' ? GM.xmlHttpRequest : GM_xmlhttpRequest
-	)
 	const xhrget = url =>
 		// not sure why `fetch` doesn't work here
 		new Promise((res, rej) => {
@@ -80,10 +74,7 @@
 	const getytplayer = async () => {
 		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
 		$p.log('No ytplayer is founded')
-		const html = await gmxhr({
-			method: 'GET',
-			url: 'https://www.youtube.com' + location.pathname + location.search
-		}).then(r => r.responseText)
+		const html = await fetch(location.href).then(r => r.text())
 		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
 		let config = eval(d[1])
 		unsafeWindow.ytplayer = {
