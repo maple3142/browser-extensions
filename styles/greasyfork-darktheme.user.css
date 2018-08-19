@@ -17,6 +17,9 @@
 	.notice, #Panel .PanelCategories .Active a {
 		background: #788991;
 	}
+	#version-note {
+		background: #565656;
+	}
 	.Overlay .Body {
 		background: none;
 	}
