@@ -1,0 +1,7 @@
+#adUnit+div, .ad-replacement {
+	display: none !important;
+}
+
+.body, .header {
+	display: flex !important;
+}
