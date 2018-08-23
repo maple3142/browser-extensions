@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         跳過動畫瘋廣告
 // @namespace    https://blog.maple3142.net/
-// @version      0.2
+// @version      0.3
 // @description  RT
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
@@ -15,10 +15,7 @@
 	'use strict'
 	const sn = animefun.videoSn
 	const device = animefun.getdeviceid()
-	const qs = o =>
-		Object.keys(o)
-			.map(k => `${k}=${encodeURIComponent(o[k])}`)
-			.join('&')
+	const qs = o => new URLSearchParams(o).toString()
 	const get = url => o => fetch(url + '?' + qs(o), { credentials: 'same-origin' })
 	const getVC = get('/ajax/videoCastcishu.php')
 	const getM3u8 = get('/ajax/m3u8.php')
