@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.3
+// @version      0.6.4
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -28,21 +28,32 @@
 			togglelinks: 'Show/Hide Links',
 			stream: 'Stream',
 			adaptive: 'Adaptive',
-			videoid: 'Video Id: {{id}}'
+			videoid: 'Video Id: {{id}}',
+			thumbnail: 'Thumbnail'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
-			videoid: '影片 Id: {{id}}'
+			videoid: '影片 Id: {{id}}',
+			thumbnail: '預覽圖'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏连结',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
-			videoid: '影片 Id: {{id}}'
+			videoid: '影片 Id: {{id}}',
+			thumbnail: '预览图'
 		}
 	}
+	const YT_THUMB_RES_ORDER = ['maxresdefault', 'hqdefault', 'mqdefault', 'sddefault', 'default']
+	const checkImgExists = url =>
+		new Promise(res => {
+			const img = new Image()
+			img.onload = () => res(true)
+			img.onerror = () => res(false)
+			img.src = url
+		})
 	const findLang = l => {
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
 		l = l.toLowerCase()
@@ -171,6 +182,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 		id: '',
 		stream: [],
 		adaptive: [],
+		thumbnail: null,
 		dark: false,
 		lang: findLang(navigator.language),
 		strings: LOCALE[findLang(navigator.language)]
@@ -199,6 +211,9 @@ self.onmessage=${workerMessageHandler.toString()}`
 			),
 			h('div', { className: state.hide ? 'hide' : '' }, [
 				h('div', { className: 't-center fs-14px' }, format(state.strings.videoid, state)),
+				h('div', { className: 't-center fs-14px' }, [
+					h('a', { href: state.thumbnail, target: '_blank' }, state.strings.thumbnail)
+				]),
 				h('div', { className: 'd-flex' }, [
 					h(
 						'div',
@@ -248,7 +263,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 	const load = async id => {
 		const ytplayer = await getytplayer()
 		return workerGetVideo(id, ytplayer.config.assets.js)
-			.then(data => {
+			.then(async data => {
 				$p.log('video loaded: %s', id)
 				$app.setState({
 					id,
@@ -257,6 +272,18 @@ self.onmessage=${workerMessageHandler.toString()}`
 					meta: data.meta
 				})
 				if (ytplayer.config.args.host_language) $app.setLang(ytplayer.config.args.host_language)
+
+				// find highest resolution thumbnail
+				let url = data.meta.thumbnail_url
+				for (const res of YT_THUMB_RES_ORDER) {
+					const u = url.replace('default', res)
+					if (await checkImgExists(u)) {
+						// if thumbnail exists
+						url = u
+						break
+					}
+				}
+				$app.setState({ thumbnail: url })
 			})
 			.catch(err => $p.error('load', err))
 	}
@@ -282,63 +309,63 @@ self.onmessage=${workerMessageHandler.toString()}`
 	$app.setDark($html.getAttribute('dark') === 'true')
 	const css = `
 .hide{
-	display: none;
+display: none;
 }
 .t-center{
-	text-align: center;
+text-align: center;
 }
 .d-flex{
-	display: flex;
+display: flex;
 }
 .f-1{
-	flex: 1;
+flex: 1;
 }
 .fs-14px{
-	font-size: 14px;
+font-size: 14px;
 }
 .of-h{
-	overflow: hidden;
+overflow: hidden;
 }
 .box{
-	border-bottom: 1px solid var(--yt-border-color);
-	font-family: Arial;
+border-bottom: 1px solid var(--yt-border-color);
+font-family: Arial;
 }
 .box-toggle{
-	margin: 3px;
-	user-select: none;
-	-moz-user-select: -moz-none;
+margin: 3px;
+user-select: none;
+-moz-user-select: -moz-none;
 }
 .box-toggle:hover{
-	color: blue;
+color: blue;
 }
 .ytdl-link-btn{
-	display: block;
-	border: 1px solid !important;
-	border-radius: 3px;
-	text-decoration: none !important;
-	outline: 0;
-	text-align: center;
-	padding: 2px;
-	margin: 5px;
-	color: black;
+display: block;
+border: 1px solid !important;
+border-radius: 3px;
+text-decoration: none !important;
+outline: 0;
+text-align: center;
+padding: 2px;
+margin: 5px;
+color: black;
 }
 a.ytdl-link-btn{
-	text-decoration: none;
+text-decoration: none;
 }
 a.ytdl-link-btn:hover{
-	color: blue;
+color: blue;
 }
 .box.dark{
-	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
 }
 .box.dark .ytdl-link-btn{
-	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
 }
 .box.dark .ytdl-link-btn:hover{
-	color: rgba(200, 200, 255, 0.8);
+color: rgba(200, 200, 255, 0.8);
 }
 .box.dark .box-toggle:hover{
-	color: rgba(200, 200, 255, 0.8);
+color: rgba(200, 200, 255, 0.8);
 }
 `
 	shadow.appendChild($el('style', { textContent: css }))
