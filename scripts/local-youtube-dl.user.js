@@ -36,14 +36,14 @@
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 Id: {{id}}',
-			thumbnail: '預覽圖'
+			thumbnail: '縮圖'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏连结',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
 			videoid: '影片 Id: {{id}}',
-			thumbnail: '预览图'
+			thumbnail: '缩图'
 		}
 	}
 	const YT_THUMB_RES_ORDER = ['maxresdefault', 'hqdefault', 'mqdefault', 'sddefault', 'default']
