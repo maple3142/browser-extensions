@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.4
+// @version      0.6.5
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -15,7 +15,7 @@
 
 ;(function() {
 	'use strict'
-	const DEBUG = false
+	const DEBUG = true
 	const create$p = console =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k]('YTDL: ' + args[0], ...args.slice(1)) : void 0)])
@@ -96,7 +96,8 @@
 	}
 	const parsedecsig = data => {
 		try {
-			const fnnameresult = /\"signature\"\),.+?\.set\(.+?,(.+?)\(/.exec(data)
+			// based on: https://github.com/rg3/youtube-dl/commit/9a47fa35dd9dd2d53f4d3f088811ea29295991e5
+			const fnnameresult = /yt\.akamaized\.net\/\)\|\|.\.set\(.*?\);.*?set\(.,(.*)\(/.exec(data)
 			const fnname = fnnameresult[1]
 			const _argnamefnbodyresult = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
 			const [_, argname, fnbody] = _argnamefnbodyresult
