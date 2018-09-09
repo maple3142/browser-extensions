@@ -3,13 +3,14 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.5
+// @version      0.6.6
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hyperapp/1.2.6/hyperapp.js
+// @require      https://unpkg.com/xfetch-js@0.0.5/xfetch.min.js
 // @compatible   firefox >=52
 // @compatible   chrome >=55
 // @license      MIT
@@ -87,7 +88,7 @@
 	const getytplayer = async () => {
 		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
 		$p.log('No ytplayer is founded')
-		const html = await fetch(location.href).then(r => r.text())
+		const html = await xf.get(location.href).text()
 		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
 		let config = eval(d[1])
 		unsafeWindow.ytplayer = {
@@ -120,8 +121,8 @@
 	const getdecsig = path => xhrget('https://www.youtube.com' + path).then(parsedecsig)
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
-		return fetch(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
-			.then(r => r.text())
+		return xf.get(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
+			.text()
 			.then(async data => {
 				const obj = parseQuery(data)
 				$p.log(`video ${id} data: %o`, obj)
@@ -157,6 +158,7 @@
 		self.postMessage(result)
 	}
 	const ytdlWorkerCode = `
+importScripts('https://unpkg.com/xfetch-js@0.0.5/xfetch.min.js')
 const DEBUG=${DEBUG}
 const $p=(${create$p.toString()})(console)
 const parseQuery=${parseQuery.toString()}
