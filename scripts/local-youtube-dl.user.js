@@ -10,12 +10,14 @@
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://cdnjs.cloudflare.com/ajax/libs/hyperapp/1.2.6/hyperapp.js
+// @compatible   firefox >=52
+// @compatible   chrome >=55
 // @license      MIT
 // ==/UserScript==
 
 ;(function() {
 	'use strict'
-	const DEBUG = true
+	const DEBUG = false
 	const create$p = console =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k]('YTDL: ' + args[0], ...args.slice(1)) : void 0)])
