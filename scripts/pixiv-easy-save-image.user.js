@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.1
+// @version      0.4.2
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -17,6 +17,7 @@
 // @match        https://www.pixiv.net/bookmark_new_illust.php*
 // @match        https://www.pixiv.net/ranking.php*
 // @match        https://www.pixiv.net/search.php*
+// @match        https://www.pixiv.net/member_illust.php*
 // @connect      pximg.net
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
@@ -131,6 +132,10 @@
 						const ugoiraMeta = getUgoiraMeta(id)
 						const ugoiraZip = ugoiraMeta.then(data => fetch(data.src).then(r => r.blob()))
 						const gifFrames = ugoiraZip
+							.then(z => {
+								console.time('gif')
+								return z
+							})
 							.then(JSZip.loadAsync)
 							.then(({ files }) =>
 								Promise.all(Object.values(files).map(f => f.async('blob').then(blobToImg)))
@@ -143,7 +148,10 @@
 											for (let i = 0; i < frames.length; i++) {
 												gif.addFrame(frames[i], { delay: data.frames[i].delay })
 											}
-											gif.on('finished', res)
+											gif.on('finished', x => {
+												console.timeEnd('gif')
+												res(x)
+											})
 											gif.on('error', rej)
 											gif.render()
 										}
@@ -189,7 +197,8 @@
 			'/bookmark_new_illust.php': 'a.work:hover,.gtm-recommend-illust.gtm-thumbnail-link:hover',
 			'/member_illust.php': 'figure>div[role=presentation]>div>a:hover',
 			'/ranking.php': 'a.work:hover',
-			'/search.php': '#js-react-search-mid a:hover,a.work:hover'
+			'/search.php': '#js-react-search-mid a:hover,a.work:hover',
+			'/member_illust.php': 'a.work:hover'
 		}
 		const selector = SELECTOR_MAP[location.pathname]
 		addEventListener('keydown', e => {
