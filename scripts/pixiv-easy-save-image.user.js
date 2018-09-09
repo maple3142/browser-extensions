@@ -3,13 +3,15 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.2
+// @version      0.4.3
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
 // @author       maple3142
 // @require      https://greasyfork.org/scripts/370765-gif-js-for-user-js/code/gifjs%20for%20userjs.js?version=616920
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
+// @require      https://unpkg.com/xfetch-js@0.0.5/xfetch.min.js
+// @require      https://unpkg.com/gmxhr-fetch@0.0.3/gmxhr-fetch.min.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
 // @match        https://www.pixiv.net/bookmark.php*
@@ -35,6 +37,9 @@
 	}
 	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
 
+	const gxf = xf.create(gmfetch)
+	unsafeWindow.gmfetch=gmfetch
+	unsafeWindow.gxf=gxf
 	const $ = s => document.querySelector(s)
 	const $$ = s => [...document.querySelectorAll(s)]
 	const elementmerge = (a, b) => {
@@ -77,13 +82,15 @@
 				rej(e)
 			}
 		})
-	const gmxhr = o => new Promise((res, rej) => GM_xmlhttpRequest({ ...o, onload: res, onerror: rej }))
-	const getJSON = url => fetch(url, { credentials: 'same-origin' }).then(r => r.json())
-	const getJSONBody = url => getJSON(url).then(r => r.body)
+	const getJSONBody = url =>
+		xf
+			.get(url)
+			.json()
+			.then(r => r.body)
 	const getIllustData = id => getJSONBody(`/ajax/illust/${id}`)
 	const getUgoiraMeta = id => getJSONBody(`/ajax/illust/${id}/ugoira_meta`)
 	const getCrossOriginBlob = (url, Referer = 'https://www.pixiv.net/') =>
-		gmxhr({ method: 'GET', url, responseType: 'blob', headers: { Referer } }).then(xhr => xhr.response)
+		gxf.get(url, { headers: { Referer } }).blob()
 	const saveImage = ({ single, multiple }, id) =>
 		getIllustData(id)
 			.then(data => {
@@ -130,7 +137,7 @@
 						const numCpu = navigator.hardwareConcurrency || 4
 						const gif = new GIF({ workers: numCpu * 4, quality: 10 })
 						const ugoiraMeta = getUgoiraMeta(id)
-						const ugoiraZip = ugoiraMeta.then(data => fetch(data.src).then(r => r.blob()))
+						const ugoiraZip = ugoiraMeta.then(data => xf.get(data.src).blob())
 						const gifFrames = ugoiraZip
 							.then(z => {
 								console.time('gif')
