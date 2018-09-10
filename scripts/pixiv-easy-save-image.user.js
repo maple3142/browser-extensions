@@ -10,7 +10,7 @@
 // @author       maple3142
 // @require      https://greasyfork.org/scripts/370765-gif-js-for-user-js/code/gifjs%20for%20userjs.js?version=616920
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
-// @require      https://unpkg.com/xfetch-js@0.0.5/xfetch.min.js
+// @require      https://unpkg.com/xfetch-js@0.0.9/xfetch.min.js
 // @require      https://unpkg.com/gmxhr-fetch@0.0.3/gmxhr-fetch.min.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
@@ -85,8 +85,7 @@
 	const getJSONBody = url =>
 		xf
 			.get(url)
-			.json()
-			.then(r => r.body)
+			.json(r=>r.body)
 	const getIllustData = id => getJSONBody(`/ajax/illust/${id}`)
 	const getUgoiraMeta = id => getJSONBody(`/ajax/illust/${id}/ugoira_meta`)
 	const getCrossOriginBlob = (url, Referer = 'https://www.pixiv.net/') =>
