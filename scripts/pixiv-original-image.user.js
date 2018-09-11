@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 替換為高畫質原圖
 // @name:zh-CN   Pixiv 替换为高画质原图
 // @namespace    https://blog.maple3142.net/
-// @version      0.2
+// @version      0.3
 // @description  Replace Pixiv image with original image
 // @description:zh-TW  替換 Pixiv 的圖片為高畫質原圖
 // @description:zh-CN  替换 Pixiv 的图片为高画质原图
@@ -14,7 +14,6 @@
 // @grant        unsafeWindow
 // @compatible   firefox >=52
 // @compatible   chrome >=55
-// @license      MIT
 // ==/UserScript==
 
 ;(function() {
@@ -28,7 +27,7 @@
 		Object.defineProperty(Object.prototype, 'props', {
 			set(v) {
 				this[PREFIX + '_props'] = v
-				if (v.urls) onTarget(this)
+				if (v && v.urls) onTarget(this)
 			},
 			get(v) {
 				return this[PREFIX + '_props']
