@@ -38,8 +38,6 @@
 	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
 
 	const gxf = xf.create(gmfetch)
-	unsafeWindow.gmfetch=gmfetch
-	unsafeWindow.gxf=gxf
 	const $ = s => document.querySelector(s)
 	const $$ = s => [...document.querySelectorAll(s)]
 	const elementmerge = (a, b) => {
