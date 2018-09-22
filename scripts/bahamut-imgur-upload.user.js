@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.7.0
+// @version      0.7.1
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -11,7 +11,7 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-;(function($) {
+;(function($, egg) {
 	'use strict'
 	/*
 	 * ALBUM_TO_UPLOAD 是你想要上傳的目標相簿 id
@@ -61,7 +61,7 @@
 		} else if ($('#msgtalk').length) {
 			// guild/bala new
 			const $msgtalk = $('#msgtalk')
-			$msgtalk.val($msgtalk.val() + urlk)
+			$msgtalk.val($msgtalk.val() + url)
 		} else if (
 			typeof Forum !== 'undefined' &&
 			typeof Forum.C !== 'undefined' &&
@@ -100,17 +100,6 @@
 				// new image box
 				if ($('.tab-menu__item1.active').css('display') === 'block') {
 					// 上傳圖片 tab1 打開了
-					let imgurEnable = false
-					const dz = Dropzone.instances[Dropzone.instances.length - 1]
-					if (dz.hooked) return
-					dz.hooked = true
-					dz.on('sending', (e, xhr, fd) => {
-						if (imgurEnable) dzupload(xhr)
-					})
-					const originalcb = dz._callbacks.success[1]
-					dz._callbacks.success[1] = (file, r) => {
-						originalcb.apply(dz, [file, [r.data.link]])
-					}
 					if ($('#imgur_uplbtn').length) return // ignore it if exists
 					const $uplbtn = $('<button>')
 						.addClass('btn')
@@ -128,6 +117,30 @@
 						if (imgurEnable) $uplbtn.removeClass('unchecked').text('imgur 模式: 啟用')
 						else $uplbtn.addClass('unchecked').text('imgur 模式: 停用')
 					})
+					// Dropzone handling
+					let imgurEnable = false
+					const dz = Dropzone.instances[Dropzone.instances.length - 1]
+					if (dz.hooked) return
+					dz.hooked = true
+					dz.on('sending', (e, xhr, fd) => {
+						if (imgurEnable) dzupload(xhr)
+					})
+					const originalcb = dz._callbacks.success[1]
+					dz._callbacks.success[1] = (file, r) => {
+						console.log(r)
+						originalcb.apply(dz, [file, Array.isArray(r) ? r : [r.data.link]])
+					}
+
+					document.onpaste = e => {
+						const { items } = e.clipboardData
+						for (let i = 0; i < items.length; i++) {
+							// It doesn't have iterator protocol...
+							const item = items[i]
+							if (item.kind === 'file') {
+								dz.addFile(item.getAsFile())
+							}
+						}
+					}
 				} else {
 					$('#imgur_uplbtn').remove()
 				}
@@ -250,22 +263,20 @@
 	function upload(image) {
 		const data = getInitialUploadData()
 		data.append('image', image)
-		return $
-			.ajax({
-				type: 'POST',
-				url: 'https://api.imgur.com/3/image',
-				data,
-				processData: false,
-				contentType: false,
-				headers: {
-					Authorization: `Bearer ${GM_getValue('access_token')}`
-				},
-				dataType: 'json'
-			})
-			.then(r => {
-				if (!r.success) throw new Error(r)
-				return r
-			})
+		return $.ajax({
+			type: 'POST',
+			url: 'https://api.imgur.com/3/image',
+			data,
+			processData: false,
+			contentType: false,
+			headers: {
+				Authorization: `Bearer ${GM_getValue('access_token')}`
+			},
+			dataType: 'json'
+		}).then(r => {
+			if (!r.success) throw new Error(r)
+			return r
+		})
 	}
 	function dzupload(xhr) {
 		const data = getInitialUploadData()
@@ -293,4 +304,4 @@
 	const css = document.createElement('style')
 	css.textContent = `.btn.unchecked{box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);opacity:0.5;}`
 	document.body.appendChild(css)
-})(jQuery.noConflict())
+})(jQuery, egg)
