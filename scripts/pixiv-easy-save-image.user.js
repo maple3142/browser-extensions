@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.5
+// @version      0.4.4
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -215,25 +215,5 @@
 			}
 			if (id) saveImage(FORMAT, id)
 		})
-	}
-
-	// support Patchouli
-	{
-		let times = 0
-		const it = setInterval(() => {
-			if (times >= 10) clearInterval(it)
-			if (typeof Patchouli !== 'undefined' && Patchouli._isMounted) {
-				$$('.illust-main-img').map(x => x.classList.add('work'))
-				const observer = new MutationObserver(
-					debounce(10)(mut => $$('.illust-main-img').map(x => x.classList.add('work')))
-					// add class=work to let them works
-				)
-				observer.observe(Patchouli.$el, { childList: true, subtree: true })
-				console.log('Pixiv easy save image: Patchouli detected!')
-				clearInterval(it)
-				GM_addStyle(`.image-item .work{margin-bottom:0px!important;}`) // disable default css
-			}
-			times++
-		}, 1000)
 	}
 })()
