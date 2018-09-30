@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.4
+// @version      0.4.5
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -20,6 +20,7 @@
 // @match        https://www.pixiv.net/ranking.php*
 // @match        https://www.pixiv.net/search.php*
 // @match        https://www.pixiv.net/member_illust.php*
+// @match        https://www.pixiv.net/member.php*
 // @connect      pximg.net
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
@@ -192,14 +193,14 @@
 	// key shortcut
 	{
 		const SELECTOR_MAP = {
-			'/': 'a.work:hover,a._work:hover',
-			'/bookmark.php': 'a.work:hover',
-			'/new_illust.php': 'a.work:hover',
-			'/bookmark_new_illust.php': 'a.work:hover,.gtm-recommend-illust.gtm-thumbnail-link:hover',
-			'/member_illust.php': 'figure>div[role=presentation]>div>a:hover',
-			'/ranking.php': 'a.work:hover',
-			'/search.php': '#js-react-search-mid a:hover,a.work:hover',
-			'/member_illust.php': 'a.work:hover'
+			'/': 'a.work:hover,a._work:hover,.illust-item-root>a:hover',
+			'/bookmark.php': 'a.work:hover,.image-item-image>a:hover',
+			'/new_illust.php': 'a.work:hover,.image-item-image>a:hover',
+			'/bookmark_new_illust.php': 'figure>div>a:hover,.illust-item-root>a:hover',
+			'/member_illust.php': 'div[role=presentation]>a:hover',
+			'/ranking.php': 'a.work:hover,.illust-item-root>a:hover',
+			'/search.php': 'figure>div>a:hover',
+			'/member.php': '[href^="/member_illust.php"]:hover,.illust-item-root>a:hover'
 		}
 		const selector = SELECTOR_MAP[location.pathname]
 		addEventListener('keydown', e => {
@@ -222,9 +223,9 @@
 		const it = setInterval(() => {
 			if (times >= 10) clearInterval(it)
 			if (typeof Patchouli !== 'undefined' && Patchouli._isMounted) {
-				$$('.image-flexbox,.illust-main').map(x => x.classList.add('work'))
+				$$('.illust-main-img').map(x => x.classList.add('work'))
 				const observer = new MutationObserver(
-					debounce(10)(mut => $$('.image-flexbox').map(x => x.classList.add('work')))
+					debounce(10)(mut => $$('.illust-main-img').map(x => x.classList.add('work')))
 					// add class=work to let them works
 				)
 				observer.observe(Patchouli.$el, { childList: true, subtree: true })
