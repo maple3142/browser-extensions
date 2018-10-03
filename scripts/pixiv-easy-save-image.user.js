@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.4
+// @version      0.4.5
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -11,7 +11,7 @@
 // @require      https://greasyfork.org/scripts/370765-gif-js-for-user-js/code/gifjs%20for%20userjs.js?version=616920
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
 // @require      https://unpkg.com/xfetch-js@0.0.9/xfetch.min.js
-// @require      https://unpkg.com/gmxhr-fetch@0.0.3/gmxhr-fetch.min.js
+// @require      https://unpkg.com/gmxhr-fetch@0.0.5/gmxhr-fetch.min.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
 // @match        https://www.pixiv.net/bookmark.php*
