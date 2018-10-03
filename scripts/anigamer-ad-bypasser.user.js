@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         跳過動畫瘋廣告
 // @namespace    https://blog.maple3142.net/
-// @version      0.3
+// @version      0.4
 // @description  RT
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
+// @require      https://unpkg.com/xfetch-js@0.1.6/xfetch.min.js
 // @grant        none
 // @compatible   firefox >=52
 // @compatible   chrome >=55
@@ -15,15 +16,8 @@
 	'use strict'
 	const sn = animefun.videoSn
 	const device = animefun.getdeviceid()
-	const qs = o => new URLSearchParams(o).toString()
-	const get = url => o => fetch(url + '?' + qs(o), { credentials: 'same-origin' })
-	const getVC = get('/ajax/videoCastcishu.php')
-	const getM3u8 = get('/ajax/m3u8.php')
 	const obj = { sn, s: getAd()[0] }
-	getVC(obj)
-		.then(() => getVC({ ...obj, ad: 'end' }))
-		.then(() => getM3u8({ sn, device }).then(r => r.json()))
-		.then(({ src }) => {
-			if (src) console.log('success: %s', src)
-		})
+	xf.get('/ajax/videoCastcishu.php', { qs: obj })
+		.then(() => xf.get('/ajax/videoCastcishu.php', { qs: { ...obj, ad: 'end' } }))
+		.then(() => xf.get('/ajax/m3u8.php', { sn, device }))
 })()
