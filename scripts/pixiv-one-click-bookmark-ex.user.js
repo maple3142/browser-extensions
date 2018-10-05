@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Pixiv 一鍵收藏 EX
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.2
+// @version      0.4.3
 // @description  強化版的 pixiv 一鍵收藏，支援收藏與取消
 // @author       maple3142
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
+// @require      https://unpkg.com/xfetch-js@0.1.6/xfetch.min.js
 // @grant        none
 // @compatible   firefox >=52
 // @compatible   chrome >=55
@@ -14,30 +15,14 @@
 	'use strict'
 	const $ = (s, el = document) => el.querySelector(s)
 	const $$ = (s, el = document) => [...el.querySelectorAll(s)]
-	const qs = o =>
-		Object.keys(o)
-			.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(o[k])}`)
-			.join('&')
-	const getData = id =>
-		fetch(`https://www.pixiv.net/ajax/illust/${id}/bookmarkData`, {
-			method: 'GET',
-			credentials: 'include'
-		}).then(r => r.json())
-	const doPost = url => data =>
-		fetch(url, {
-			method: 'POST',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			},
-			body: qs(data)
-		}).then(r => r.json())
-	const rpcCall = mode => o => doPost('/rpc/index.php')({ ...o, mode, tt: globalToken }).then(r => {
+	const resultHandler = r => {
 		if (r.error) throw new Error(r.message)
 		return r
-	})
-	const save_illust_bookmark = rpcCall('save_illust_bookmark')
-	const delete_illust_bookmark = rpcCall('delete_illust_bookmark')
+	}
+	const rpcBind = mode => o =>
+		xf.post('/rpc/index.php', { form: { ...o, mode, tt: globalToken } }).then(resultHandler)
+	const save_illust_bookmark = rpcBind('save_illust_bookmark')
+	const delete_illust_bookmark = rpcBind('delete_illust_bookmark')
 	const doBookmark = id =>
 		save_illust_bookmark({
 			illust_id: id,
@@ -45,11 +30,14 @@
 			comment: '',
 			tags: ''
 		})
-	const unBookmark = id => getData(id).then(d => delete_illust_bookmark({ bookmark_id: d.body.bookmarkData.id }))
+	const unBookmark = id =>
+		xf
+			.get(`https://www.pixiv.net/ajax/illust/${id}/bookmarkData`)
+			.json(d => delete_illust_bookmark({ bookmark_id: d.body.bookmarkData.id }))
 
 	const bookmarked = new WeakMap()
 	new MutationObserver(mut => {
-		const el = $('figure>div>div>section>div>a[href*=bookmark_add]') || $('button.gtm-main-bookmark')
+		const el = $('div[role=presentation]+div a[href*=bookmark_add]') || $('.gtm-main-bookmark')
 		if (el && !bookmarked.has(el)) {
 			el.style.outline = 'none'
 			bookmarked.set(el, false)
