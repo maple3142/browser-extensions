@@ -11,7 +11,7 @@
 // @require      https://greasyfork.org/scripts/370765-gif-js-for-user-js/code/gifjs%20for%20userjs.js?version=616920
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
 // @require      https://unpkg.com/xfetch-js@0.1.6/xfetch.min.js
-// @require      https://unpkg.com/gmxhr-fetch@0.0.5/gmxhr-fetch.min.js
+// @require      https://unpkg.com/gmxhr-fetch@0.0.6/gmxhr-fetch.min.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
 // @match        https://www.pixiv.net/bookmark.php*
