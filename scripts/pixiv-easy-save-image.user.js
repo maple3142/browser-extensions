@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.5
+// @version      0.4.6
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -171,25 +171,6 @@
 				}
 			})
 
-	if (location.pathname === '/member_illust.php') {
-		const observer = new MutationObserver(
-			debounce(10)(mut => {
-				const menu = $('ul[role=menu]')
-				if (!menu) return
-				const n = menu.children.length
-				const item = $el('li', {
-					role: 'menuitem',
-					onclick: () => saveImage(FORMAT, new URLSearchParams(location.search).get('illust_id'))
-				})
-				item.className = menu.children[n - 2].className
-				const text = $el('span', { textContent: '⬇' })
-				item.appendChild(text)
-				menu.insertBefore(item, menu.children[n - 1])
-			})
-		)
-		observer.observe(document.body, { childList: true, subtree: true })
-	}
-
 	// key shortcut
 	{
 		const SELECTOR_MAP = {
@@ -197,7 +178,7 @@
 			'/bookmark.php': 'a.work:hover,.image-item-image>a:hover',
 			'/new_illust.php': 'a.work:hover,.image-item-image>a:hover',
 			'/bookmark_new_illust.php': 'figure>div>a:hover,.illust-item-root>a:hover',
-			'/member_illust.php': 'div[role=presentation]>a:hover',
+			'/member_illust.php': 'div[role=presentation]>a:hover,canvas:hover',
 			'/ranking.php': 'a.work:hover,.illust-item-root>a:hover',
 			'/search.php': 'figure>div>a:hover',
 			'/member.php': '[href^="/member_illust.php"]:hover,.illust-item-root>a:hover'
@@ -209,7 +190,8 @@
 			if (typeof selector === 'string') {
 				const el = $(selector)
 				if (!el) return
-				id = /\d+/.exec(el.href.split('/').pop())[0]
+				if (el.href) id = /\d+/.exec(el.href.split('/').pop())[0]
+				else id = new URLSearchParams(location.search).get('illust_id')
 			} else {
 				id = selector()
 			}
