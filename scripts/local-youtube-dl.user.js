@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.6
+// @version      0.6.7
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -121,7 +121,8 @@
 	const getdecsig = path => xhrget('https://www.youtube.com' + path).then(parsedecsig)
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
-		return xf.get(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
+		return xf
+			.get(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
 			.text()
 			.then(async data => {
 				const obj = parseQuery(data)
@@ -256,7 +257,16 @@ self.onmessage=${workerMessageHandler.toString()}`
 							)
 						)
 					)
-				])
+				]),
+				h(
+					'div',
+					{ className: 'of-h t-center' },
+					h(
+						'a',
+						{ href: 'https://maple3142.github.io/mergemp4/', target: '_blank' },
+						'If you download adaptive ones, you can merge mp4 video and audio here.'
+					)
+				)
 			])
 		])
 	const shadowHost = $el('div')
