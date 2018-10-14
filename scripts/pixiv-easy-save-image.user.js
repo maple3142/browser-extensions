@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.6
+// @version      0.4.7
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -132,7 +132,7 @@
 						const numCpu = navigator.hardwareConcurrency || 4
 						const gif = new GIF({ workers: numCpu * 4, quality: 10 })
 						const ugoiraMeta = getUgoiraMeta(id)
-						const ugoiraZip = ugoiraMeta.then(data => xf.get(data.src).blob())
+						const ugoiraZip = ugoiraMeta.then(data => xf.get(data.originalSrc).blob())
 						const gifFrames = ugoiraZip
 							.then(z => {
 								console.time('gif')
