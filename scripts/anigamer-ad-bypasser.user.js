@@ -5,7 +5,7 @@
 // @description  RT
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
-// @require      https://unpkg.com/xfetch-js@0.1.6/xfetch.min.js
+// @require      https://unpkg.com/xfetch-js@0.2.1/xfetch.min.js
 // @grant        none
 // @compatible   firefox >=52
 // @compatible   chrome >=55
@@ -16,8 +16,18 @@
 	'use strict'
 	const sn = animefun.videoSn
 	const device = animefun.getdeviceid()
-	const obj = { sn, s: getAd()[0] }
-	xf.get('/ajax/videoCastcishu.php', { qs: obj })
-		.then(() => xf.get('/ajax/videoCastcishu.php', { qs: { ...obj, ad: 'end' } }))
-		.then(() => xf.get('/ajax/m3u8.php', { sn, device }))
+	const s = getAd()
+	const sleep = ms => new Promise(res => setTimeout(res, ms))
+	const startad = () => xf.get('/ajax/videoCastcishu.php', { qs: { sn, s } }).text()
+	const endad = () => xf.get('/ajax/videoCastcishu.php', { qs: { sn, s, ad: 'end' } }).text()
+	const getm3u8 = () => xf.get('/ajax/m3u8.php', { qs: { sn, device } }).json()
+
+	const skipad = () =>
+		startad()
+			.then(() => sleep(3000))
+			.then(endad)
+			.then(getm3u8)
+			.then(console.log)
+			.then(() => location.reload())
+	getm3u8().then(r => (r.src ? null : skipad()))
 })()
