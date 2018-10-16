@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         跳過動畫瘋廣告
 // @namespace    https://blog.maple3142.net/
-// @version      0.4
+// @version      0.5
 // @description  RT
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
