@@ -1,16 +1,17 @@
 // ==UserScript==
 // @name         巴哈姆特公會批量簽到
 // @namespace    https://blog.maple3142.net/
-// @version      0.2.1
+// @version      0.3.0
 // @description  巴哈姆特公會批量簽到工具
 // @author       maple3142
-// @match        https://home.gamer.com.tw/joinGuild.php?owner=*
-// @match        https://guild.gamer.com.tw/?sign=1
+// @include      /https:\/\/home\.gamer\.com\.tw\/joinGuild\.php\?owner=[A-Za-z0-9]+/
+// @require      https://unpkg.com/xfetch-js@0.2.1/xfetch.min.js
+// @require      https://unpkg.com/gmxhr-fetch@0.1.0/gmxhr-fetch.min.js
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @compatible   firefox >=52
-// @compatible   chrome >=55
-// @license      MIT
+// @grant        GM_xmlhttpRequest
+// @connect      api.gamer.com.tw
+// @connect      guild.gamer.com.tw
 // ==/UserScript==
 
 /*
@@ -19,44 +20,22 @@
 */
 ;(function() {
 	'use strict'
-	function signin(sn) {
-		return fetch('https://guild.gamer.com.tw/ajax/guildSign.php', {
-			method: 'post',
-			body: 'sn=' + sn,
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		})
-			.then(r => r.json())
-			.catch(e => {})
-	}
-	if (location.hostname === 'home.gamer.com.tw') {
-		const id = location.href.match(/owner=([\w\d]*)/)[1]
-		if (id !== BAHAID) return
-		if (!confirm('要批量簽到嗎?')) return
-		const list = jQuery('.acgboximg.BC5')
-			.toArray()
-			.map(
-				el =>
-					$(el)
-						.find('a')
-						.attr('href')
-						.match(/sn=(\d*)/)[1]
-			)
-		if (!list.length) return
-		GM_setValue('list', list)
-		open('https://guild.gamer.com.tw/?sign=1', 'window', 'width=500,height=300')
-	}
-	if (location.hostname === 'guild.gamer.com.tw') {
-		document.write('')
-		let list = GM_getValue('list')
-		if (!list) return
-		Promise.all(list.map(sn => signin(sn))).then(results => {
-			const okcnt = results.filter(r => r && r.ok).length
+	const gxf = xf.extend({ fetch: gmfetch })
+	const signin = sn =>
+		gxf
+			.post('https://guild.gamer.com.tw/ajax/guildSign.php', {
+				form: { sn }
+			})
+			.json()
+			.catch(() => ({}))
+	const id = new URLSearchParams(location.search).get('owner')
+	if (id !== BAHAID) return
+	if (!confirm('要批量簽到嗎?')) return
+	gxf.get('https://api.gamer.com.tw/mobile_app/bahabook/v1/guild_list.php')
+		.json(ar => Promise.all(ar.map(x => signin(x.sn))))
+		.then(results => {
+			const okcnt = results.filter(r => r.ok).length
+			console.log(results)
 			alert(`簽到了${okcnt}個公會`)
-			GM_setValue('list', false)
-			close()
 		})
-	}
 })()
