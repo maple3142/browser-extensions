@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         GitHub one-click sync fork
 // @namespace    https://blog.maple3142.net/
-// @version      0.1
+// @version      0.2
 // @description  Sync your GitHub fork repo within one click
 // @author       maple3142
-// @include      /^https:\/\/github\.com/[A-Za-z0-9-]+\/[^\/]+/
+// @match        https://github.com/*
 // @require      https://unpkg.com/xfetch-js@0.2.3/xfetch.min.js
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -19,8 +19,8 @@
 	const gh = xf.extend({ baseURI: 'https://api.github.com/' })
 	const oauthurl = // eslint-disable-next-line max-len
 		'https://github.com/login/oauth/authorize?client_id=5c0954a832a0f2bb68f2&scope=repo&redirect_uri=https://github.com/'
-	const confirmmsg = // eslint-disable-next-line max-len
-		'Are you sure?\nIt will replace all changes you have made with upstream\'s content.\nIT CANNOT BE RECOVERED!'
+	// eslint-disable-next-line max-len
+	const confirmmsg = 'Are you sure?\nAll the changes you have made will be DELETED!\nIT CANNOT BE RECOVERED!'
 	const search = new URL(location.href).searchParams
 	if (search.has('code')) {
 		const code = search.get('code')
