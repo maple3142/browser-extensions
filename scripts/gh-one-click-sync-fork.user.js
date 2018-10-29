@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub one-click sync fork
 // @namespace    https://blog.maple3142.net/
-// @version      0.2
+// @version      0.3
 // @description  Sync your GitHub fork repo within one click
 // @author       maple3142
 // @match        https://github.com/*
@@ -64,7 +64,7 @@
 				return
 			}
 			if (!confirm(confirmmsg)) return
-			const sha = await gh.get(`/repos/${upstream}/commits`).json(c => c[0].sha)
+			const sha = await gh.get(`/repos/${upstream}/branches/${branch}`).json(b => b.commit.sha)
 			await gh
 				.patch(`/repos/${repo}/git/refs/heads/${branch}`, {
 					headers: { Authorization: `token ${token}` },
