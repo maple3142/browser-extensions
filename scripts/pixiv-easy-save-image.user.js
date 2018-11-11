@@ -3,14 +3,14 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.7
+// @version      0.4.8
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
 // @author       maple3142
 // @require      https://greasyfork.org/scripts/370765-gif-js-for-user-js/code/gifjs%20for%20userjs.js?version=616920
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
-// @require      https://unpkg.com/xfetch-js@0.1.6/xfetch.min.js
+// @require      https://unpkg.com/xfetch-js@0.3.0/xfetch.min.js
 // @require      https://unpkg.com/gmxhr-fetch@0.0.6/gmxhr-fetch.min.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
@@ -38,7 +38,7 @@
 	}
 	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
 
-	const gxf = xf.create(gmfetch)
+	const gxf = xf.extend({ fetch: gmfetch })
 	const $ = s => document.querySelector(s)
 	const $$ = s => [...document.querySelectorAll(s)]
 	const elementmerge = (a, b) => {
@@ -113,8 +113,8 @@
 								}
 								const len = (data.pageCount + offset) / 10 + 1
 								const ar = []
-								for (let i = offset; i < data.pageCount + offset; i++) {
-									const num = i.toString().padStart(len, '0')
+								for (let i = 0; i < data.pageCount; i++) {
+									const num = (i + offset).toString().padStart(len, '0')
 									ar.push(
 										Promise.all([
 											`${fname.replace(/{{#(\d+)?}}/g, num)}.${ext}`,
