@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         巴哈姆特動漫電玩通解答顯示小工具
 // @namespace    https://blog.maple3142.net/
-// @version      0.6
+// @version      0.7
 // @description  在巴哈姆特哈拉區右側的動漫電玩通顯示答案
 // @author       maple3142
 // @require      https://unpkg.com/xfetch-js@0.1.6/xfetch.min.js
@@ -32,10 +32,10 @@
 				.contents()[0]
 				.textContent.trim()
 				.replace(/,/g, 'COMMA'),
-			answer1: anss[0].replace(',', 'COMMA'),
-			answer2: anss[1].replace(',', 'COMMA'),
-			answer3: anss[2].replace(',', 'COMMA'),
-			answer4: anss[3].replace(',', 'COMMA'),
+			answer1: anss[0].replace(/,/g, 'COMMA'),
+			answer2: anss[1].replace(/,/g, 'COMMA'),
+			answer3: anss[2].replace(/,/g, 'COMMA'),
+			answer4: anss[3].replace(/,/g, 'COMMA'),
 			sn: $ansbox.data('quiz-sn'),
 			toString: function() {
 				return `${q.sn},${q.question},${q.answer1},${q.answer2},${q.answer3},${q.answer4},${q.answer}`
