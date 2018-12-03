@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.8
+// @version      0.6.9
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -32,22 +32,25 @@
 			stream: 'Stream',
 			adaptive: 'Adaptive',
 			videoid: 'Video Id: {{id}}',
-			thumbnail: 'Thumbnail'
+			thumbnail: 'Thumbnail',
+			inbrowser_adaptive_merger: 'In browser adaptive video & audio merger'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 Id: {{id}}',
-			thumbnail: '縮圖'
+			thumbnail: '影片縮圖',
+			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器'
 		},
 		zh: {
-			togglelinks: '显示 / 隐藏连结',
-			stream: '串流 Stream',
-			adaptive: '自适应 Adaptive',
-			videoid: '影片 Id: {{id}}',
-			thumbnail: '缩图'
-		}
+            togglelinks: '显示 / 隐藏 下载链接',
+            stream: '串流 Stream',
+            adaptive: '自适应 Adaptive',
+            videoid: '视频 ID: {{id}}',
+			thumbnail: '封面图',
+			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器'
+        }
 	}
 	const YT_THUMB_RES_ORDER = ['maxresdefault', 'hqdefault', 'mqdefault', 'sddefault', 'default']
 	const checkImgExists = url =>
@@ -263,7 +266,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 					h(
 						'a',
 						{ href: 'https://maple3142.github.io/mergemp4/', target: '_blank' },
-						'If you download adaptive ones, you can merge mp4 video and audio here.'
+						state.strings.inbrowser_adaptive_merger
 					)
 				)
 			])
