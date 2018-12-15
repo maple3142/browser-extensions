@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.4.8
+// @version      0.5.0
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -38,6 +38,7 @@
 	}
 	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
 
+	const sleep = ms => new Promise(res => setTimeout(res, ms))
 	const gxf = xf.extend({ fetch: gmfetch })
 	const $ = s => document.querySelector(s)
 	const $$ = s => [...document.querySelectorAll(s)]
@@ -68,6 +69,11 @@
 		a.click()
 		document.body.removeChild(a)
 	}
+	const downloadBlob = (blob, fname) => {
+		const url = URL.createObjectURL(blob)
+		download(url, fname)
+		URL.revokeObjectURL(url)
+	}
 	const blobToImg = blob =>
 		new Promise((res, rej) => {
 			const src = URL.createObjectURL(blob)
@@ -86,90 +92,83 @@
 	const getUgoiraMeta = id => getJSONBody(`/ajax/illust/${id}/ugoira_meta`)
 	const getCrossOriginBlob = (url, Referer = 'https://www.pixiv.net/') =>
 		gxf.get(url, { headers: { Referer } }).blob()
-	const saveImage = ({ single, multiple }, id) =>
-		getIllustData(id)
-			.then(data => {
-				const { illustType } = data
-				switch (illustType) {
-					case 0:
-					case 1:
-						{
-							// normal
-							const f = data.pageCount === 1 ? single : multiple
-							const fname = f.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
-							const url = data.urls.original
-							const ext = url
-								.split('/')
-								.pop()
-								.split('.')
-								.pop()
-							if (data.pageCount === 1) {
-								return Promise.all([Promise.all([fname + '.' + ext, getCrossOriginBlob(url)])])
-							} else {
-								const rgxr = /{{#(\d+)}}/.exec(multiple)
-								let offset = 0
-								if (rgxr) {
-									offset = parseInt(rgxr[1])
-								}
-								const len = (data.pageCount + offset) / 10 + 1
-								const ar = []
-								for (let i = 0; i < data.pageCount; i++) {
-									const num = (i + offset).toString().padStart(len, '0')
-									ar.push(
-										Promise.all([
-											`${fname.replace(/{{#(\d+)?}}/g, num)}.${ext}`,
-											getCrossOriginBlob(url.replace('p0', `p${i}`))
-										])
-									)
-								}
-								return Promise.all(ar)
-							}
+	const saveImage = async ({ single, multiple }, id) => {
+		const illustData = await getIllustData(id)
+		let results
+		const { illustType } = illustData
+		switch (illustType) {
+			case 0:
+			case 1:
+				{
+					// normal
+					const f = illustData.pageCount === 1 ? single : multiple
+					const fname = f.replace(/{{(\w+?)}}/g, (m, g1) => illustData[g1])
+					const url = illustData.urls.original
+					const ext = url
+						.split('/')
+						.pop()
+						.split('.')
+						.pop()
+					if (illustData.pageCount === 1) {
+						results = [[fname + '.' + ext, await getCrossOriginBlob(url)]]
+					} else {
+						const rgxr = /{{#(\d+)}}/.exec(multiple)
+						let offset = 0
+						if (rgxr) {
+							offset = parseInt(rgxr[1])
 						}
-						break
-					case 2: {
-						// ugoira
-						const fname = single.replace(/{{(\w+?)}}/g, (m, g1) => data[g1])
-						const numCpu = navigator.hardwareConcurrency || 4
-						const gif = new GIF({ workers: numCpu * 4, quality: 10 })
-						const ugoiraMeta = getUgoiraMeta(id)
-						const ugoiraZip = ugoiraMeta.then(data => xf.get(data.originalSrc).blob())
-						const gifFrames = ugoiraZip
-							.then(z => {
-								console.time('gif')
-								return z
-							})
-							.then(JSZip.loadAsync)
-							.then(({ files }) =>
-								Promise.all(Object.values(files).map(f => f.async('blob').then(blobToImg)))
+						const len = (illustData.pageCount + offset).toString().length
+						const ar = []
+						for (let i = 0; i < illustData.pageCount; i++) {
+							const num = (i + offset).toString().padStart(len, '0')
+							ar.push(
+								Promise.all([
+									`${fname.replace(/{{#(\d+)?}}/g, num)}.${ext}`,
+									getCrossOriginBlob(url.replace('p0', `p${i}`))
+								])
 							)
-						return Promise.all([ugoiraMeta, gifFrames])
-							.then(
-								([data, frames]) =>
-									new Promise((res, rej) => {
-										{
-											for (let i = 0; i < frames.length; i++) {
-												gif.addFrame(frames[i], { delay: data.frames[i].delay })
-											}
-											gif.on('finished', x => {
-												console.timeEnd('gif')
-												res(x)
-											})
-											gif.on('error', rej)
-											gif.render()
-										}
-									})
-							)
-							.then(gifBlob => [[fname + '.gif', gifBlob]])
+						}
+						results = await Promise.all(ar)
 					}
 				}
-			})
-			.then(results => {
-				for (const [f, blob] of results) {
-					const url = URL.createObjectURL(blob)
-					download(url, f)
-					URL.revokeObjectURL(url)
-				}
-			})
+				break
+			case 2: {
+				// ugoira
+				const fname = single.replace(/{{(\w+?)}}/g, (m, g1) => illustData[g1])
+				const numCpu = navigator.hardwareConcurrency || 4
+				const gif = new GIF({ workers: numCpu * 4, quality: 10 })
+				const ugoiraMeta = await getUgoiraMeta(id)
+				const ugoiraZip = await xf.get(ugoiraMeta.originalSrc).blob()
+				const { files } = await JSZip.loadAsync(ugoiraZip)
+				const gifFrames = await Promise.all(Object.values(files).map(f => f.async('blob').then(blobToImg)))
+				const getGif = (data, frames) =>
+					new Promise((res, rej) => {
+						for (let i = 0; i < frames.length; i++) {
+							gif.addFrame(frames[i], { delay: data.frames[i].delay })
+						}
+						gif.on('finished', x => {
+							console.timeEnd('gif')
+							res(x)
+						})
+						gif.on('error', rej)
+						gif.render()
+					})
+				results = await [[fname + '.gif', await getGif(ugoiraMeta, gifFrames)]]
+			}
+		}
+		if (results.length === 1) {
+			const [f, blob] = results[0]
+			downloadBlob(blob, f)
+		} else {
+			const zip = new JSZip()
+			for (const [f, blob] of results) {
+				zip.file(f, blob)
+			}
+			const blob = await zip.generateAsync({ type: 'blob' })
+			const zipname = single.replace(/{{(\w+?)}}/g, (m, g1) => illustData[g1])
+			downloadBlob(blob, zipname)
+		}
+	}
 
 	// key shortcut
 	{
@@ -185,9 +184,15 @@
 		}
 		const selector = SELECTOR_MAP[location.pathname]
 		addEventListener('keydown', e => {
-			if (e.which !== KEYCODE_TO_SAVE) return // 's' key
+			if (e.which !== KEYCODE_TO_SAVE) return
+			e.preventDefault()
+			e.stopPropagation()
 			let id
-			if (typeof selector === 'string') {
+			if (!id && $('#Patchouli')) {
+				const el = $('.image-item-image:hover>a')
+				if (!el) return
+				id = /\d+/.exec(el.href.split('/').pop())[0]
+			} else if (typeof selector === 'string') {
 				const el = $(selector)
 				if (!el) return
 				if (el.href) id = /\d+/.exec(el.href.split('/').pop())[0]
@@ -195,7 +200,7 @@
 			} else {
 				id = selector()
 			}
-			if (id) saveImage(FORMAT, id)
+			if (id) saveImage(FORMAT, id).catch(console.error)
 		})
 	}
 })()
