@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.9
+// @version      0.6.10
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -44,13 +44,13 @@
 			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器'
 		},
 		zh: {
-            togglelinks: '显示 / 隐藏 下载链接',
-            stream: '串流 Stream',
-            adaptive: '自适应 Adaptive',
-            videoid: '视频 ID: {{id}}',
+			togglelinks: '显示 / 隐藏 下载链接',
+			stream: '串流 Stream',
+			adaptive: '自适应 Adaptive',
+			videoid: '视频 ID: {{id}}',
 			thumbnail: '封面图',
 			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器'
-        }
+		}
 	}
 	const YT_THUMB_RES_ORDER = ['maxresdefault', 'hqdefault', 'mqdefault', 'sddefault', 'default']
 	const checkImgExists = url =>
@@ -102,7 +102,7 @@
 	}
 	const parsedecsig = data => {
 		try {
-			const fnnameresult = /yt\.akamaized\.net.*encodeURIComponent\)\((\w+)/.exec(data)
+			const fnnameresult = /yt\.akamaized\.net.*encodeURIComponent\((\w+)/.exec(data)
 			const fnname = fnnameresult[1]
 			const _argnamefnbodyresult = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
 			const [_, argname, fnbody] = _argnamefnbodyresult
