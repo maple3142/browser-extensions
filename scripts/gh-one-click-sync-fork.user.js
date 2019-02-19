@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub one-click sync fork
 // @namespace    https://blog.maple3142.net/
-// @version      0.3
+// @version      0.4
 // @description  Sync your GitHub fork repo within one click
 // @author       maple3142
 // @match        https://github.com/*
@@ -48,9 +48,14 @@
 		const upstream = $('.fork-flag a')
 			.getAttribute('href')
 			.slice(1)
-		const branchbtn = $('.file-navigation>div.select-menu')
+		const fnav = $('.file-navigation')
+		const branchbtn = $('.file-navigation>.select-menu')
 		if (!branchbtn) return
-		const branch = branchbtn.querySelector('button').title || branchbtn.querySelector('button>span').textContent
+		const branch =
+			fnav
+				.querySelector('a')
+				.href.split('/')
+				.pop() || branchbtn.querySelector('summary>span').textContent
 		const el = document.createElement('div')
 		el.classList.add('one-click-sync-fork')
 		el.classList.add('btn')
