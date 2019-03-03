@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.10
+// @version      0.6.11
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -102,6 +102,13 @@
 	}
 	const parsedecsig = data => {
 		try {
+			if (data.startsWith('var script')) {
+				// they inject the script via script tag
+				const obj = {}
+				const document = { createElement: () => obj, head: { appendChild: () => {} } }
+				eval(data)
+				data = obj.innerHTML
+			}
 			const fnnameresult = /yt\.akamaized\.net.*encodeURIComponent\((\w+)/.exec(data)
 			const fnname = fnnameresult[1]
 			const _argnamefnbodyresult = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
