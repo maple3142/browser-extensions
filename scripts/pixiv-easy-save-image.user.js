@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.5.0
+// @version      0.6.0
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -33,8 +33,8 @@
 ;(function() {
 	'use strict'
 	const FORMAT = {
-		single: '{{title}}-{{userName}}-{{id}}',
-		multiple: '{{title}}-{{userName}}-{{id}}-p{{#}}'
+		single: d => `${d.title}-${d.userName}-${d.id}`,
+		multiple: (d, i) => `${d.title}-${d.userName}-${d.id}-p${i}`
 	}
 	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
 
@@ -101,8 +101,6 @@
 			case 1:
 				{
 					// normal
-					const f = illustData.pageCount === 1 ? single : multiple
-					const fname = f.replace(/{{(\w+?)}}/g, (m, g1) => illustData[g1])
 					const url = illustData.urls.original
 					const ext = url
 						.split('/')
@@ -110,20 +108,14 @@
 						.split('.')
 						.pop()
 					if (illustData.pageCount === 1) {
-						results = [[fname + '.' + ext, await getCrossOriginBlob(url)]]
+						results = [[single(illustData) + '.' + ext, await getCrossOriginBlob(url)]]
 					} else {
-						const rgxr = /{{#(\d+)}}/.exec(multiple)
-						let offset = 0
-						if (rgxr) {
-							offset = parseInt(rgxr[1])
-						}
-						const len = (illustData.pageCount + offset).toString().length
+						const len = illustData.pageCount
 						const ar = []
-						for (let i = 0; i < illustData.pageCount; i++) {
-							const num = (i + offset).toString().padStart(len, '0')
+						for (let i = 0; i < len; i++) {
 							ar.push(
 								Promise.all([
-									`${fname.replace(/{{#(\d+)?}}/g, num)}.${ext}`,
+									multiple(illustData, i) + '.' + ext,
 									getCrossOriginBlob(url.replace('p0', `p${i}`))
 								])
 							)
@@ -134,7 +126,7 @@
 				break
 			case 2: {
 				// ugoira
-				const fname = single.replace(/{{(\w+?)}}/g, (m, g1) => illustData[g1])
+				const fname = single(illustData)
 				const numCpu = navigator.hardwareConcurrency || 4
 				const gif = new GIF({ workers: numCpu * 4, quality: 10 })
 				const ugoiraMeta = await getUgoiraMeta(id)
@@ -165,7 +157,7 @@
 				zip.file(f, blob)
 			}
 			const blob = await zip.generateAsync({ type: 'blob' })
-			const zipname = single.replace(/{{(\w+?)}}/g, (m, g1) => illustData[g1])
+			const zipname = single(illustData)
 			downloadBlob(blob, zipname)
 		}
 	}
