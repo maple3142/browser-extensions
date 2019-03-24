@@ -3,14 +3,14 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.11
+// @version      0.7.0
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
 // @match        https://*.youtube.com/*
-// @require      https://cdnjs.cloudflare.com/ajax/libs/hyperapp/1.2.6/hyperapp.js
-// @require      https://unpkg.com/xfetch-js@0.0.5/xfetch.min.js
+// @require      https://unpkg.com/vue@2.6.10/dist/vue.js
+// @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
 // @compatible   firefox >=52
 // @compatible   chrome >=55
 // @license      MIT
@@ -18,7 +18,7 @@
 
 ;(function() {
 	'use strict'
-	const DEBUG = false
+	const DEBUG = true
 	const create$p = console =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k]('YTDL: ' + args[0], ...args.slice(1)) : void 0)])
@@ -31,35 +31,24 @@
 			togglelinks: 'Show/Hide Links',
 			stream: 'Stream',
 			adaptive: 'Adaptive',
-			videoid: 'Video Id: {{id}}',
-			thumbnail: 'Thumbnail',
+			videoid: 'Video Id: ',
 			inbrowser_adaptive_merger: 'In browser adaptive video & audio merger'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
-			videoid: '影片 Id: {{id}}',
-			thumbnail: '影片縮圖',
+			videoid: '影片 ID: ',
 			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏 下载链接',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
-			videoid: '视频 ID: {{id}}',
-			thumbnail: '封面图',
+			videoid: '视频 ID: ',
 			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器'
 		}
 	}
-	const YT_THUMB_RES_ORDER = ['maxresdefault', 'hqdefault', 'mqdefault', 'sddefault', 'default']
-	const checkImgExists = url =>
-		new Promise(res => {
-			const img = new Image()
-			img.onload = () => res(true)
-			img.onerror = () => res(false)
-			img.src = url
-		})
 	const findLang = l => {
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
 		l = l.toLowerCase()
@@ -67,8 +56,6 @@
 		else if (l.length > 2) return findLang(l.split('-')[0])
 		else return LANG_FALLBACK
 	}
-
-	const format = s => d => s.replace(/{{(\w+?)}}/g, (m, g1) => d[g1])
 	const $ = (s, x = document) => x.querySelector(s)
 	const $el = (tag, opts) => {
 		const el = document.createElement(tag)
@@ -168,7 +155,7 @@
 		self.postMessage(result)
 	}
 	const ytdlWorkerCode = `
-importScripts('https://unpkg.com/xfetch-js@0.0.5/xfetch.min.js')
+importScripts('https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js')
 const DEBUG=${DEBUG}
 const $p=(${create$p.toString()})(console)
 const parseQuery=${parseQuery.toString()}
@@ -191,123 +178,65 @@ self.onmessage=${workerMessageHandler.toString()}`
 		})
 	}
 
-	const { app, h } = hyperapp
-	const state = {
-		hide: true,
-		id: '',
-		stream: [],
-		adaptive: [],
-		thumbnail: null,
-		dark: false,
-		lang: findLang(navigator.language),
-		strings: LOCALE[findLang(navigator.language)]
-	}
-	$p.log(`default language: ${state.lang}`)
-	const actions = {
-		toggleHide: () => state => ({ hide: !state.hide }),
-		setState: newstate => state => newstate,
-		setLang: lang => state => {
-			const target = findLang(lang)
-			$p.log(`language change to: ${target}`)
+	const template = `
+<div class="box" :class="{'dark':dark}">
+	<div @click="hide=!hide" class="box-toggle t-center fs-14px" v-text="strings.togglelinks"></div>
+	<div :class="{'hide':hide}">
+		<div class="t-center fs-14px" v-text="strings.videoid+id"></div>
+		<div class="d-flex">
+			<div class="f-1 of-h">
+				<div class="t-center fs-14px" v-text="strings.stream"></div>
+				<a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in stream" :href="vid.url" :title="vid.type" v-text="vid.quality||vid.type"></a>
+			</div>
+			<div class="f-1 of-h">
+				<div class="t-center fs-14px" v-text="strings.adaptive"></div>
+				<a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in adaptive" :href="vid.url" :title="vid.type" v-text="[vid.quality_label,vid.type].filter(x=>x).join(':')"></a>
+			</div>
+		</div>
+		<div class="of-h t-center">
+			<a href="https://maple3142.github.io/mergemp4/" target="_blank" v-text="strings.inbrowser_adaptive_merger"></a>
+		</div>
+	</div>
+</div>
+`.slice(1)
+	const app = new Vue({
+		data() {
 			return {
-				lang: target,
-				strings: LOCALE[target]
+				hide: true,
+				id: '',
+				stream: [],
+				adaptive: [],
+				dark: false,
+				lang: findLang(navigator.language)
 			}
 		},
-		setDark: dark => state => ({ dark }),
-		getState: () => state => state
-	}
-	const view = (state, actions) =>
-		h('div', { className: 'box' + (state.dark ? ' dark' : '') }, [
-			h(
-				'div',
-				{ onclick: () => actions.toggleHide(), className: 'box-toggle t-center fs-14px' },
-				state.strings.togglelinks
-			),
-			h('div', { className: state.hide ? 'hide' : '' }, [
-				h('div', { className: 't-center fs-14px' }, format(state.strings.videoid, state)),
-				h('div', { className: 't-center fs-14px' }, [
-					h('a', { href: state.thumbnail, target: '_blank' }, state.strings.thumbnail)
-				]),
-				h('div', { className: 'd-flex' }, [
-					h(
-						'div',
-						{ className: 'f-1 of-h' },
-						[h('div', { className: 't-center fs-14px' }, state.strings.stream)].concat(
-							state.stream.map(x =>
-								h(
-									'a',
-									{
-										href: x.url + '&title=' + state.meta.title,
-										title: x.type,
-										target: '_blank',
-										className: 'ytdl-link-btn fs-14px'
-									},
-									x.quality || x.type
-								)
-							)
-						)
-					),
-					h(
-						'div',
-						{ className: 'f-1 of-h' },
-						[h('div', { className: 't-center fs-14px' }, state.strings.adaptive)].concat(
-							state.adaptive.map(x =>
-								h(
-									'a',
-									{
-										href: x.url + '&title=' + state.meta.title,
-										title: x.type,
-										target: '_blank',
-										className: 'ytdl-link-btn fs-14px'
-									},
-									(x.quality_label ? x.quality_label + ':' : '') + x.type
-								)
-							)
-						)
-					)
-				]),
-				h(
-					'div',
-					{ className: 'of-h t-center' },
-					h(
-						'a',
-						{ href: 'https://maple3142.github.io/mergemp4/', target: '_blank' },
-						state.strings.inbrowser_adaptive_merger
-					)
-				)
-			])
-		])
+		computed: {
+			strings() {
+				return LOCALE[this.lang.toLowerCase()]
+			}
+		},
+		template
+	})
+	$p.log(`default language: ${app.lang}`)
+
+	// attach element
 	const shadowHost = $el('div')
 	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'closed' }) : shadowHost // no shadow dom
 	const container = $el('div')
 	shadow.appendChild(container)
-	const $app = app(state, actions, view, container)
-	if (DEBUG) unsafeWindow.$app = $app
+	app.$mount(container)
+
+	if (DEBUG) unsafeWindow.$app = app
 	const load = async id => {
 		const ytplayer = await getytplayer()
 		return workerGetVideo(id, ytplayer.config.assets.js)
 			.then(async data => {
 				$p.log('video loaded: %s', id)
-				$app.setState({
-					id,
-					stream: data.stream,
-					adaptive: data.adaptive,
-					meta: data.meta
-				})
-				if (ytplayer.config.args.host_language) $app.setLang(ytplayer.config.args.host_language)
-
-				// find highest resolution thumbnail
-				let url = data.meta.thumbnail_url
-				for (const res of YT_THUMB_RES_ORDER) {
-					const u = url.replace('default', res)
-					if (await checkImgExists(u)) {
-						// if thumbnail exists
-						url = u
-						break
-					}
-				}
-				$app.setState({ thumbnail: url })
+				app.id = id
+				app.stream = data.stream
+				app.adaptive = data.adaptive
+				app.meta = data.meta
+				if (ytplayer.config.args.host_language) app.lang = ytplayer.config.args.host_language
 			})
 			.catch(err => $p.error('load', err))
 	}
@@ -317,9 +246,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 		if (el && !el.contains(shadowHost)) el.appendChild(shadowHost)
 		if (location.href !== prevurl && location.pathname === '/watch') {
 			prevurl = location.href
-			$app.setState({
-				hide: true
-			})
+			app.hide = true
 			const id = parseQuery(location.search).v
 			$p.log(`start loading new video: ${id}`)
 			load(id)
@@ -328,9 +255,9 @@ self.onmessage=${workerMessageHandler.toString()}`
 	// listen to dark mode toggle
 	const $html = $('html')
 	new MutationObserver(() => {
-		$app.setDark($html.getAttribute('dark') === 'true')
+		app.dark = $html.getAttribute('dark') === 'true'
 	}).observe($html, { attributes: true })
-	$app.setDark($html.getAttribute('dark') === 'true')
+	app.dark = $html.getAttribute('dark') === 'true'
 	const css = `
 .hide{
 display: none;
