@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.7.0
+// @version      0.7.1
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -42,7 +42,7 @@
 			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器'
 		},
 		zh: {
-			togglelinks: '显示 / 隐藏 下载链接',
+			togglelinks: '显示 / 隐藏链接',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
 			videoid: '视频 ID: ',
@@ -104,7 +104,7 @@
 			const helpername = helpernameresult[1]
 			const helperresult = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)
 			const helper = helperresult[0]
-			$p.log(`parsedecsig result: ${argname} => { ${helper}\n${fnbody}}`)
+			$p.log(`parsedecsig result: %s=>{%s\n%s}`, argname, helper, fnbody)
 			return new Function([argname], helper + '\n' + fnbody)
 		} catch (e) {
 			$p.error('parsedecsig error: %o', e)
@@ -122,7 +122,7 @@
 			.text()
 			.then(async data => {
 				const obj = parseQuery(data)
-				$p.log(`video ${id} data: %o`, obj)
+				$p.log(`video %s data: %o`, id, obj)
 				if (obj.status === 'fail') {
 					throw obj
 				}
@@ -145,7 +145,7 @@
 							.map(x => ({ ...x, url: x.url + `&signature=${x.s}` }))
 					}
 				}
-				$p.log(`video ${id} result: %o`, { stream, adaptive })
+				$p.log(`video %s result: %o`, id, { stream, adaptive })
 				return { stream, adaptive, meta: obj }
 			})
 	}
@@ -166,7 +166,7 @@ const getVideo=${getVideo.toString()}
 self.onmessage=${workerMessageHandler.toString()}`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
 	const workerGetVideo = (id, path) => {
-		$p.log(`workerGetVideo start: ${id} ${path}`)
+		$p.log(`workerGetVideo start: %s %s`, id, path)
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
@@ -217,7 +217,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 		},
 		template
 	})
-	$p.log(`default language: ${app.lang}`)
+	$p.log(`default language: %s`, app.lang)
 
 	// attach element
 	const shadowHost = $el('div')
@@ -236,7 +236,13 @@ self.onmessage=${workerMessageHandler.toString()}`
 				app.stream = data.stream
 				app.adaptive = data.adaptive
 				app.meta = data.meta
-				if (ytplayer.config.args.host_language) app.lang = ytplayer.config.args.host_language
+				if (ytplayer.config.args.host_language) {
+					const actLang = ytplayer.config.args.host_language
+					const lang = findLang(actLang)
+					$p.log('youtube ui lang: %s', actLang)
+					$p.log('ytdl lang:', lang)
+					app.lang = lang
+				}
 			})
 			.catch(err => $p.error('load', err))
 	}
@@ -248,7 +254,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 			prevurl = location.href
 			app.hide = true
 			const id = parseQuery(location.search).v
-			$p.log(`start loading new video: ${id}`)
+			$p.log('start loading new video: %s', id)
 			load(id)
 		}
 	}, 1000)
