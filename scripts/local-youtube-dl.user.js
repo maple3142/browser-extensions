@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.7.1
+// @version      0.7.2
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -18,7 +18,7 @@
 
 ;(function() {
 	'use strict'
-	const DEBUG = true
+	const DEBUG = false
 	const create$p = console =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k]('YTDL: ' + args[0], ...args.slice(1)) : void 0)])
@@ -51,7 +51,7 @@
 	}
 	const findLang = l => {
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
-		l = l.toLowerCase()
+		l = l.toLowerCase().replace('_', '-')
 		if (l in LOCALE) return l
 		else if (l.length > 2) return findLang(l.split('-')[0])
 		else return LANG_FALLBACK
@@ -227,17 +227,26 @@ self.onmessage=${workerMessageHandler.toString()}`
 	app.$mount(container)
 
 	if (DEBUG) unsafeWindow.$app = app
+	const getLangCode = () => {
+		if (typeof ytplayer !== 'undefined') {
+			return ytplayer.config.args.host_language
+		} else if (typeof yt !== 'undefined') {
+			return yt.config_.GAPI_LOCALE
+		}
+		return null
+	}
 	const load = async id => {
-		const ytplayer = await getytplayer()
-		return workerGetVideo(id, ytplayer.config.assets.js)
+		const scriptel = $('script[src$="base.js"]')
+		return workerGetVideo(id, scriptel.src)
 			.then(async data => {
 				$p.log('video loaded: %s', id)
 				app.id = id
 				app.stream = data.stream
 				app.adaptive = data.adaptive
 				app.meta = data.meta
-				if (ytplayer.config.args.host_language) {
-					const actLang = ytplayer.config.args.host_language
+				const actLang = getLangCode()
+				if (actLang !== null) {
+					console.log(actLang)
 					const lang = findLang(actLang)
 					$p.log('youtube ui lang: %s', actLang)
 					$p.log('ytdl lang:', lang)
