@@ -75,18 +75,6 @@
 			xhr.onerror = rej
 			xhr.send()
 		})
-	const getytplayer = async () => {
-		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
-		$p.log('No ytplayer is founded')
-		const html = await xf.get(location.href).text()
-		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
-		let config = eval(d[1])
-		unsafeWindow.ytplayer = {
-			config
-		}
-		$p.log('ytplayer fetched: %o', unsafeWindow.ytplayer)
-		return ytplayer
-	}
 	const parsedecsig = data => {
 		try {
 			if (data.startsWith('var script')) {
