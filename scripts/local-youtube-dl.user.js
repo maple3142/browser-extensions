@@ -18,7 +18,7 @@
 
 ;(function() {
 	'use strict'
-	const DEBUG = false
+	const DEBUG = true
 	const create$p = console =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k]('YTDL: ' + args[0], ...args.slice(1)) : void 0)])
@@ -75,6 +75,18 @@
 			xhr.onerror = rej
 			xhr.send()
 		})
+	const getytplayer = async () => {
+		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
+		$p.log('No ytplayer is founded')
+		const html = await xf.get(location.href).text()
+		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
+		let config = eval(d[1])
+		unsafeWindow.ytplayer = {
+			config
+		}
+		$p.log('ytplayer fetched: %o', unsafeWindow.ytplayer)
+		return ytplayer
+	}
 	const parsedecsig = data => {
 		try {
 			if (data.startsWith('var script')) {
@@ -102,7 +114,6 @@
 			)
 		}
 	}
-	const getdecsig = path => xhrget('https://www.youtube.com' + path).then(parsedecsig)
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
 		return xf
@@ -117,6 +128,7 @@
 				let stream = []
 				if (obj.url_encoded_fmt_stream_map) {
 					stream = obj.url_encoded_fmt_stream_map.split(',').map(parseQuery)
+					$p.log(`video %s stream: %o`, id, stream)
 					if (stream[0].sp && stream[0].sp.includes('signature')) {
 						stream = stream
 							.map(x => ({ ...x, s: decsig(x.s) }))
@@ -127,6 +139,7 @@
 				let adaptive = []
 				if (obj.adaptive_fmts) {
 					adaptive = obj.adaptive_fmts.split(',').map(parseQuery)
+					$p.log(`video %s adaptive: %o`, id, adaptive)
 					if (adaptive[0].sp && adaptive[0].sp.includes('signature')) {
 						adaptive = adaptive
 							.map(x => ({ ...x, s: decsig(x.s) }))
@@ -138,7 +151,7 @@
 			})
 	}
 	const workerMessageHandler = async e => {
-		const decsig = await getdecsig(e.data.path)
+		const decsig = await xf.get(e.data.path).text(parsedecsig)
 		const result = await getVideo(e.data.id, decsig)
 		self.postMessage(result)
 	}
@@ -149,7 +162,6 @@ const $p=(${create$p.toString()})(console)
 const parseQuery=${parseQuery.toString()}
 const xhrget=${xhrget.toString()}
 const parsedecsig=${parsedecsig.toString()}
-const getdecsig=${getdecsig.toString()}
 const getVideo=${getVideo.toString()}
 self.onmessage=${workerMessageHandler.toString()}`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
