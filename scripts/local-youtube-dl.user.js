@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.7.2
+// @version      0.8.0
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -222,6 +222,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 	// attach element
 	const shadowHost = $el('div')
 	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'closed' }) : shadowHost // no shadow dom
+	$p.log('shadowHost: %o', shadowHost)
 	const container = $el('div')
 	shadow.appendChild(container)
 	app.$mount(container)
@@ -246,7 +247,6 @@ self.onmessage=${workerMessageHandler.toString()}`
 				app.meta = data.meta
 				const actLang = getLangCode()
 				if (actLang !== null) {
-					console.log(actLang)
 					const lang = findLang(actLang)
 					$p.log('youtube ui lang: %s', actLang)
 					$p.log('ytdl lang:', lang)
@@ -255,24 +255,37 @@ self.onmessage=${workerMessageHandler.toString()}`
 			})
 			.catch(err => $p.error('load', err))
 	}
-	let prevurl = null
+	let prevpath = null
 	setInterval(() => {
-		const el = $('#info-contents') || $('#watch-header') || $('ytm-item-section-renderer>lazy-list')
-		if (el && !el.contains(shadowHost)) el.appendChild(shadowHost)
-		if (location.href !== prevurl && location.pathname === '/watch') {
-			prevurl = location.href
-			app.hide = true
-			const id = parseQuery(location.search).v
-			$p.log('start loading new video: %s', id)
-			load(id)
+		const el =
+			$('#info-contents') ||
+			$('#watch-header') ||
+			$('.page-container:not([hidden]) ytm-item-section-renderer>lazy-list')
+		if (el && !el.contains(shadowHost)) {
+			el.appendChild(shadowHost)
+		}
+		if (location.pathname !== prevpath) {
+			$p.log(`page change: ${prevpath} -> ${location.pathname}`)
+			prevpath = location.pathname
+			if (location.pathname === '/watch') {
+				shadowHost.style.display = 'block'
+				const id = parseQuery(location.search).v
+				$p.log('start loading new video: %s', id)
+				app.hide = true // fold it
+				load(id)
+			} else {
+				shadowHost.style.display = 'none'
+			}
 		}
 	}, 1000)
+
 	// listen to dark mode toggle
 	const $html = $('html')
 	new MutationObserver(() => {
 		app.dark = $html.getAttribute('dark') === 'true'
 	}).observe($html, { attributes: true })
 	app.dark = $html.getAttribute('dark') === 'true'
+
 	const css = `
 .hide{
 display: none;
