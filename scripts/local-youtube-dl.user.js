@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.8.0
+// @version      0.8.1
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -19,11 +19,11 @@
 ;(function() {
 	'use strict'
 	const DEBUG = true
-	const create$p = console =>
+	const createLogger = (console,tag) =>
 		Object.keys(console)
-			.map(k => [k, (...args) => (DEBUG ? console[k]('YTDL: ' + args[0], ...args.slice(1)) : void 0)])
+			.map(k => [k, (...args) => (DEBUG ? console[k](tag + ': ' + args[0], ...args.slice(1)) : void 0)])
 			.reduce((acc, [k, fn]) => ((acc[k] = fn), acc), {})
-	const $p = create$p(console)
+	const logger = createLogger(console, 'YTDL')
 
 	const LANG_FALLBACK = 'en'
 	const LOCALE = {
@@ -77,14 +77,14 @@
 		})
 	const getytplayer = async () => {
 		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
-		$p.log('No ytplayer is founded')
+		logger.log('No ytplayer is founded')
 		const html = await xf.get(location.href).text()
 		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
 		let config = eval(d[1])
 		unsafeWindow.ytplayer = {
 			config
 		}
-		$p.log('ytplayer fetched: %o', unsafeWindow.ytplayer)
+		logger.log('ytplayer fetched: %o', unsafeWindow.ytplayer)
 		return ytplayer
 	}
 	const parsedecsig = data => {
@@ -104,12 +104,12 @@
 			const helpername = helpernameresult[1]
 			const helperresult = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)
 			const helper = helperresult[0]
-			$p.log(`parsedecsig result: %s=>{%s\n%s}`, argname, helper, fnbody)
+			logger.log(`parsedecsig result: %s=>{%s\n%s}`, argname, helper, fnbody)
 			return new Function([argname], helper + '\n' + fnbody)
 		} catch (e) {
-			$p.error('parsedecsig error: %o', e)
-			$p.info('script content: %s', data)
-			$p.info(
+			logger.error('parsedecsig error: %o', e)
+			logger.info('script content: %s', data)
+			logger.info(
 				'If you encounter this error, please copy the full "script content" to https://pastebin.com/ for me.'
 			)
 		}
@@ -121,14 +121,14 @@
 			.text()
 			.then(async data => {
 				const obj = parseQuery(data)
-				$p.log(`video %s data: %o`, id, obj)
+				logger.log(`video %s data: %o`, id, obj)
 				if (obj.status === 'fail') {
 					throw obj
 				}
 				let stream = []
 				if (obj.url_encoded_fmt_stream_map) {
 					stream = obj.url_encoded_fmt_stream_map.split(',').map(parseQuery)
-					$p.log(`video %s stream: %o`, id, stream)
+					logger.log(`video %s stream: %o`, id, stream)
 					if (stream[0].sp && stream[0].sp.includes('signature')) {
 						stream = stream
 							.map(x => ({ ...x, s: decsig(x.s) }))
@@ -139,14 +139,14 @@
 				let adaptive = []
 				if (obj.adaptive_fmts) {
 					adaptive = obj.adaptive_fmts.split(',').map(parseQuery)
-					$p.log(`video %s adaptive: %o`, id, adaptive)
+					logger.log(`video %s adaptive: %o`, id, adaptive)
 					if (adaptive[0].sp && adaptive[0].sp.includes('signature')) {
 						adaptive = adaptive
 							.map(x => ({ ...x, s: decsig(x.s) }))
 							.map(x => ({ ...x, url: x.url + `&signature=${x.s}` }))
 					}
 				}
-				$p.log(`video %s result: %o`, id, { stream, adaptive })
+				logger.log(`video %s result: %o`, id, { stream, adaptive })
 				return { stream, adaptive, meta: obj }
 			})
 	}
@@ -158,19 +158,19 @@
 	const ytdlWorkerCode = `
 importScripts('https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js')
 const DEBUG=${DEBUG}
-const $p=(${create$p.toString()})(console)
-const parseQuery=${parseQuery.toString()}
-const xhrget=${xhrget.toString()}
-const parsedecsig=${parsedecsig.toString()}
-const getVideo=${getVideo.toString()}
-self.onmessage=${workerMessageHandler.toString()}`
+const logger=(${createLogger})(console, 'YTDL')
+const parseQuery=${parseQuery}
+const xhrget=${xhrget}
+const parsedecsig=${parsedecsig}
+const getVideo=${getVideo}
+self.onmessage=${workerMessageHandler}`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
 	const workerGetVideo = (id, path) => {
-		$p.log(`workerGetVideo start: %s %s`, id, path)
+		logger.log(`workerGetVideo start: %s %s`, id, path)
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
-				$p.log('workerGetVideo end: %o', e.data)
+				logger.log('workerGetVideo end: %o', e.data)
 				res(e.data)
 			}
 			ytdlWorker.addEventListener('message', callback)
@@ -217,12 +217,12 @@ self.onmessage=${workerMessageHandler.toString()}`
 		},
 		template
 	})
-	$p.log(`default language: %s`, app.lang)
+	logger.log(`default language: %s`, app.lang)
 
 	// attach element
 	const shadowHost = $el('div')
 	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'closed' }) : shadowHost // no shadow dom
-	$p.log('shadowHost: %o', shadowHost)
+	logger.log('shadowHost: %o', shadowHost)
 	const container = $el('div')
 	shadow.appendChild(container)
 	app.$mount(container)
@@ -240,7 +240,7 @@ self.onmessage=${workerMessageHandler.toString()}`
 		const scriptel = $('script[src$="base.js"]')
 		return workerGetVideo(id, scriptel.src)
 			.then(async data => {
-				$p.log('video loaded: %s', id)
+				logger.log('video loaded: %s', id)
 				app.id = id
 				app.stream = data.stream
 				app.adaptive = data.adaptive
@@ -248,14 +248,14 @@ self.onmessage=${workerMessageHandler.toString()}`
 				const actLang = getLangCode()
 				if (actLang !== null) {
 					const lang = findLang(actLang)
-					$p.log('youtube ui lang: %s', actLang)
-					$p.log('ytdl lang:', lang)
+					logger.log('youtube ui lang: %s', actLang)
+					logger.log('ytdl lang:', lang)
 					app.lang = lang
 				}
 			})
-			.catch(err => $p.error('load', err))
+			.catch(err => logger.error('load', err))
 	}
-	let prevpath = null
+	let prev = null
 	setInterval(() => {
 		const el =
 			$('#info-contents') ||
@@ -264,13 +264,13 @@ self.onmessage=${workerMessageHandler.toString()}`
 		if (el && !el.contains(shadowHost)) {
 			el.appendChild(shadowHost)
 		}
-		if (location.pathname !== prevpath) {
-			$p.log(`page change: ${prevpath} -> ${location.pathname}`)
-			prevpath = location.pathname
+		if (location.href !== prev) {
+			logger.log(`page change: ${prev} -> ${location.href}`)
+			prev = location.href
 			if (location.pathname === '/watch') {
 				shadowHost.style.display = 'block'
 				const id = parseQuery(location.search).v
-				$p.log('start loading new video: %s', id)
+				logger.log('start loading new video: %s', id)
 				app.hide = true // fold it
 				load(id)
 			} else {
