@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.8.1
+// @version      0.8.2
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -19,7 +19,7 @@
 ;(function() {
 	'use strict'
 	const DEBUG = true
-	const createLogger = (console,tag) =>
+	const createLogger = (console, tag) =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k](tag + ': ' + args[0], ...args.slice(1)) : void 0)])
 			.reduce((acc, [k, fn]) => ((acc[k] = fn), acc), {})
@@ -32,6 +32,7 @@
 			stream: 'Stream',
 			adaptive: 'Adaptive',
 			videoid: 'Video Id: ',
+			thumbnail: 'Thumbnail',
 			inbrowser_adaptive_merger: 'In browser adaptive video & audio merger'
 		},
 		'zh-tw': {
@@ -39,6 +40,7 @@
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 ID: ',
+			thumbnail: '影片縮圖',
 			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器'
 		},
 		zh: {
@@ -46,6 +48,7 @@
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
 			videoid: '视频 ID: ',
+			thumbnail: '视频缩图',
 			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器'
 		}
 	}
@@ -62,32 +65,7 @@
 		Object.assign(el, opts)
 		return el
 	}
-	const xhrget = url =>
-		// not sure why `fetch` doesn't work here
-		new Promise((res, rej) => {
-			const xhr = new XMLHttpRequest()
-			xhr.open('GET', url)
-			xhr.onreadystatechange = () => {
-				if (xhr.readyState === xhr.DONE) {
-					res(xhr.responseText)
-				}
-			}
-			xhr.onerror = rej
-			xhr.send()
-		})
-	const getytplayer = async () => {
-		if (typeof ytplayer !== 'undefined' && ytplayer.config) return ytplayer
-		logger.log('No ytplayer is founded')
-		const html = await xf.get(location.href).text()
-		const d = /<script >(var ytplayer[\s\S]*?)ytplayer\.load/.exec(html)
-		let config = eval(d[1])
-		unsafeWindow.ytplayer = {
-			config
-		}
-		logger.log('ytplayer fetched: %o', unsafeWindow.ytplayer)
-		return ytplayer
-	}
-	const parsedecsig = data => {
+	const parseDecsig = data => {
 		try {
 			if (data.startsWith('var script')) {
 				// they inject the script via script tag
@@ -150,8 +128,18 @@
 				return { stream, adaptive, meta: obj }
 			})
 	}
+	const getVideoDetails = id =>
+		xf
+			.get('https://www.googleapis.com/youtube/v3/videos', {
+				qs: {
+					key: 'AIzaSyBk6o0igFl-P4Qe4ouVlRTPlqX7kruWdUg',
+					part: 'snippet',
+					id
+				}
+			})
+			.json(r => r.items[0])
 	const workerMessageHandler = async e => {
-		const decsig = await xf.get(e.data.path).text(parsedecsig)
+		const decsig = await xf.get(e.data.path).text(parseDecsig)
 		const result = await getVideo(e.data.id, decsig)
 		self.postMessage(result)
 	}
@@ -160,8 +148,7 @@ importScripts('https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js')
 const DEBUG=${DEBUG}
 const logger=(${createLogger})(console, 'YTDL')
 const parseQuery=${parseQuery}
-const xhrget=${xhrget}
-const parsedecsig=${parsedecsig}
+const parseDecsig=${parseDecsig}
 const getVideo=${getVideo}
 self.onmessage=${workerMessageHandler}`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
@@ -183,6 +170,9 @@ self.onmessage=${workerMessageHandler}`
 	<div @click="hide=!hide" class="box-toggle t-center fs-14px" v-text="strings.togglelinks"></div>
 	<div :class="{'hide':hide}">
 		<div class="t-center fs-14px" v-text="strings.videoid+id"></div>
+		<div class="t-center fs-14px">
+			<a :href="thumbnail" target="_blank" v-text="strings.thumbnail"></a>
+		</div>
 		<div class="d-flex">
 			<div class="f-1 of-h">
 				<div class="t-center fs-14px" v-text="strings.stream"></div>
@@ -207,6 +197,7 @@ self.onmessage=${workerMessageHandler}`
 				stream: [],
 				adaptive: [],
 				dark: false,
+				thumbnail: null,
 				lang: findLang(navigator.language)
 			}
 		},
@@ -227,7 +218,14 @@ self.onmessage=${workerMessageHandler}`
 	shadow.appendChild(container)
 	app.$mount(container)
 
-	if (DEBUG) unsafeWindow.$app = app
+	if (DEBUG) {
+		// expose some functions for debugging
+		unsafeWindow.$app = app
+		unsafeWindow.parseQuery = parseQuery
+		unsafeWindow.parseDecsig = parseDecsig
+		unsafeWindow.getVideo = getVideo
+	}
+
 	const getLangCode = () => {
 		if (typeof ytplayer !== 'undefined') {
 			return ytplayer.config.args.host_language
@@ -238,22 +236,37 @@ self.onmessage=${workerMessageHandler}`
 	}
 	const load = async id => {
 		const scriptel = $('script[src$="base.js"]')
-		return workerGetVideo(id, scriptel.src)
-			.then(async data => {
-				logger.log('video loaded: %s', id)
-				app.id = id
-				app.stream = data.stream
-				app.adaptive = data.adaptive
-				app.meta = data.meta
-				const actLang = getLangCode()
-				if (actLang !== null) {
-					const lang = findLang(actLang)
-					logger.log('youtube ui lang: %s', actLang)
-					logger.log('ytdl lang:', lang)
-					app.lang = lang
-				}
-			})
-			.catch(err => logger.error('load', err))
+		try {
+			const data = await workerGetVideo(id, scriptel.src)
+			const details = await getVideoDetails(id)
+			logger.log('video details: %o', details)
+			logger.log('video loaded: %s', id)
+			app.id = id
+			app.stream = data.stream
+			app.adaptive = data.adaptive
+			app.meta = data.meta
+
+			// find highest quality thumbnail
+			const thumbnail = Object.values(details.snippet.thumbnails)
+				.map(d => {
+					const x = {}
+					x.url = d.url
+					x.size = d.width * d.height
+					return x
+				})
+				.sort((a, b) => b.size - a.size)[0].url
+			app.thumbnail = thumbnail
+
+			const actLang = getLangCode()
+			if (actLang !== null) {
+				const lang = findLang(actLang)
+				logger.log('youtube ui lang: %s', actLang)
+				logger.log('ytdl lang:', lang)
+				app.lang = lang
+			}
+		} catch (err) {
+			logger.error('load', err)
+		}
 	}
 	let prev = null
 	setInterval(() => {
