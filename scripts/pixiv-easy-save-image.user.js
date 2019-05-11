@@ -12,7 +12,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
 // @require      https://unpkg.com/xfetch-js@0.3.0/xfetch.min.js
 // @require      https://unpkg.com/gmxhr-fetch@0.0.6/gmxhr-fetch.min.js
-// @require      https://raw.githubusercontent.com/antimatter15/whammy/master/whammy.js
+// @require      https://gitcdn.xyz/repo/antimatter15/whammy/27ef01b3d82e9b32c7822f7a5250809e1ae89b33/whammy.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
 // @match        https://www.pixiv.net/bookmark.php*
