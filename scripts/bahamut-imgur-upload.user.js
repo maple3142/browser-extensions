@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.7.1
+// @version      0.7.2
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -11,7 +11,7 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-;(function($, egg) {
+;(function($) {
 	'use strict'
 	/*
 	 * ALBUM_TO_UPLOAD 是你想要上傳的目標相簿 id
@@ -19,7 +19,7 @@
 	 * 請把他貼到 GM_getValue('ALBUM_TO_UPLOAD','') 後面的引號中，變成 GM_getValue('ALBUM_TO_UPLOAD','C8763')
 	 * 這樣可以確保 id 不會在腳本更新後被清除，不過如果要修改的需要自己去腳本管理器的儲存空間修改
 	 * Tampermonkey 直接在編輯頁面上面的 Storage 頁面修改就好，其他我就不知道了
-	*/
+	 */
 	const ALBUM_TO_UPLOAD = GM_getValue('ALBUM_TO_UPLOAD', '')
 	if (ALBUM_TO_UPLOAD) GM_setValue('ALBUM_TO_UPLOAD', ALBUM_TO_UPLOAD)
 
@@ -113,6 +113,10 @@
 					$uplbtn.on('click', e => {
 						e.preventDefault()
 						e.stopPropagation()
+						if (!chk_isAuthorized()) {
+							login()
+							return
+						}
 						imgurEnable = !imgurEnable
 						if (imgurEnable) $uplbtn.removeClass('unchecked').text('imgur 模式: 啟用')
 						else $uplbtn.addClass('unchecked').text('imgur 模式: 停用')
@@ -304,4 +308,4 @@
 	const css = document.createElement('style')
 	css.textContent = `.btn.unchecked{box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);opacity:0.5;}`
 	document.body.appendChild(css)
-})(jQuery, egg)
+})(jQuery)
