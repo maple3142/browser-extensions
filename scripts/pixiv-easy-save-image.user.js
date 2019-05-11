@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.0
+// @version      0.6.1
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -12,6 +12,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
 // @require      https://unpkg.com/xfetch-js@0.3.0/xfetch.min.js
 // @require      https://unpkg.com/gmxhr-fetch@0.0.6/gmxhr-fetch.min.js
+// @require      https://raw.githubusercontent.com/antimatter15/whammy/master/whammy.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
 // @match        https://www.pixiv.net/
 // @match        https://www.pixiv.net/bookmark.php*
@@ -22,9 +23,7 @@
 // @match        https://www.pixiv.net/member_illust.php*
 // @match        https://www.pixiv.net/member.php*
 // @connect      pximg.net
-// @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
 // @compatible   firefox >=52
 // @compatible   chrome >=55
 // @license      MIT
@@ -37,6 +36,7 @@
 		multiple: (d, i) => `${d.title}-${d.userName}-${d.id}-p${i}`
 	}
 	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
+	const SAVE_UGOIRA_AS_WEBM = false // faster than gif
 
 	const sleep = ms => new Promise(res => setTimeout(res, ms))
 	const gxf = xf.extend({ fetch: gmfetch })
@@ -49,7 +49,7 @@
 			else a.setAttribute(k, b[k])
 		})
 	}
-	const $el = (s, o) => {
+	const $el = (s, o = {}) => {
 		const el = document.createElement(s)
 		elementmerge(el, o)
 		return el
@@ -74,13 +74,18 @@
 		download(url, fname)
 		URL.revokeObjectURL(url)
 	}
-	const blobToImg = blob =>
+	const blobToCanvas = blob =>
 		new Promise((res, rej) => {
 			const src = URL.createObjectURL(blob)
 			const img = $el('img', { src })
+			const cvs = $el('canvas')
+			const ctx = cvs.getContext('2d')
 			img.onload = () => {
 				URL.revokeObjectURL(src)
-				res(img)
+				cvs.height = img.naturalHeight
+				cvs.width = img.naturalWidth
+				ctx.drawImage(img, 0, 0)
+				res(cvs)
 			}
 			img.onerror = e => {
 				URL.revokeObjectURL(src)
@@ -127,25 +132,36 @@
 			case 2: {
 				// ugoira
 				const fname = single(illustData)
-				const numCpu = navigator.hardwareConcurrency || 4
-				const gif = new GIF({ workers: numCpu * 4, quality: 10 })
 				const ugoiraMeta = await getUgoiraMeta(id)
 				const ugoiraZip = await xf.get(ugoiraMeta.originalSrc).blob()
 				const { files } = await JSZip.loadAsync(ugoiraZip)
-				const gifFrames = await Promise.all(Object.values(files).map(f => f.async('blob').then(blobToImg)))
-				const getGif = (data, frames) =>
-					new Promise((res, rej) => {
-						for (let i = 0; i < frames.length; i++) {
-							gif.addFrame(frames[i], { delay: data.frames[i].delay })
-						}
-						gif.on('finished', x => {
-							console.timeEnd('gif')
-							res(x)
+				const frames = await Promise.all(Object.values(files).map(f => f.async('blob').then(blobToCanvas)))
+				if (SAVE_UGOIRA_AS_WEBM) {
+					const getWebm = (data, frames) =>
+						new Promise((res, rej) => {
+							const encoder = new Whammy.Video()
+							for (let i = 0; i < frames.length; i++) {
+								encoder.add(frames[i], data.frames[i].delay)
+							}
+							encoder.compile(false, res)
 						})
-						gif.on('error', rej)
-						gif.render()
-					})
-				results = await [[fname + '.gif', await getGif(ugoiraMeta, gifFrames)]]
+					results = [[fname + '.webm', await getWebm(ugoiraMeta, frames)]]
+				} else {
+					const numCpu = navigator.hardwareConcurrency || 4
+					const getGif = (data, frames) =>
+						new Promise((res, rej) => {
+							const gif = new GIF({ workers: numCpu * 4, quality: 10 })
+							for (let i = 0; i < frames.length; i++) {
+								gif.addFrame(frames[i], { delay: data.frames[i].delay })
+							}
+							gif.on('finished', x => {
+								res(x)
+							})
+							gif.on('error', rej)
+							gif.render()
+						})
+					results = [[fname + '.gif', await getGif(ugoiraMeta, frames)]]
+				}
 			}
 		}
 		if (results.length === 1) {
