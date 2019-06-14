@@ -107,10 +107,10 @@
 				if (obj.url_encoded_fmt_stream_map) {
 					stream = obj.url_encoded_fmt_stream_map.split(',').map(parseQuery)
 					logger.log(`video %s stream: %o`, id, stream)
-					if (stream[0].sp && stream[0].sp.includes('signature')) {
+					if (stream[0].sp && stream[0].sp.includes('sig')) {
 						stream = stream
 							.map(x => ({ ...x, s: decsig(x.s) }))
-							.map(x => ({ ...x, url: x.url + `&signature=${x.s}` }))
+							.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
 					}
 				}
 
@@ -118,10 +118,10 @@
 				if (obj.adaptive_fmts) {
 					adaptive = obj.adaptive_fmts.split(',').map(parseQuery)
 					logger.log(`video %s adaptive: %o`, id, adaptive)
-					if (adaptive[0].sp && adaptive[0].sp.includes('signature')) {
+					if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
 						adaptive = adaptive
 							.map(x => ({ ...x, s: decsig(x.s) }))
-							.map(x => ({ ...x, url: x.url + `&signature=${x.s}` }))
+							.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
 					}
 				}
 				logger.log(`video %s result: %o`, id, { stream, adaptive })
