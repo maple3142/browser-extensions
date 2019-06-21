@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.8.2
+// @version      0.8.4
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -74,7 +74,7 @@
 				eval(data)
 				data = obj.innerHTML
 			}
-			const fnnameresult = /yt\.akamaized\.net.*encodeURIComponent\((\w+)/.exec(data)
+			const fnnameresult = /\.set\([^,]*,encodeURIComponent\(([^(]*)\(/.exec(data)
 			const fnname = fnnameresult[1]
 			const _argnamefnbodyresult = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
 			const [_, argname, fnbody] = _argnamefnbodyresult
@@ -107,10 +107,10 @@
 				if (obj.url_encoded_fmt_stream_map) {
 					stream = obj.url_encoded_fmt_stream_map.split(',').map(parseQuery)
 					logger.log(`video %s stream: %o`, id, stream)
-					if (stream[0].sp && stream[0].sp.includes('signature')) {
+					if (stream[0].sp && stream[0].sp.includes('sig')) {
 						stream = stream
 							.map(x => ({ ...x, s: decsig(x.s) }))
-							.map(x => ({ ...x, url: x.url + `&signature=${x.s}` }))
+							.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
 					}
 				}
 
@@ -118,10 +118,10 @@
 				if (obj.adaptive_fmts) {
 					adaptive = obj.adaptive_fmts.split(',').map(parseQuery)
 					logger.log(`video %s adaptive: %o`, id, adaptive)
-					if (adaptive[0].sp && adaptive[0].sp.includes('signature')) {
+					if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
 						adaptive = adaptive
 							.map(x => ({ ...x, s: decsig(x.s) }))
-							.map(x => ({ ...x, url: x.url + `&signature=${x.s}` }))
+							.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
 					}
 				}
 				logger.log(`video %s result: %o`, id, { stream, adaptive })
