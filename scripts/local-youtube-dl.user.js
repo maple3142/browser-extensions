@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.8.4
+// @version      0.8.5
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -138,6 +138,18 @@
 				}
 			})
 			.json(r => r.items[0])
+	const getHighresThumbnail = id =>
+		getVideoDetails(id).then(
+			details =>
+				Object.values(details.snippet.thumbnails)
+					.map(d => {
+						const x = {}
+						x.url = d.url
+						x.size = d.width * d.height
+						return x
+					})
+					.sort((a, b) => b.size - a.size)[0].url
+		)
 	const workerMessageHandler = async e => {
 		const decsig = await xf.get(e.data.path).text(parseDecsig)
 		const result = await getVideo(e.data.id, decsig)
@@ -206,6 +218,13 @@ self.onmessage=${workerMessageHandler}`
 				return LOCALE[this.lang.toLowerCase()]
 			}
 		},
+		watch: {
+			async hide() {
+				if (this.thumbnail == null) {
+					app.thumbnail = await getHighresThumbnail(this.id)
+				}
+			}
+		},
 		template
 	})
 	logger.log(`default language: %s`, app.lang)
@@ -238,24 +257,15 @@ self.onmessage=${workerMessageHandler}`
 		const scriptel = $('script[src$="base.js"]')
 		try {
 			const data = await workerGetVideo(id, scriptel.src)
-			const details = await getVideoDetails(id)
-			logger.log('video details: %o', details)
 			logger.log('video loaded: %s', id)
 			app.id = id
 			app.stream = data.stream
 			app.adaptive = data.adaptive
 			app.meta = data.meta
 
-			// find highest quality thumbnail
-			const thumbnail = Object.values(details.snippet.thumbnails)
-				.map(d => {
-					const x = {}
-					x.url = d.url
-					x.size = d.width * d.height
-					return x
-				})
-				.sort((a, b) => b.size - a.size)[0].url
-			app.thumbnail = thumbnail
+			// lazy load thumbnail to save quota, so it will only load thumbnail when expanding
+			// app.thumbnail = await getHighresThumbnail(id)
+			app.thumbnail = null
 
 			const actLang = getLangCode()
 			if (actLang !== null) {
