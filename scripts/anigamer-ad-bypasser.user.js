@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         跳過動畫瘋廣告
 // @namespace    https://blog.maple3142.net/
-// @version      0.6
+// @version      0.7
 // @description  RT
 // @author       maple3142
 // @match        https://ani.gamer.com.tw/animeVideo.php?sn=*
@@ -15,7 +15,24 @@
 ;(function() {
 	'use strict'
 	const css = document.createElement('style')
-	css.textContent = `.vast-blocker{background:black;}.vast-blocker::before{content:"約8秒後會自動跳過廣告，失敗就重新整理";color:white;font-size:70px;}`
+	css.textContent = `
+	.vast-blocker{
+		background: black;
+		text-align: center;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		text-decoration: none;
+	}
+	.vast-blocker::before{
+		content: "約8秒後會自動跳過廣告，失敗就重新整理";
+		color: white;
+		font-size: 48px;
+		font-family: -apple-system, "Helvetica Neue", "微軟正黑體", Arial, sans-serif;
+	}
+	`
+	css.textContent +=
+		'.vast-blocker::before{content:"約8秒後會自動跳過廣告，失敗就重新整理";color:white;font-size:48px;}'
 	document.body.appendChild(css)
 	let tryCount = 0
 	function tryUntilAniVideoIsOk() {
@@ -33,6 +50,9 @@
 			return
 		}
 		ani_video.on('vast.adStart', () => {
+			if (document.querySelector('.vast-blocker')) {
+				document.querySelector('#ani_video_html5_api').pause()
+			}
 			setTimeout(() => ani_video.trigger('vast.adSkip'), 8000)
 		})
 	}
