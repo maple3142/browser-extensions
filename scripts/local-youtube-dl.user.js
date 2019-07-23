@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.0
+// @version      0.9.1
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -19,7 +19,7 @@
 ;(function() {
 	'use strict'
 	const DEBUG = false
-    const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
+	const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
 	const createLogger = (console, tag) =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k](tag + ': ' + args[0], ...args.slice(1)) : void 0)])
@@ -260,23 +260,32 @@ self.onmessage=${workerMessageHandler}`
 		}
 		return null
 	}
-    const textToHtml = t=>{
-        // URLs starting with http://, https://
-        t=t.replace(/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim, '<a href="$1" target="_blank">$1</a>')
-        t=t.replace(/\n/g,'<br>')
-        return t
-    }
-    const applyOriginalTitle = meta => {
-        const data = eval(`(${meta.player_response})`).videoDetails // not a valid json, so JSON.parse won't work
-        $('#eow-title').textContent=data.title
-        $('#eow-description').innerHTML=textToHtml(data.shortDescription)
-    }
+	const textToHtml = t => {
+		// URLs starting with http://, https://
+		t = t.replace(
+			/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim,
+			'<a href="$1" target="_blank">$1</a>'
+		)
+		t = t.replace(/\n/g, '<br>')
+		return t
+	}
+	const applyOriginalTitle = meta => {
+		const data = eval(`(${meta.player_response})`).videoDetails // not a valid json, so JSON.parse won't work
+		if ($('#eow-title')) {
+			// legacy youtube
+			$('#eow-title').textContent = data.title
+			$('#eow-description').innerHTML = textToHtml(data.shortDescription)
+		} else {
+			$('h1.title').textContent = data.title
+			$('yt-formatted-string.content').innerHTML = textToHtml(data.shortDescription)
+		}
+	}
 	const load = async id => {
 		const scriptel = $('script[src$="base.js"]')
 		try {
 			const data = await workerGetVideo(id, scriptel.src)
 			logger.log('video loaded: %s', id)
-            if(RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) applyOriginalTitle(data.meta)
+			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) applyOriginalTitle(data.meta)
 			app.id = id
 			app.stream = data.stream
 			app.adaptive = data.adaptive
