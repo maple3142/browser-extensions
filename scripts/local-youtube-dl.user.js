@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.8.5
+// @version      0.9.0
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -18,7 +18,8 @@
 
 ;(function() {
 	'use strict'
-	const DEBUG = true
+	const DEBUG = false
+    const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
 	const createLogger = (console, tag) =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k](tag + ': ' + args[0], ...args.slice(1)) : void 0)])
@@ -50,6 +51,12 @@
 			videoid: '视频 ID: ',
 			thumbnail: '视频缩图',
 			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器'
+		},
+		kr: {
+			togglelinks: '링크 보이기/숨기기',
+			stream: '스트리밍',
+			adaptive: '조정 가능한',
+			videoid: 'Video Id: {{id}}'
 		}
 	}
 	const findLang = l => {
@@ -253,11 +260,23 @@ self.onmessage=${workerMessageHandler}`
 		}
 		return null
 	}
+    const textToHtml = t=>{
+        // URLs starting with http://, https://
+        t=t.replace(/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim, '<a href="$1" target="_blank">$1</a>')
+        t=t.replace(/\n/g,'<br>')
+        return t
+    }
+    const applyOriginalTitle = meta => {
+        const data = eval(`(${meta.player_response})`).videoDetails // not a valid json, so JSON.parse won't work
+        $('#eow-title').textContent=data.title
+        $('#eow-description').innerHTML=textToHtml(data.shortDescription)
+    }
 	const load = async id => {
 		const scriptel = $('script[src$="base.js"]')
 		try {
 			const data = await workerGetVideo(id, scriptel.src)
 			logger.log('video loaded: %s', id)
+            if(RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) applyOriginalTitle(data.meta)
 			app.id = id
 			app.stream = data.stream
 			app.adaptive = data.adaptive
