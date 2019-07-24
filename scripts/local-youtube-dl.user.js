@@ -244,7 +244,7 @@ self.onmessage=${workerMessageHandler}`
 	shadow.appendChild(container)
 	app.$mount(container)
 
-	if (DEBUG) {
+	if (DEBUG && typeof unsafeWindow !== 'undefined') {
 		// expose some functions for debugging
 		unsafeWindow.$app = app
 		unsafeWindow.parseQuery = parseQuery
