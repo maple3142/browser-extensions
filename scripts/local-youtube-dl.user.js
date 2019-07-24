@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.1
+// @version      0.9.2
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -18,7 +18,7 @@
 
 ;(function() {
 	'use strict'
-	const DEBUG = false
+	const DEBUG = true
 	const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
 	const createLogger = (console, tag) =>
 		Object.keys(console)
@@ -275,7 +275,8 @@ self.onmessage=${workerMessageHandler}`
 			// legacy youtube
 			$('#eow-title').textContent = data.title
 			$('#eow-description').innerHTML = textToHtml(data.shortDescription)
-		} else {
+		} else if ($('h1.title')) {
+			// new youtube (polymer)
 			$('h1.title').textContent = data.title
 			$('yt-formatted-string.content').innerHTML = textToHtml(data.shortDescription)
 		}
@@ -285,7 +286,13 @@ self.onmessage=${workerMessageHandler}`
 		try {
 			const data = await workerGetVideo(id, scriptel.src)
 			logger.log('video loaded: %s', id)
-			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) applyOriginalTitle(data.meta)
+			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) {
+				try {
+					applyOriginalTitle(data.meta)
+				} catch (e) {
+					// just make sure the main function will work even if original title applier doesn't work
+				}
+			}
 			app.id = id
 			app.stream = data.stream
 			app.adaptive = data.adaptive
