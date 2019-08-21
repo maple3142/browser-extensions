@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.2
+// @version      0.9.3
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -72,6 +72,7 @@
 		Object.assign(el, opts)
 		return el
 	}
+	const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 	const parseDecsig = data => {
 		try {
 			if (data.startsWith('var script')) {
@@ -83,11 +84,11 @@
 			}
 			const fnnameresult = /\.set\([^,]*,encodeURIComponent\(([^(]*)\(/.exec(data)
 			const fnname = fnnameresult[1]
-			const _argnamefnbodyresult = new RegExp(fnname + '=function\\((.+?)\\){(.+?)}').exec(data)
+			const _argnamefnbodyresult = new RegExp(escapeRegExp(fnname) + '=function\\((.+?)\\){(.+?)}').exec(data)
 			const [_, argname, fnbody] = _argnamefnbodyresult
 			const helpernameresult = /;(.+?)\..+?\(/.exec(fnbody)
 			const helpername = helpernameresult[1]
-			const helperresult = new RegExp('var ' + helpername + '={[\\s\\S]+?};').exec(data)
+			const helperresult = new RegExp('var ' + escapeRegExp(helpername) + '={[\\s\\S]+?};').exec(data)
 			const helper = helperresult[0]
 			logger.log(`parsedecsig result: %s=>{%s\n%s}`, argname, helper, fnbody)
 			return new Function([argname], helper + '\n' + fnbody)
@@ -166,6 +167,7 @@
 importScripts('https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js')
 const DEBUG=${DEBUG}
 const logger=(${createLogger})(console, 'YTDL')
+const escapeRegExp=${escapeRegExp}
 const parseQuery=${parseQuery}
 const parseDecsig=${parseDecsig}
 const getVideo=${getVideo}
