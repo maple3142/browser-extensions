@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         翻譯小工具
 // @namespace    https://blog.maple3142.net/
-// @version      1.0
+// @version      1.1
 // @description  選字時會出現小懸浮窗以方便翻譯
 // @author       maple3142  xinggsf  田雨菲
 // @include      *
@@ -10,7 +10,8 @@
 // ==/UserScript==
 
 'use strict'
-const googleUrl = '//translate.google.com/translate_a/single?client=gtx&dt=t&dt=bd&dj=1&source=input&hl=en&sl=auto&tl='
+const googleUrl =
+	'https://translate.google.com/translate_a/single?client=gtx&dt=t&dt=bd&dj=1&source=input&hl=en&sl=auto'
 const reHZ = /^[\u4E00-\u9FA5\uFF00-\uFF20\u3000-\u301C]$/
 
 const countOfWord = str => (str ? str.split(/\W+/).length : 0)
@@ -24,6 +25,10 @@ const translateTip = {
 		if (!this._tip) return
 		this._tip.innerHTML = text
 		this._tip.style.display = ''
+	},
+	appendElement(el) {
+		if (!this._tip) return
+		this._tip.appendChild(el)
 	},
 	destroy() {
 		this._tip && this._tip.remove()
@@ -52,7 +57,7 @@ max-height:216px!important;
 z-index:2147483647!important;`
 		)
 		div.style.top = ev.pageY + 'px'
-		//面板最大宽度为350px
+		// 最大寬度為 350px
 		div.style.left =
 			(ev.pageX + 350 <= document.body.clientWidth ? ev.pageX : document.body.clientWidth - 350) + 'px'
 		document.body.appendChild(div)
@@ -76,7 +81,7 @@ z-index:2147483647!important;`
 let outTimer, overTimer
 document.documentElement.appendChild(icon)
 icon.hidden = true
-//攔截 event 以防止選中的文字消失
+// 攔截 event 以防止選中的文字消失
 icon.addEventListener('mousedown', e => e.preventDefault(), true)
 icon.addEventListener('mouseup', e => e.preventDefault(), true)
 
@@ -110,15 +115,15 @@ const clickIcon = function(e) {
 	if (text) {
 		icon.hidden = true
 		translateTip.makeTip(e)
-		const url = isAllChinese(text) ? googleUrl + 'en&q=' : googleUrl + navigator.language + '&q='
-		ajax(url, text)
+		const dest = isAllChinese(text) ? 'en' : navigator.language
+		showTranslate(text, dest)
 	}
 }
 icon.addEventListener('click', clickIcon, true)
 
 icon.addEventListener(
 	'mouseover',
-	function(e) {
+	e => {
 		if (outTimer) {
 			clearTimeout(outTimer)
 			outTimer = null
@@ -130,7 +135,7 @@ icon.addEventListener(
 )
 icon.addEventListener(
 	'mouseout',
-	function(e) {
+	e => {
 		if (overTimer) {
 			clearTimeout(overTimer)
 			overTimer = null
@@ -146,24 +151,51 @@ icon.addEventListener(
 	true
 )
 
-function ajax(url, text) {
-	url += encodeURIComponent(text)
-	GM_xmlhttpRequest({
-		method: 'GET',
-		responseType: 'json',
-		url: url,
-		onload: function(res) {
-			google(res.response)
-		},
-		onerror: function(res) {
-			translateTip.showText('連接失敗\nURL: ' + url)
-		}
-	})
+function showTranslate(text, dest, originaldest = dest) {
+	translate(text, dest)
+		.then(res => {
+			console.log(res)
+			let html = ''
+			for (const s of res.sentences) html += s.trans + '</br>'
+			translateTip.showText(html)
+
+			// 如果翻譯目標不是英文，會在下方新增一個按鈕可在英文與原本的翻譯目標語言中切換
+			// 若不是的話則把它隱藏(包括兩個 <a> 之間的空白)
+			const a1 = document.createElement('a')
+			a1.textContent = dest === 'en' ? '還原' : '翻譯為英文'
+			a1.href = 'javascript:void()'
+			a1.onclick = () => showTranslate(text, dest === 'en' ? originaldest : 'en', originaldest)
+			if (originaldest == 'en') a1.style.display = 'none'
+			const a2 = document.createElement('a')
+			a2.textContent = '在 Google 翻譯中檢視'
+			a2.href = `https://translate.google.com/#${res.src}|${dest}|${encodeURIComponent(text)}`
+			a2.target = '_blank'
+			const div = document.createElement('div')
+			div.appendChild(a1)
+			if (originaldest != 'en') div.appendChild(document.createTextNode(' '))
+			div.appendChild(a2)
+			translateTip.appendElement(div)
+		})
+		.catch(err => {
+			console.error(err)
+			translateTip.showText('連接失敗')
+			const a2 = document.createElement('a')
+			a2.textContent = '在 Google 翻譯中檢視'
+			a2.href = `https://translate.google.com/#${res.src}|${dest}|${encodeURIComponent(text)}`
+			a2.target = '_blank'
+			translateTip.appendElement(a2)
+		})
 }
 
-function google(rst) {
-	let k,
-		html = ''
-	for (k of rst.sentences) html += k.trans
-	translateTip.showText(html)
+function translate(text, dest) {
+	const url = googleUrl + `&tl=${dest}&q=${text}`
+	return new Promise((res, rej) => {
+		GM_xmlhttpRequest({
+			method: 'GET',
+			responseType: 'json',
+			url: url,
+			onload: r => res(r.response),
+			onerror: err => rej(err)
+		})
+	})
 }
