@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         翻譯小工具
 // @namespace    https://blog.maple3142.net/
-// @version      1.1
+// @version      1.2
 // @description  選字時會出現小懸浮窗以方便翻譯
-// @author       maple3142  xinggsf  田雨菲
+// @author       maple3142
 // @include      *
 // @connect      translate.google.com
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
+
+// 此腳本的各版本作者為: 田雨菲->xinggsf->maple3142
 
 'use strict'
 const googleUrl =
@@ -21,14 +23,20 @@ const translateTip = {
 		const el = ev.target
 		return !!(this._tip && el && this._tip.contains(el))
 	},
-	showText(text) {
+	show() {
 		if (!this._tip) return
-		this._tip.innerHTML = text
 		this._tip.style.display = ''
+	},
+	hide() {
+		if (!this._tip) return
+		this._tip.style.display = 'none'
 	},
 	appendElement(el) {
 		if (!this._tip) return
-		this._tip.appendChild(el)
+		this._tip_root.appendChild(el)
+	},
+	clear() {
+		this._tip_root.innerHTML = ''
 	},
 	destroy() {
 		this._tip && this._tip.remove()
@@ -62,6 +70,7 @@ z-index:2147483647!important;`
 			(ev.pageX + 350 <= document.body.clientWidth ? ev.pageX : document.body.clientWidth - 350) + 'px'
 		document.body.appendChild(div)
 		this._tip = div
+		this._tip_root = div.attachShadow({ mode: 'open' })
 	}
 }
 const icon = document.createElement('span')
@@ -152,43 +161,52 @@ icon.addEventListener(
 )
 
 function showTranslate(text, dest, originaldest = dest) {
+	translateTip.hide()
+	translateTip.clear()
 	translate(text, dest)
 		.then(res => {
 			console.log(res)
 			let html = ''
 			for (const s of res.sentences) html += s.trans + '</br>'
-			translateTip.showText(html)
+			const translatedTexts = document.createElement('div')
+			translatedTexts.innerHTML = html
+			translatedTexts.style.fontSize = '14px'
+			translateTip.appendElement(translatedTexts)
 
 			// 如果翻譯目標不是英文，會在下方新增一個按鈕可在英文與原本的翻譯目標語言中切換
 			// 若不是的話則把它隱藏(包括兩個 <a> 之間的空白)
 			const a1 = document.createElement('a')
 			a1.textContent = dest === 'en' ? '還原' : '翻譯為英文'
-			a1.href = 'javascript:void()'
+			a1.href = 'javascript:void(0)'
 			a1.onclick = () => showTranslate(text, dest === 'en' ? originaldest : 'en', originaldest)
 			if (originaldest == 'en') a1.style.display = 'none'
 			const a2 = document.createElement('a')
 			a2.textContent = '在 Google 翻譯中檢視'
 			a2.href = `https://translate.google.com/#${res.src}|${dest}|${encodeURIComponent(text)}`
 			a2.target = '_blank'
-			const div = document.createElement('div')
-			div.appendChild(a1)
-			if (originaldest != 'en') div.appendChild(document.createTextNode(' '))
-			div.appendChild(a2)
-			translateTip.appendElement(div)
+			const linksWrapper = document.createElement('div')
+			linksWrapper.appendChild(a1)
+			if (originaldest != 'en') linksWrapper.appendChild(document.createTextNode(' '))
+			linksWrapper.appendChild(a2)
+			translateTip.appendElement(linksWrapper)
+
+			translateTip.show()
 		})
 		.catch(err => {
 			console.error(err)
-			translateTip.showText('連接失敗')
+			translateTip.appendElement(document.createTextNode('連接失敗'))
 			const a2 = document.createElement('a')
 			a2.textContent = '在 Google 翻譯中檢視'
 			a2.href = `https://translate.google.com/#${res.src}|${dest}|${encodeURIComponent(text)}`
 			a2.target = '_blank'
 			translateTip.appendElement(a2)
+
+			translateTip.show()
 		})
 }
 
 function translate(text, dest) {
-	const url = googleUrl + `&tl=${dest}&q=${text}`
+	const url = googleUrl + `&tl=${dest}&q=${encodeURIComponent(text)}`
 	return new Promise((res, rej) => {
 		GM_xmlhttpRequest({
 			method: 'GET',
