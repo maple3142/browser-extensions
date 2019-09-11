@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.4
+// @version      0.9.5
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -107,13 +107,15 @@
 			.text()
 			.then(async data => {
 				const obj = parseQuery(data)
+				const playerResponse = JSON.parse(obj.player_response)
 				logger.log(`video %s data: %o`, id, obj)
+				logger.log(`video %s playerResponse: %o`, id, playerResponse)
 				if (obj.status === 'fail') {
 					throw obj
 				}
 				let stream = []
-				if (obj.url_encoded_fmt_stream_map) {
-					stream = obj.url_encoded_fmt_stream_map.split(',').map(parseQuery)
+				if (playerResponse.streamingData.formats) {
+					stream = playerResponse.streamingData.formats
 					logger.log(`video %s stream: %o`, id, stream)
 					if (stream[0].sp && stream[0].sp.includes('sig')) {
 						stream = stream
@@ -123,8 +125,8 @@
 				}
 
 				let adaptive = []
-				if (obj.adaptive_fmts) {
-					adaptive = obj.adaptive_fmts.split(',').map(parseQuery)
+				if (playerResponse.streamingData.adaptiveFormats) {
+					adaptive = playerResponse.streamingData.adaptiveFormats
 					logger.log(`video %s adaptive: %o`, id, adaptive)
 					if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
 						adaptive = adaptive
@@ -201,7 +203,7 @@ self.onmessage=${workerMessageHandler}`
 			</div>
 			<div class="f-1 of-h">
 				<div class="t-center fs-14px" v-text="strings.adaptive"></div>
-				<a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in adaptive" :href="vid.url" :title="vid.type" v-text="[vid.quality_label,vid.type].filter(x=>x).join(':')"></a>
+				<a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in adaptive" :href="vid.url" :title="vid.type" v-text="[vid.qualityLabel,vid.mimeType].filter(x=>x).join(':')"></a>
 			</div>
 		</div>
 		<div class="of-h t-center">
