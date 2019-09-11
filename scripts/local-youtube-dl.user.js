@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.5
+// @version      0.9.7
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -115,7 +115,7 @@
 				}
 				let stream = []
 				if (playerResponse.streamingData.formats) {
-					stream = playerResponse.streamingData.formats
+					stream = playerResponse.streamingData.formats.map(x => Object.assign(x, parseQuery(x.cipher)))
 					logger.log(`video %s stream: %o`, id, stream)
 					if (stream[0].sp && stream[0].sp.includes('sig')) {
 						stream = stream
@@ -126,7 +126,9 @@
 
 				let adaptive = []
 				if (playerResponse.streamingData.adaptiveFormats) {
-					adaptive = playerResponse.streamingData.adaptiveFormats
+					adaptive = playerResponse.streamingData.adaptiveFormats.map(x =>
+						Object.assign(x, parseQuery(x.cipher))
+					)
 					logger.log(`video %s adaptive: %o`, id, adaptive)
 					if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
 						adaptive = adaptive
