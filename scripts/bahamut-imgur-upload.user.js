@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.7.2
+// @version      0.7.3
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -267,20 +267,19 @@
 	function upload(image) {
 		const data = getInitialUploadData()
 		data.append('image', image)
-		return $.ajax({
-			type: 'POST',
-			url: 'https://api.imgur.com/3/image',
-			data,
-			processData: false,
-			contentType: false,
+		return fetch('https://api.imgur.com/3/image', {
+			method: 'POST',
+			credentials: 'omit',
+			body: data,
 			headers: {
 				Authorization: `Bearer ${GM_getValue('access_token')}`
-			},
-			dataType: 'json'
-		}).then(r => {
-			if (!r.success) throw new Error(r)
-			return r
+			}
 		})
+			.then(r => r.json())
+			.then(r => {
+				if (!r.success) throw new Error(r)
+				return r
+			})
 	}
 	function dzupload(xhr) {
 		const data = getInitialUploadData()
@@ -289,6 +288,7 @@
 			xhr.send = res
 		})
 		return fd$.then(fd => {
+			xhr.withCredentials = false
 			xhr.open('POST', 'https://api.imgur.com/3/image')
 			xhr.setRequestHeader('Authorization', `Bearer ${GM_getValue('access_token')}`)
 			data.append('image', fd.get('dzfile'))
