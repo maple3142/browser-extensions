@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Baha imgur upload
 // @namespace    https://blog.maple3142.net/
-// @version      0.7.3
+// @version      0.7.4
 // @description  add upload to imgur in bahamut
 // @author       maple3142
 // @match        https://*.gamer.com.tw/*
@@ -131,8 +131,14 @@
 					})
 					const originalcb = dz._callbacks.success[1]
 					dz._callbacks.success[1] = (file, r) => {
-						console.log(r)
-						originalcb.apply(dz, [file, Array.isArray(r) ? r : [r.data.link]])
+						console.log('dz success', r, originalcb)
+						if (r.token) {
+							// normal baha file upload
+							originalcb.apply(dz, [file, r])
+						} else {
+							$cancelbtn.click()
+							insertUrlToField(r.data.link)
+						}
 					}
 
 					document.onpaste = e => {
