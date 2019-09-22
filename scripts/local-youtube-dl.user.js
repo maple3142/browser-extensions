@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.7
+// @version      0.9.8
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -57,6 +57,20 @@
 			stream: '스트리밍',
 			adaptive: '조정 가능한',
 			videoid: 'Video Id: {{id}}'
+		},
+		es: {
+			togglelinks: 'Mostrar/Ocultar Links',
+			stream: 'Stream',
+			adaptive: 'Adaptable',
+			videoid: 'Id del Video: ',
+			thumbnail: 'Miniatura',
+			inbrowser_adaptive_merger: 'Acoplar Audio a Video '
+		},
+		he: {
+			togglelinks: 'הצג/הסתר קישורים',
+			stream: 'סטרים',
+			adaptive: 'אדפטיבי',
+			videoid: 'מזהה סרטון: {{id}}'
 		}
 	}
 	const findLang = l => {
