@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.1
+// @version      0.6.2
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -20,7 +20,7 @@
 // @match        https://www.pixiv.net/bookmark_new_illust.php*
 // @match        https://www.pixiv.net/ranking.php*
 // @match        https://www.pixiv.net/search.php*
-// @match        https://www.pixiv.net/member_illust.php*
+// @match        https://www.pixiv.net/artworks*
 // @match        https://www.pixiv.net/member.php*
 // @connect      pximg.net
 // @grant        GM_xmlhttpRequest
@@ -179,32 +179,40 @@
 	}
 
 	// key shortcut
-	{
+	function getSelector() {
 		const SELECTOR_MAP = {
 			'/': 'a.work:hover,a._work:hover,.illust-item-root>a:hover',
-			'/bookmark.php': 'a.work:hover,.image-item-image>a:hover',
-			'/new_illust.php': 'a.work:hover,.image-item-image>a:hover',
-			'/bookmark_new_illust.php': 'figure>div>a:hover,.illust-item-root>a:hover',
-			'/member_illust.php': 'div[role=presentation]>a:hover,canvas:hover',
-			'/ranking.php': 'a.work:hover,.illust-item-root>a:hover',
-			'/search.php': 'figure>div>a:hover',
-			'/member.php': '[href^="/member_illust.php"]:hover,.illust-item-root>a:hover'
+			'/bookmark\\.php': 'a.work:hover,.image-item-image>a:hover',
+			'/new_illust\\.php': 'a.work:hover,.image-item-image>a:hover',
+			'/bookmark_new_illust\\.php': 'figure>div>a:hover,.illust-item-root>a:hover',
+			'/artworks/\\d+': 'div[role=presentation]>a:hover,canvas:hover',
+			'/ranking\\.php': 'a.work:hover,.illust-item-root>a:hover',
+			'/search\\.php': 'figure>div>a:hover',
+			'/member\\.php': '[href^="/artworks"]:hover,.illust-item-root>a:hover'
 		}
-		const selector = SELECTOR_MAP[location.pathname]
+		for (const [key, val] of Object.entries(SELECTOR_MAP)) {
+			const rgx = new RegExp(`^${key}$`)
+			if (rgx.test(location.pathname)) {
+				return val
+			}
+		}
+	}
+	{
 		addEventListener('keydown', e => {
 			if (e.which !== KEYCODE_TO_SAVE) return
 			e.preventDefault()
 			e.stopPropagation()
+			const selector = getSelector()
 			let id
-			if (!id && $('#Patchouli')) {
-				const el = $('.image-item-image:hover>a')
+			if ($('#Patchouli')) {
+				const el = $('.illust-main-img:hover')
 				if (!el) return
-				id = /\d+/.exec(el.href.split('/').pop())[0]
+				id = /\d+/.exec(el.parentElement.href.split('/').pop())[0]
 			} else if (typeof selector === 'string') {
 				const el = $(selector)
 				if (!el) return
 				if (el.href) id = /\d+/.exec(el.href.split('/').pop())[0]
-				else id = new URLSearchParams(location.search).get('illust_id')
+				else if (location.pathname.startsWith('/artwork')) id = location.pathname.split('/').pop()
 			} else {
 				id = selector()
 			}
