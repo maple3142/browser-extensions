@@ -3,7 +3,7 @@
 // @name:zh-TW   Pixiv 簡單存圖
 // @name:zh-CN   Pixiv 简单存图
 // @namespace    https://blog.maple3142.net/
-// @version      0.6.2
+// @version      0.6.3
 // @description  Save pixiv image easily with custom name format and shortcut key.
 // @description:zh-TW  透過快捷鍵與自訂名稱格式來簡單的存圖
 // @description:zh-CN  透过快捷键与自订名称格式来简单的存图
@@ -11,6 +11,8 @@
 // @require      https://greasyfork.org/scripts/370765-gif-js-for-user-js/code/gifjs%20for%20userjs.js?version=616920
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js
 // @require      https://unpkg.com/xfetch-js@0.3.0/xfetch.min.js
+// @require      https://unpkg.com/@snackbar/core@1.7.0/dist/snackbar.min.js
+// @require      https://bundle.run/filenamify@4.1.0
 // @require      https://unpkg.com/gmxhr-fetch@0.0.6/gmxhr-fetch.min.js
 // @require      https://gitcdn.xyz/repo/antimatter15/whammy/27ef01b3d82e9b32c7822f7a5250809e1ae89b33/whammy.js
 // @match        https://www.pixiv.net/member_illust.php?mode=medium&illust_id=*
@@ -37,8 +39,8 @@
 	}
 	const KEYCODE_TO_SAVE = 83 // 83 is 's' key
 	const SAVE_UGOIRA_AS_WEBM = false // faster than gif
+	const USE_PIXIVCAT = true // much faster than pximg
 
-	const sleep = ms => new Promise(res => setTimeout(res, ms))
 	const gxf = xf.extend({ fetch: gmfetch })
 	const $ = s => document.querySelector(s)
 	const $$ = s => [...document.querySelectorAll(s)]
@@ -53,15 +55,6 @@
 		const el = document.createElement(s)
 		elementmerge(el, o)
 		return el
-	}
-	const debounce = delay => fn => {
-		let de = false
-		return (...args) => {
-			if (de) return
-			de = true
-			fn(...args)
-			setTimeout(() => (de = false), delay)
-		}
 	}
 	const download = (url, fname) => {
 		const a = $el('a', { href: url, download: fname || true })
@@ -97,8 +90,23 @@
 	const getUgoiraMeta = id => getJSONBody(`/ajax/illust/${id}/ugoira_meta`)
 	const getCrossOriginBlob = (url, Referer = 'https://www.pixiv.net/') =>
 		gxf.get(url, { headers: { Referer } }).blob()
+	const getImageFromPximg = (url, pixivcat_multiple_systax) => {
+		if (USE_PIXIVCAT) {
+			const [_, id, idx] = /\/(\d+)_p(\d+)/.exec(url)
+			const newUrl = pixivcat_multiple_systax
+				? `https://pixiv.cat/${id}-${parseInt(idx) + 1}.png`
+				: `https://pixiv.cat/${id}.png`
+			return xf.get(newUrl).blob()
+		}
+		return getCrossOriginBlob(url)
+	}
 	const saveImage = async ({ single, multiple }, id) => {
 		const illustData = await getIllustData(id)
+		if (snackbar) {
+			snackbar.createSnackbar(`Downloading ${illustData.title}...`, {
+				timeout: 1000
+			})
+		}
 		let results
 		const { illustType } = illustData
 		switch (illustType) {
@@ -113,7 +121,7 @@
 						.split('.')
 						.pop()
 					if (illustData.pageCount === 1) {
-						results = [[single(illustData) + '.' + ext, await getCrossOriginBlob(url)]]
+						results = [[single(illustData) + '.' + ext, await getImageFromPximg(url)]]
 					} else {
 						const len = illustData.pageCount
 						const ar = []
@@ -121,7 +129,7 @@
 							ar.push(
 								Promise.all([
 									multiple(illustData, i) + '.' + ext,
-									getCrossOriginBlob(url.replace('p0', `p${i}`))
+									getImageFromPximg(url.replace('p0', `p${i}`), true)
 								])
 							)
 						}
@@ -164,17 +172,19 @@
 				}
 			}
 		}
+
+		// `filenamify` will normalize file names, since some character is not allowed
 		if (results.length === 1) {
 			const [f, blob] = results[0]
-			downloadBlob(blob, f)
+			downloadBlob(blob, filenamify(f))
 		} else {
 			const zip = new JSZip()
 			for (const [f, blob] of results) {
-				zip.file(f, blob)
+				zip.file(filenamify(f), blob)
 			}
 			const blob = await zip.generateAsync({ type: 'blob' })
 			const zipname = single(illustData)
-			downloadBlob(blob, zipname)
+			downloadBlob(blob, filenamify(zipname))
 		}
 	}
 
@@ -182,8 +192,8 @@
 	function getSelector() {
 		const SELECTOR_MAP = {
 			'/': 'a.work:hover,a._work:hover,.illust-item-root>a:hover',
-			'/bookmark\\.php': 'a.work:hover,.image-item-image>a:hover',
-			'/new_illust\\.php': 'a.work:hover,.image-item-image>a:hover',
+			'/bookmark\\.php': 'a.work:hover',
+			'/new_illust\\.php': 'a.work:hover',
 			'/bookmark_new_illust\\.php': 'figure>div>a:hover,.illust-item-root>a:hover',
 			'/artworks/\\d+': 'div[role=presentation]>a:hover,canvas:hover',
 			'/ranking\\.php': 'a.work:hover,.illust-item-root>a:hover',
@@ -205,18 +215,23 @@
 			const selector = getSelector()
 			let id
 			if ($('#Patchouli')) {
-				const el = $('.illust-main-img:hover')
-				if (!el) return
-				id = /\d+/.exec(el.parentElement.href.split('/').pop())[0]
-			} else if (typeof selector === 'string') {
+				const el = $('.image-item-image:hover>a')
+				if (el) id = /\d+/.exec(el.href.split('/').pop())[0]
+			}
+			if (!id && typeof selector === 'string') {
 				const el = $(selector)
-				if (!el) return
-				if (el.href) id = /\d+/.exec(el.href.split('/').pop())[0]
+				if (el && el.href) id = /\d+/.exec(el.href.split('/').pop())[0]
 				else if (location.pathname.startsWith('/artwork')) id = location.pathname.split('/').pop()
-			} else {
-				id = selector()
 			}
 			if (id) saveImage(FORMAT, id).catch(console.error)
 		})
+	}
+	{
+		document.body.appendChild(
+			$el('link', {
+				rel: 'stylesheet',
+				href: 'https://unpkg.com/@snackbar/core@1.7.0/dist/snackbar.min.css'
+			})
+		)
 	}
 })()
