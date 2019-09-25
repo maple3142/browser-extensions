@@ -273,10 +273,12 @@ self.onmessage=${workerMessageHandler}`
 	}
 
 	const getLangCode = () => {
-		if (typeof ytplayer !== 'undefined') {
+		if (typeof ytplayer !== 'undefined' && ytplayer.config) {
 			return ytplayer.config.args.host_language
 		} else if (typeof yt !== 'undefined') {
 			return yt.config_.GAPI_LOCALE
+		} else {
+			return navigator.language
 		}
 		return null
 	}
@@ -304,7 +306,7 @@ self.onmessage=${workerMessageHandler}`
 	const load = async id => {
 		try {
 			const basejs =
-				typeof ytplayer !== 'undefined'
+				typeof ytplayer !== 'undefined' && ytplayer.config
 					? 'https://' + location.host + ytplayer.config.assets.js
 					: $('script[src$="base.js"]').src
 			const data = await workerGetVideo(id, basejs)
