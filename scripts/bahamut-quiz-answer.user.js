@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         巴哈姆特動漫電玩通解答顯示小工具
 // @namespace    https://blog.maple3142.net/
-// @version      0.7
+// @version      0.8
 // @description  在巴哈姆特哈拉區右側的動漫電玩通顯示答案
 // @author       maple3142
-// @require      https://unpkg.com/xfetch-js@0.1.6/xfetch.min.js
+// @require      https://unpkg.com/xfetch-js@0.4.0/dist/xfetch.min.js
 // @match        https://forum.gamer.com.tw/B.php*
 // ==/UserScript==
 
@@ -28,17 +28,14 @@
 			.map(x => x.textContent.trim())
 		let q
 		return (q = {
-			question: $ansbox
-				.contents()[0]
-				.textContent.trim()
-				.replace(/,/g, 'COMMA'),
-			answer1: anss[0].replace(/,/g, 'COMMA'),
-			answer2: anss[1].replace(/,/g, 'COMMA'),
-			answer3: anss[2].replace(/,/g, 'COMMA'),
-			answer4: anss[3].replace(/,/g, 'COMMA'),
+			question: $ansbox.contents()[0].textContent.trim(),
+			answer1: anss[0],
+			answer2: anss[1],
+			answer3: anss[2],
+			answer4: anss[3],
 			sn: $ansbox.data('quiz-sn'),
-			toString: function() {
-				return `${q.sn},${q.question},${q.answer1},${q.answer2},${q.answer3},${q.answer4},${q.answer}`
+			toArray: function() {
+				return [q.sn, q.question, q.answer1, q.answer2, q.answer3, q.answer4, q.answer]
 			}
 		})
 	}
@@ -52,7 +49,7 @@
 			return tryAnswer(q.sn).then(ans => {
 				q.answer = ans
 				console.log('Submit new question to database', q)
-				xf.post(APIURL, { form: { data: q.toString() } }).json(console.log)
+				xf.post(APIURL, { json: q.toArray(), mode: 'no-cors', redirect: 'follow' }).json(console.log)
 				return ans
 			})
 		})
