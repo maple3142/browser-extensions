@@ -237,7 +237,7 @@ self.onmessage=${workerMessageHandler}`
 
 	const template = `
 <div class="box" :class="{'dark':dark}">
-	<div @click="hide=!hide" class="box-toggle t-center fs-14px" v-text="strings.togglelinks"></div>
+	<div @click="hide=!hide" class="box-toggle div-a t-center fs-14px" v-text="strings.togglelinks"></div>
 	<div :class="{'hide':hide}">
 		<div class="t-center fs-14px" v-text="strings.videoid+id"></div>
 		<div class="t-center fs-14px">
@@ -254,7 +254,7 @@ self.onmessage=${workerMessageHandler}`
 			</div>
 		</div>
 		<div class="of-h t-center">
-			<a href="https://maple3142.github.io/mergemp4/" target="_blank" v-text="strings.inbrowser_adaptive_merger"></a>
+			<a class="fs-14px" href="https://maple3142.github.io/mergemp4/" target="_blank" v-text="strings.inbrowser_adaptive_merger"></a>
 		</div>
 	</div>
 </div>
@@ -434,9 +434,6 @@ margin: 3px;
 user-select: none;
 -moz-user-select: -moz-none;
 }
-.box-toggle:hover{
-color: blue;
-}
 .ytdl-link-btn{
 display: block;
 border: 1px solid !important;
@@ -448,12 +445,12 @@ padding: 2px;
 margin: 5px;
 color: black;
 }
-a{
-color:var(--yt-spec-call-to-action);
+a, .div-a{
 text-decoration: none;
+color: var(--yt-button-color, inherit);
 }
-a.ytdl-link-btn:hover{
-color: blue;
+a:hover, .div-a:hover{
+color: var(--yt-spec-call-to-action, blue);
 }
 .box.dark{
 color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
