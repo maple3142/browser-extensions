@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.10
+// @version      0.9.11
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -241,7 +241,7 @@ self.onmessage=${workerMessageHandler}`
 	<div :class="{'hide':hide}">
 		<div class="t-center fs-14px" v-text="strings.videoid+id"></div>
 		<div class="t-center fs-14px">
-			<a :href="thumbnail" target="_blank" v-text="strings.thumbnail"></a>
+			<a :href="thumbnail" target="_blank" v-text="strings.thumbnail" @mouseover="loadThumbnail"></a>
 		</div>
 		<div class="d-flex">
 			<div class="f-1 of-h">
@@ -276,8 +276,8 @@ self.onmessage=${workerMessageHandler}`
 				return LOCALE[this.lang.toLowerCase()]
 			}
 		},
-		watch: {
-			async hide() {
+		methods: {
+			async loadThumbnail() {
 				if (this.thumbnail == null) {
 					app.thumbnail = await getHighresThumbnail(this.id)
 				}
