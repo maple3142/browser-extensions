@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.9
+// @version      0.9.10
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -22,7 +22,13 @@
 	const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
 	const createLogger = (console, tag) =>
 		Object.keys(console)
-			.map(k => [k, (...args) => (DEBUG ? console[k](tag + ': ' + args[0], ...args.slice(1)) : void 0)])
+			.map(k => [
+				k,
+				(...args) =>
+					DEBUG
+						? console[k](tag + ': ' + args[0], ...args.slice(1))
+						: void 0
+			])
 			.reduce((acc, [k, fn]) => ((acc[k] = fn), acc), {})
 	const logger = createLogger(console, 'YTDL')
 
@@ -34,7 +40,8 @@
 			adaptive: 'Adaptive',
 			videoid: 'Video Id: ',
 			thumbnail: 'Thumbnail',
-			inbrowser_adaptive_merger: 'In browser adaptive video & audio merger'
+			inbrowser_adaptive_merger:
+				'In browser adaptive video & audio merger'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -92,19 +99,33 @@
 			if (data.startsWith('var script')) {
 				// they inject the script via script tag
 				const obj = {}
-				const document = { createElement: () => obj, head: { appendChild: () => {} } }
+				const document = {
+					createElement: () => obj,
+					head: { appendChild: () => {} }
+				}
 				eval(data)
 				data = obj.innerHTML
 			}
-			const fnnameresult = /\.set\([^,]*,encodeURIComponent\(([^(]*)\(/.exec(data)
+			const fnnameresult = /\.set\([^,]*,encodeURIComponent\(([^(]*)\(/.exec(
+				data
+			)
 			const fnname = fnnameresult[1]
-			const _argnamefnbodyresult = new RegExp(escapeRegExp(fnname) + '=function\\((.+?)\\){(.+?)}').exec(data)
+			const _argnamefnbodyresult = new RegExp(
+				escapeRegExp(fnname) + '=function\\((.+?)\\){(.+?)}'
+			).exec(data)
 			const [_, argname, fnbody] = _argnamefnbodyresult
 			const helpernameresult = /;(.+?)\..+?\(/.exec(fnbody)
 			const helpername = helpernameresult[1]
-			const helperresult = new RegExp('var ' + escapeRegExp(helpername) + '={[\\s\\S]+?};').exec(data)
+			const helperresult = new RegExp(
+				'var ' + escapeRegExp(helpername) + '={[\\s\\S]+?};'
+			).exec(data)
 			const helper = helperresult[0]
-			logger.log(`parsedecsig result: %s=>{%s\n%s}`, argname, helper, fnbody)
+			logger.log(
+				`parsedecsig result: %s=>{%s\n%s}`,
+				argname,
+				helper,
+				fnbody
+			)
 			return new Function([argname], helper + '\n' + fnbody)
 		} catch (e) {
 			logger.error('parsedecsig error: %o', e)
@@ -114,10 +135,16 @@
 			)
 		}
 	}
-	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
+	const parseQuery = s =>
+		[...new URLSearchParams(s).entries()].reduce(
+			(acc, [k, v]) => ((acc[k] = v), acc),
+			{}
+		)
 	const getVideo = async (id, decsig) => {
 		return xf
-			.get(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
+			.get(
+				`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`
+			)
 			.text()
 			.then(async data => {
 				const obj = parseQuery(data)
@@ -129,7 +156,9 @@
 				}
 				let stream = []
 				if (playerResponse.streamingData.formats) {
-					stream = playerResponse.streamingData.formats.map(x => Object.assign(x, parseQuery(x.cipher)))
+					stream = playerResponse.streamingData.formats.map(x =>
+						Object.assign(x, parseQuery(x.cipher))
+					)
 					logger.log(`video %s stream: %o`, id, stream)
 					if (stream[0].sp && stream[0].sp.includes('sig')) {
 						stream = stream
@@ -140,8 +169,8 @@
 
 				let adaptive = []
 				if (playerResponse.streamingData.adaptiveFormats) {
-					adaptive = playerResponse.streamingData.adaptiveFormats.map(x =>
-						Object.assign(x, parseQuery(x.cipher))
+					adaptive = playerResponse.streamingData.adaptiveFormats.map(
+						x => Object.assign(x, parseQuery(x.cipher))
 					)
 					logger.log(`video %s adaptive: %o`, id, adaptive)
 					if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
@@ -158,7 +187,7 @@
 		xf
 			.get('https://www.googleapis.com/youtube/v3/videos', {
 				qs: {
-					key: 'AIzaSyBk6o0igFl-P4Qe4ouVlRTPlqX7kruWdUg',
+					key: 'AIzaSyCBRSJISKx4F4Y1y2CFyhSepbSZZ2TgPwQ',
 					part: 'snippet',
 					id
 				}
@@ -190,7 +219,9 @@ const parseQuery=${parseQuery}
 const parseDecsig=${parseDecsig}
 const getVideo=${getVideo}
 self.onmessage=${workerMessageHandler}`
-	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
+	const ytdlWorker = new Worker(
+		URL.createObjectURL(new Blob([ytdlWorkerCode]))
+	)
 	const workerGetVideo = (id, path) => {
 		logger.log(`workerGetVideo start: %s %s`, id, path)
 		return new Promise((res, rej) => {
@@ -258,7 +289,9 @@ self.onmessage=${workerMessageHandler}`
 
 	// attach element
 	const shadowHost = $el('div')
-	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'closed' }) : shadowHost // no shadow dom
+	const shadow = shadowHost.attachShadow
+		? shadowHost.attachShadow({ mode: 'closed' })
+		: shadowHost // no shadow dom
 	logger.log('shadowHost: %o', shadowHost)
 	const container = $el('div')
 	shadow.appendChild(container)
@@ -300,7 +333,9 @@ self.onmessage=${workerMessageHandler}`
 		} else if ($('h1.title')) {
 			// new youtube (polymer)
 			$('h1.title').textContent = data.title
-			$('yt-formatted-string.content').innerHTML = textToHtml(data.shortDescription)
+			$('yt-formatted-string.content').innerHTML = textToHtml(
+				data.shortDescription
+			)
 		}
 	}
 	const load = async id => {
@@ -343,7 +378,9 @@ self.onmessage=${workerMessageHandler}`
 		const el =
 			$('#info-contents') ||
 			$('#watch-header') ||
-			$('.page-container:not([hidden]) ytm-item-section-renderer>lazy-list')
+			$(
+				'.page-container:not([hidden]) ytm-item-section-renderer>lazy-list'
+			)
 		if (el && !el.contains(shadowHost)) {
 			el.appendChild(shadowHost)
 		}
@@ -411,7 +448,8 @@ padding: 2px;
 margin: 5px;
 color: black;
 }
-a.ytdl-link-btn{
+a{
+color:var(--yt-spec-call-to-action);
 text-decoration: none;
 }
 a.ytdl-link-btn:hover{
