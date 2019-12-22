@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.12
+// @version      0.9.13
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -11,6 +11,7 @@
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
+// @require      https://unpkg.com/@ffmpeg/ffmpeg@0.5.2/dist/ffmpeg.min.js
 // @compatible   firefox >=52
 // @compatible   chrome >=55
 // @license      MIT
@@ -41,7 +42,8 @@
 			videoid: 'Video Id: ',
 			thumbnail: 'Thumbnail',
 			inbrowser_adaptive_merger:
-				'In browser adaptive video & audio merger'
+				'In browser adaptive video & audio merger',
+			dlmp4: 'Download hi res mp4 in one click'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -49,7 +51,8 @@
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 ID: ',
 			thumbnail: '影片縮圖',
-			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器'
+			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器',
+			dlmp4: '一鍵下載高畫質 mp4'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏链接',
@@ -57,7 +60,8 @@
 			adaptive: '自适应 Adaptive',
 			videoid: '视频 ID: ',
 			thumbnail: '视频缩图',
-			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器'
+			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器',
+			dlmp4: '一键下载高画质 mp4'
 		},
 		kr: {
 			togglelinks: '링크 보이기/숨기기',
@@ -235,6 +239,136 @@ self.onmessage=${workerMessageHandler}`
 		})
 	}
 
+	// video downloader
+	const xhrDownloadBuffer = (url, progressCb) =>
+		new Promise((res, rej) => {
+			const start = Date.now()
+			const xhr = new XMLHttpRequest()
+			xhr.responseType = 'arraybuffer'
+			xhr.onload = () => res(xhr.response)
+			xhr.onerror = rej
+			xhr.onprogress = e => {
+				if (!e.lengthComputable) return
+				const dt = (Date.now() - start) / 1000 // unit: second
+				progressCb({
+					total: e.total, // bytes
+					loaded: e.loaded, // bytes
+					speed: e.loaded / dt // bytes/s
+				})
+			}
+			xhr.open('GET', url)
+			xhr.send()
+		})
+	const ffWorker = FFmpeg.createWorker()
+	let ffWorkerLoaded = false
+	const mergeVideo = async (video, audio) => {
+		if (!ffWorkerLoaded) await ffWorker.load()
+		await ffWorker.write('video.mp4', video)
+		await ffWorker.write('audio.mp4', audio)
+		await ffWorker.run(
+			'-i /data/video.mp4 -i /data/audio.mp4 -c copy output.mp4',
+			{
+				input: ['video.mp4', 'audio.mp4'],
+				output: 'output.mp4'
+			}
+		)
+		const { data } = await ffWorker.read('output.mp4')
+		return data
+	}
+	const triggerDownload = (url, filename) => {
+		const a = document.createElement('a')
+		a.href = url
+		a.download = filename
+		document.body.appendChild(a)
+		a.click()
+		a.remove()
+	}
+	const dlModal = document.createElement('div')
+	document.body.appendChild(dlModal)
+	const dlModalTemplate = `
+  <div style="position: fixed; background: white; z-index: 2147483647; left: 25%; top: 25%; width: 50%; height: 50%;" v-show="show">
+    <div v-if="merging" style="height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; font-size: 24px;">Merging video, please wait...</div>
+    <div v-else style="height: 100%; width: 100%; display: flex; flex-direction: column;">
+      <div style="flex: 1; margin: 10px;">
+        <p style="font-size: 24px;">Video</p>
+        <progress style="width: 100%;" :value="video.progress" min="0" max="100"></progress>
+        <div style="display: flex; justify-content: space-between;">
+          <span>{{video.speed}} kB/s</span>
+          <span>{{video.loaded}}/{{video.total}} MB</span>
+        </div>
+      </div>
+      <div style="flex: 1; margin: 10px;">
+        <p style="font-size: 24px;">Audio</p>
+        <progress style="width: 100%;" :value="audio.progress" min="0" max="100"></progress>
+        <div style="display: flex; justify-content: space-between;">
+          <span>{{audio.speed}} kB/s</span>
+          <span>{{audio.loaded}}/{{audio.total}} MB</span>
+        </div>
+      </div>
+    </div>
+  </div>
+`
+	const dlModalApp = new Vue({
+		template: dlModalTemplate,
+		data() {
+			return {
+				video: {
+					progress: 0,
+					total: 0,
+					loaded: 0,
+					speed: 0
+				},
+				audio: {
+					progress: 0,
+					total: 0,
+					loaded: 0,
+					speed: 0
+				},
+				show: false,
+				merging: false
+			}
+		},
+		methods: {
+			open() {
+				this.show = true
+			},
+			close() {
+				this.show = false
+			},
+			async start(adaptive, title) {
+				// YouTube's default order is descending by video quality
+				const vUrl = adaptive.find(x =>
+					x.mimeType.includes('video/mp4')
+				).url
+				const aUrl = adaptive.find(x =>
+					x.mimeType.includes('audio/mp4')
+				).url
+				const vPromise = xhrDownloadBuffer(vUrl, e => {
+					this.video.progress = (e.loaded / e.total) * 100
+					this.video.loaded = (e.loaded / 1024 / 1024).toFixed(2)
+					this.video.total = (e.total / 1024 / 1024).toFixed(2)
+					this.video.speed = (e.speed / 1024).toFixed(2)
+				})
+				const aPromise = xhrDownloadBuffer(aUrl, e => {
+					this.audio.progress = (e.loaded / e.total) * 100
+					this.audio.loaded = (e.loaded / 1024 / 1024).toFixed(2)
+					this.audio.total = (e.total / 1024 / 1024).toFixed(2)
+					this.audio.speed = (e.speed / 1024).toFixed(2)
+				})
+				const [vbuf, abuf] = await Promise.all([vPromise, aPromise])
+				this.merging = true
+				const result = await mergeVideo(
+					new Uint8Array(vbuf),
+					new Uint8Array(abuf)
+				)
+				this.merging = false
+				const url = URL.createObjectURL(new Blob([result]))
+				triggerDownload(url, title + '.mp4')
+				this.close()
+			}
+		}
+	}).$mount(dlModal)
+
 	const template = `
 <div class="box" :class="{'dark':dark}">
 	<div @click="hide=!hide" class="box-toggle div-a t-center fs-14px" v-text="strings.togglelinks"></div>
@@ -242,6 +376,9 @@ self.onmessage=${workerMessageHandler}`
 		<div class="t-center fs-14px" v-text="strings.videoid+id"></div>
 		<div class="t-center fs-14px">
 			<a :href="thumbnail" target="_blank" v-text="strings.thumbnail" @mouseover="loadThumbnail"></a>
+		</div>
+    <div class="of-h t-center">
+			<a class="fs-14px" @click="dlmp4" v-text="strings.dlmp4"></a>
 		</div>
 		<div class="d-flex">
 			<div class="f-1 of-h">
@@ -266,6 +403,7 @@ self.onmessage=${workerMessageHandler}`
 				id: '',
 				stream: [],
 				adaptive: [],
+				meta: null,
 				dark: false,
 				thumbnail: null,
 				lang: findLang(navigator.language)
@@ -281,6 +419,11 @@ self.onmessage=${workerMessageHandler}`
 				if (this.thumbnail == null) {
 					app.thumbnail = await getHighresThumbnail(this.id)
 				}
+			},
+			dlmp4() {
+				dlModalApp.open()
+				const r = JSON.parse(this.meta.player_response)
+				dlModalApp.start(this.adaptive, r.videoDetails.title)
 			}
 		},
 		template
