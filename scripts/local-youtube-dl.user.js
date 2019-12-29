@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.13
+// @version      0.9.14
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -12,6 +12,7 @@
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.5.2/dist/ffmpeg.min.js
+// @grant        GM_xmlhttpRequest
 // @compatible   firefox >=52
 // @compatible   chrome >=55
 // @license      MIT
@@ -32,6 +33,7 @@
 			])
 			.reduce((acc, [k, fn]) => ((acc[k] = fn), acc), {})
 	const logger = createLogger(console, 'YTDL')
+	const sleep = ms => new Promise(res => setTimeout(res, ms))
 
 	const LANG_FALLBACK = 'en'
 	const LOCALE = {
@@ -242,10 +244,14 @@ self.onmessage=${workerMessageHandler}`
 	// video downloader
 	const xhrDownloadBuffer = (url, progressCb) =>
 		new Promise((res, rej) => {
+			// use gmxhr to bypass CORS problem when coming from home page
+			const hasgmxhr = typeof GM_xmlhttpRequest !== 'undefined'
 			const start = Date.now()
-			const xhr = new XMLHttpRequest()
+			const xhr = hasgmxhr ? {} : new XMLHttpRequest()
 			xhr.responseType = 'arraybuffer'
-			xhr.onload = () => res(xhr.response)
+			xhr.onload = function() {
+				res(this.response)
+			}
 			xhr.onerror = rej
 			xhr.onprogress = e => {
 				if (!e.lengthComputable) return
@@ -256,10 +262,18 @@ self.onmessage=${workerMessageHandler}`
 					speed: e.loaded / dt // bytes/s
 				})
 			}
-			xhr.open('GET', url)
-			xhr.send()
+			if (hasgmxhr) {
+				xhr.method = 'GET'
+				xhr.url = url
+				GM_xmlhttpRequest(xhr)
+			} else {
+				xhr.open('GET', url)
+				xhr.send()
+			}
 		})
-	const ffWorker = FFmpeg.createWorker()
+	const ffWorker = FFmpeg.createWorker({
+		logger: DEBUG ? m => logger.log(m.message) : () => {}
+	})
 	let ffWorkerLoaded = false
 	const mergeVideo = async (video, audio) => {
 		if (!ffWorkerLoaded) await ffWorker.load()
@@ -357,10 +371,20 @@ self.onmessage=${workerMessageHandler}`
 				})
 				const [vbuf, abuf] = await Promise.all([vPromise, aPromise])
 				this.merging = true
-				const result = await mergeVideo(
-					new Uint8Array(vbuf),
-					new Uint8Array(abuf)
-				)
+				const varr = new Uint8Array(vbuf)
+				const aarr = new Uint8Array(abuf)
+				const result = await Promise.race([
+					mergeVideo(varr, aarr),
+					sleep(1000 * 25).then(() => null)
+				])
+				if (!result) {
+					alert('An error has occurred when merging video')
+					const bvurl = URL.createObjectURL(new Blob([varr]))
+					const baurl = URL.createObjectURL(new Blob([aarr]))
+					triggerDownload(bvurl, title + '-videoonly.mp4')
+					triggerDownload(baurl, title + '-audioonly.mp4')
+					return this.close()
+				}
 				this.merging = false
 				const url = URL.createObjectURL(new Blob([result]))
 				triggerDownload(url, title + '.mp4')
