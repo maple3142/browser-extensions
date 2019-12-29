@@ -249,9 +249,7 @@ self.onmessage=${workerMessageHandler}`
 			const start = Date.now()
 			const xhr = hasgmxhr ? {} : new XMLHttpRequest()
 			xhr.responseType = 'arraybuffer'
-			xhr.onload = function() {
-				res(this.response)
-			}
+			xhr.onload = resp => res(resp.response)
 			xhr.onerror = rej
 			xhr.onprogress = e => {
 				if (!e.lengthComputable) return
