@@ -13,6 +13,7 @@
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.5.2/dist/ffmpeg.min.js
 // @grant        GM_xmlhttpRequest
+// @connect      googlevideo.com
 // @compatible   firefox >=52
 // @compatible   chrome >=55
 // @license      MIT
