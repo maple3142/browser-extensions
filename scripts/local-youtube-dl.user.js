@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.14
+// @version      0.9.15
 // @description  Get youtube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -69,7 +69,7 @@
 			togglelinks: '링크 보이기/숨기기',
 			stream: '스트리밍',
 			adaptive: '조정 가능한',
-			videoid: 'Video Id: {{id}}'
+			videoid: 'Video Id: '
 		},
 		es: {
 			togglelinks: 'Mostrar/Ocultar Links',
@@ -83,7 +83,7 @@
 			togglelinks: 'הצג/הסתר קישורים',
 			stream: 'סטרים',
 			adaptive: 'אדפטיבי',
-			videoid: 'מזהה סרטון: {{id}}'
+			videoid: 'מזהה סרטון: '
 		}
 	}
 	const findLang = l => {
@@ -242,12 +242,17 @@ self.onmessage=${workerMessageHandler}`
 	}
 
 	// video downloader
-	const xhrDownloadBuffer = (url, progressCb) =>
-		new Promise((res, rej) => {
+	const xhrDownloadBuffer = (url, progressCb) => {
+		let control, outrej
+		const promise = new Promise((res, rej) => {
+			if (typeof GM_xmlhttpRequest === 'undefined') {
+				return alert(
+					"Your userscript manager doesn't support this feature."
+				)
+			}
 			// use gmxhr to bypass CORS problem when coming from home page
-			const hasgmxhr = typeof GM_xmlhttpRequest !== 'undefined'
 			const start = Date.now()
-			const xhr = hasgmxhr ? {} : new XMLHttpRequest()
+			const xhr = {}
 			xhr.responseType = 'arraybuffer'
 			xhr.onload = resp => res(resp.response)
 			xhr.onerror = rej
@@ -260,15 +265,20 @@ self.onmessage=${workerMessageHandler}`
 					speed: e.loaded / dt // bytes/s
 				})
 			}
-			if (hasgmxhr) {
-				xhr.method = 'GET'
-				xhr.url = url
-				GM_xmlhttpRequest(xhr)
-			} else {
-				xhr.open('GET', url)
-				xhr.send()
-			}
+			xhr.method = 'GET'
+			xhr.url = url
+
+			// abort hack
+			control = GM_xmlhttpRequest(xhr)
+			outrej = rej
 		})
+		promise.abort = () => {
+			control.abort()
+			outrej('aborted')
+		}
+		return promise
+	}
+
 	const ffWorker = FFmpeg.createWorker({
 		logger: DEBUG ? m => logger.log(m.message) : () => {}
 	})
@@ -295,10 +305,8 @@ self.onmessage=${workerMessageHandler}`
 		a.click()
 		a.remove()
 	}
-	const dlModal = document.createElement('div')
-	document.body.appendChild(dlModal)
 	const dlModalTemplate = `
-  <div style="position: fixed; background: white; z-index: 2147483647; left: 25%; top: 25%; width: 50%; height: 50%;" v-show="show">
+  <div style="width: 100%; height: 100%;">
     <div v-if="merging" style="height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; font-size: 24px;">Merging video, please wait...</div>
     <div v-else style="height: 100%; width: 100%; display: flex; flex-direction: column;">
       <div style="flex: 1; margin: 10px;">
@@ -320,76 +328,88 @@ self.onmessage=${workerMessageHandler}`
     </div>
   </div>
 `
-	const dlModalApp = new Vue({
-		template: dlModalTemplate,
-		data() {
-			return {
-				video: {
-					progress: 0,
-					total: 0,
-					loaded: 0,
-					speed: 0
-				},
-				audio: {
-					progress: 0,
-					total: 0,
-					loaded: 0,
-					speed: 0
-				},
-				show: false,
-				merging: false
-			}
-		},
-		methods: {
-			open() {
-				this.show = true
-			},
-			close() {
-				this.show = false
-			},
-			async start(adaptive, title) {
-				// YouTube's default order is descending by video quality
-				const vUrl = adaptive.find(x =>
-					x.mimeType.includes('video/mp4')
-				).url
-				const aUrl = adaptive.find(x =>
-					x.mimeType.includes('audio/mp4')
-				).url
-				const vPromise = xhrDownloadBuffer(vUrl, e => {
-					this.video.progress = (e.loaded / e.total) * 100
-					this.video.loaded = (e.loaded / 1024 / 1024).toFixed(2)
-					this.video.total = (e.total / 1024 / 1024).toFixed(2)
-					this.video.speed = (e.speed / 1024).toFixed(2)
-				})
-				const aPromise = xhrDownloadBuffer(aUrl, e => {
-					this.audio.progress = (e.loaded / e.total) * 100
-					this.audio.loaded = (e.loaded / 1024 / 1024).toFixed(2)
-					this.audio.total = (e.total / 1024 / 1024).toFixed(2)
-					this.audio.speed = (e.speed / 1024).toFixed(2)
-				})
-				const [vbuf, abuf] = await Promise.all([vPromise, aPromise])
-				this.merging = true
-				const varr = new Uint8Array(vbuf)
-				const aarr = new Uint8Array(abuf)
-				const result = await Promise.race([
-					mergeVideo(varr, aarr),
-					sleep(1000 * 25).then(() => null)
-				])
-				if (!result) {
-					alert('An error has occurred when merging video')
-					const bvurl = URL.createObjectURL(new Blob([varr]))
-					const baurl = URL.createObjectURL(new Blob([aarr]))
-					triggerDownload(bvurl, title + '-videoonly.mp4')
-					triggerDownload(baurl, title + '-audioonly.mp4')
-					return this.close()
+	function openDownloadModel(adaptive, title) {
+		const win = open(
+			'about:blank',
+			'Video Download',
+			`toolbar=no,height=${screen.height / 2},width=${screen.width /
+				2},left=${screenLeft},top=${screenTop}`
+		)
+		const div = win.document.createElement('div')
+		win.document.body.appendChild(div)
+		win.document.title = `Downloading "${title}"`
+		const dlModalApp = new Vue({
+			template: dlModalTemplate,
+			data() {
+				return {
+					video: {
+						progress: 0,
+						total: 0,
+						loaded: 0,
+						speed: 0
+					},
+					audio: {
+						progress: 0,
+						total: 0,
+						loaded: 0,
+						speed: 0
+					},
+					merging: false
 				}
-				this.merging = false
-				const url = URL.createObjectURL(new Blob([result]))
-				triggerDownload(url, title + '.mp4')
-				this.close()
+			},
+			methods: {
+				async start(adaptive, title) {
+					win.onbeforeunload = () => true
+					// YouTube's default order is descending by video quality
+					const vUrl = adaptive.find(x =>
+						x.mimeType.includes('video/mp4')
+					).url
+					const aUrl = adaptive.find(x =>
+						x.mimeType.includes('audio/mp4')
+					).url
+					const vPromise = xhrDownloadBuffer(vUrl, e => {
+						this.video.progress = (e.loaded / e.total) * 100
+						this.video.loaded = (e.loaded / 1024 / 1024).toFixed(2)
+						this.video.total = (e.total / 1024 / 1024).toFixed(2)
+						this.video.speed = (e.speed / 1024).toFixed(2)
+					})
+					const aPromise = xhrDownloadBuffer(aUrl, e => {
+						this.audio.progress = (e.loaded / e.total) * 100
+						this.audio.loaded = (e.loaded / 1024 / 1024).toFixed(2)
+						this.audio.total = (e.total / 1024 / 1024).toFixed(2)
+						this.audio.speed = (e.speed / 1024).toFixed(2)
+					})
+					win.onunload = () => {
+						// because GM_xmlhttpRequest won't automatically stop when window closes
+						vPromise.abort()
+						aPromise.abort()
+					}
+					const [vbuf, abuf] = await Promise.all([vPromise, aPromise])
+					this.merging = true
+					const varr = new Uint8Array(vbuf)
+					const aarr = new Uint8Array(abuf)
+					const result = await Promise.race([
+						mergeVideo(varr, aarr),
+						sleep(1000 * 25).then(() => null)
+					])
+					if (!result) {
+						alert('An error has occurred when merging video')
+						const bvurl = URL.createObjectURL(new Blob([varr]))
+						const baurl = URL.createObjectURL(new Blob([aarr]))
+						triggerDownload(bvurl, title + '-videoonly.mp4')
+						triggerDownload(baurl, title + '-audioonly.mp4')
+						return this.close()
+					}
+					this.merging = false
+					const url = URL.createObjectURL(new Blob([result]))
+					triggerDownload(url, title + '.mp4')
+					win.onbeforeunload = null
+					win.close()
+				}
 			}
-		}
-	}).$mount(dlModal)
+		}).$mount(div)
+		dlModalApp.start(adaptive, title)
+	}
 
 	const template = `
 <div class="box" :class="{'dark':dark}">
@@ -443,9 +463,8 @@ self.onmessage=${workerMessageHandler}`
 				}
 			},
 			dlmp4() {
-				dlModalApp.open()
 				const r = JSON.parse(this.meta.player_response)
-				dlModalApp.start(this.adaptive, r.videoDetails.title)
+				openDownloadModel(this.adaptive, r.videoDetails.title)
 			}
 		},
 		template
