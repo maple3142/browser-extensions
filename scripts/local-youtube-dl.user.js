@@ -43,18 +43,17 @@
 			stream: 'Stream',
 			adaptive: 'Adaptive',
 			videoid: 'Video Id: ',
-			thumbnail: 'Thumbnail',
 			inbrowser_adaptive_merger:
-				'In browser adaptive video & audio merger',
-			dlmp4: 'Download hi res mp4 in one click'
+				'In browser adaptive video & audio merger (FFmpeg)',
+			dlmp4: 'Download highest resolution mp4 in one click'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 ID: ',
-			thumbnail: '影片縮圖',
-			inbrowser_adaptive_merger: '瀏覽器版自適應影片及聲音合成器',
+			inbrowser_adaptive_merger:
+				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4'
 		},
 		zh: {
@@ -62,8 +61,8 @@
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
 			videoid: '视频 ID: ',
-			thumbnail: '视频缩图',
-			inbrowser_adaptive_merger: '浏览器版自适应视频及声音合成器',
+			inbrowser_adaptive_merger:
+				'浏览器版自适应视频及声音合成器 (FFmpeg)',
 			dlmp4: '一键下载高画质 mp4'
 		},
 		kr: {
@@ -77,8 +76,7 @@
 			stream: 'Stream',
 			adaptive: 'Adaptable',
 			videoid: 'Id del Video: ',
-			thumbnail: 'Miniatura',
-			inbrowser_adaptive_merger: 'Acoplar Audio a Video '
+			inbrowser_adaptive_merger: 'Acoplar Audio a Video (FFmpeg)'
 		},
 		he: {
 			togglelinks: 'הצג/הסתר קישורים',
@@ -200,18 +198,6 @@
 				}
 			})
 			.json(r => r.items[0])
-	const getHighresThumbnail = id =>
-		getVideoDetails(id).then(
-			details =>
-				Object.values(details.snippet.thumbnails)
-					.map(d => {
-						const x = {}
-						x.url = d.url
-						x.size = d.width * d.height
-						return x
-					})
-					.sort((a, b) => b.size - a.size)[0].url
-		)
 	const workerMessageHandler = async e => {
 		const decsig = await xf.get(e.data.path).text(parseDecsig)
 		const result = await getVideo(e.data.id, decsig)
@@ -307,27 +293,27 @@ self.onmessage=${workerMessageHandler}`
 		a.remove()
 	}
 	const dlModalTemplate = `
-  <div style="width: 100%; height: 100%;">
-    <div v-if="merging" style="height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; font-size: 24px;">Merging video, please wait...</div>
-    <div v-else style="height: 100%; width: 100%; display: flex; flex-direction: column;">
-      <div style="flex: 1; margin: 10px;">
-        <p style="font-size: 24px;">Video</p>
-        <progress style="width: 100%;" :value="video.progress" min="0" max="100"></progress>
-        <div style="display: flex; justify-content: space-between;">
-          <span>{{video.speed}} kB/s</span>
-          <span>{{video.loaded}}/{{video.total}} MB</span>
-        </div>
-      </div>
-      <div style="flex: 1; margin: 10px;">
-        <p style="font-size: 24px;">Audio</p>
-        <progress style="width: 100%;" :value="audio.progress" min="0" max="100"></progress>
-        <div style="display: flex; justify-content: space-between;">
-          <span>{{audio.speed}} kB/s</span>
-          <span>{{audio.loaded}}/{{audio.total}} MB</span>
-        </div>
-      </div>
-    </div>
-  </div>
+<div style="width: 100%; height: 100%;">
+	<div v-if="merging" style="height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; font-size: 24px;">Merging video, please wait...</div>
+	<div v-else style="height: 100%; width: 100%; display: flex; flex-direction: column;">
+ 		<div style="flex: 1; margin: 10px;">
+			<p style="font-size: 24px;">Video</p>
+			<progress style="width: 100%;" :value="video.progress" min="0" max="100"></progress>
+			<div style="display: flex; justify-content: space-between;">
+				<span>{{video.speed}} kB/s</span>
+				<span>{{video.loaded}}/{{video.total}} MB</span>
+			</div>
+		</div>
+		<div style="flex: 1; margin: 10px;">
+			<p style="font-size: 24px;">Audio</p>
+			<progress style="width: 100%;" :value="audio.progress" min="0" max="100"></progress>
+			<div style="display: flex; justify-content: space-between;">
+				<span>{{audio.speed}} kB/s</span>
+				<span>{{audio.loaded}}/{{audio.total}} MB</span>
+			</div>
+		</div>
+	</div>
+</div>
 `
 	function openDownloadModel(adaptive, title) {
 		const win = open(
@@ -362,9 +348,21 @@ self.onmessage=${workerMessageHandler}`
 				async start(adaptive, title) {
 					win.onbeforeunload = () => true
 					// YouTube's default order is descending by video quality
-					const vUrl = adaptive.find(x =>
-						x.mimeType.includes('video/mp4')
-					).url
+					const vUrl = adaptive
+						.filter(x => x.mimeType.includes('video/mp4'))
+						.map(v => {
+							const [_, quality, fps] = /(\d+)p(\d*)/.exec(
+								v.qualityLabel
+							)
+							v.qualityNum = parseInt(quality)
+							v.fps = fps ? parseInt(fps) : 30
+							return v
+						})
+						.sort((a, b) => {
+							if (a.qualityNum === b.qualityNum)
+								return b.fps - a.fps // ex: 30-60=-30, then a will be put before b
+							return b.qualityNum - a.qualityNum
+						})[0].url
 					const aUrl = adaptive.find(x =>
 						x.mimeType.includes('audio/mp4')
 					).url
@@ -414,15 +412,12 @@ self.onmessage=${workerMessageHandler}`
 
 	const template = `
 <div class="box" :class="{'dark':dark}">
-	<div @click="hide=!hide" class="box-toggle div-a t-center fs-14px" v-text="strings.togglelinks"></div>
+	<div v-if="adaptive.length" class="of-h t-center c-pointer lh-20">
+		<a class="fs-14px" @click="dlmp4" v-text="strings.dlmp4"></a>
+	</div>
+	<div @click="hide=!hide" class="box-toggle div-a t-center fs-14px c-pointer lh-20" v-text="strings.togglelinks"></div>
 	<div :class="{'hide':hide}">
 		<div class="t-center fs-14px" v-text="strings.videoid+id"></div>
-		<div class="t-center fs-14px">
-			<a :href="thumbnail" target="_blank" v-text="strings.thumbnail" @mouseover="loadThumbnail"></a>
-		</div>
-    <div class="of-h t-center">
-			<a class="fs-14px" @click="dlmp4" v-text="strings.dlmp4"></a>
-		</div>
 		<div class="d-flex">
 			<div class="f-1 of-h">
 				<div class="t-center fs-14px" v-text="strings.stream"></div>
@@ -448,7 +443,6 @@ self.onmessage=${workerMessageHandler}`
 				adaptive: [],
 				meta: null,
 				dark: false,
-				thumbnail: null,
 				lang: findLang(navigator.language)
 			}
 		},
@@ -458,11 +452,6 @@ self.onmessage=${workerMessageHandler}`
 			}
 		},
 		methods: {
-			async loadThumbnail() {
-				if (this.thumbnail == null) {
-					app.thumbnail = await getHighresThumbnail(this.id)
-				}
-			},
 			dlmp4() {
 				const r = JSON.parse(this.meta.player_response)
 				openDownloadModel(this.adaptive, r.videoDetails.title)
@@ -543,10 +532,6 @@ self.onmessage=${workerMessageHandler}`
 			app.adaptive = data.adaptive
 			app.meta = data.meta
 
-			// lazy load thumbnail to save quota, so it will only load thumbnail when expanding
-			// app.thumbnail = await getHighresThumbnail(id)
-			app.thumbnail = null
-
 			const actLang = getLangCode()
 			if (actLang !== null) {
 				const lang = findLang(actLang)
@@ -593,61 +578,67 @@ self.onmessage=${workerMessageHandler}`
 
 	const css = `
 .hide{
-display: none;
+	display: none;
 }
 .t-center{
-text-align: center;
+	text-align: center;
 }
 .d-flex{
-display: flex;
+	display: flex;
 }
 .f-1{
-flex: 1;
+	flex: 1;
 }
 .fs-14px{
-font-size: 14px;
+	font-size: 14px;
 }
 .of-h{
-overflow: hidden;
+	overflow: hidden;
 }
 .box{
-border-bottom: 1px solid var(--yt-border-color);
-font-family: Arial;
+	border-bottom: 1px solid var(--yt-border-color);
+	font-family: Arial;
 }
 .box-toggle{
-margin: 3px;
-user-select: none;
--moz-user-select: -moz-none;
+	margin: 3px;
+	user-select: none;
+	-moz-user-select: -moz-none;
 }
 .ytdl-link-btn{
-display: block;
-border: 1px solid !important;
-border-radius: 3px;
-text-decoration: none !important;
-outline: 0;
-text-align: center;
-padding: 2px;
-margin: 5px;
-color: black;
+	display: block;
+	border: 1px solid !important;
+	border-radius: 3px;
+	text-decoration: none !important;
+	outline: 0;
+	text-align: center;
+	padding: 2px;
+	margin: 5px;
+	color: black;
 }
 a, .div-a{
-text-decoration: none;
-color: var(--yt-button-color, inherit);
+	text-decoration: none;
+	color: var(--yt-button-color, inherit);
 }
 a:hover, .div-a:hover{
-color: var(--yt-spec-call-to-action, blue);
+	color: var(--yt-spec-call-to-action, blue);
 }
 .box.dark{
-color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
 }
 .box.dark .ytdl-link-btn{
-color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
 }
 .box.dark .ytdl-link-btn:hover{
-color: rgba(200, 200, 255, 0.8);
+	color: rgba(200, 200, 255, 0.8);
 }
 .box.dark .box-toggle:hover{
-color: rgba(200, 200, 255, 0.8);
+	color: rgba(200, 200, 255, 0.8);
+}
+.c-pointer{
+	cursor: pointer;
+}
+.lh-20{
+	line-height: 20px;
 }
 `
 	shadow.appendChild($el('style', { textContent: css }))
