@@ -1,13 +1,16 @@
 // ==UserScript==
 // @name         Local SoundCloud Downloader
 // @namespace    https://blog.maple3142.net/
-// @version      0.1.0
+// @version      0.1.1
 // @description  Download SoundCloud without external service.
 // @author       maple3142
 // @match        https://soundcloud.com/*
+// @require      https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js
+// @require      https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
 // @grant        none
 // ==/UserScript==
 
+streamSaver.mitm = 'https://maple3142.github.io/StreamSaver.js/mitm.html'
 function hook(obj, name, callback) {
 	const fn = obj[name]
 	obj[name] = function(...args) {
@@ -37,11 +40,10 @@ const btn = {
 		this.el.classList.add('sc-button-responsive')
 	},
 	attach() {
-		document
-			.querySelector(
-				'.listenEngagement__footer .sc-button-toolbar .sc-button-group'
-			)
-			.insertAdjacentElement('afterbegin', this.el)
+		const par = document.querySelector(
+			'.listenEngagement__footer .sc-button-toolbar .sc-button-group'
+		)
+		if (par) par.insertAdjacentElement('afterbegin', this.el)
 	}
 }
 btn.init()
@@ -73,11 +75,14 @@ function load() {
 					const { url } = await fetch(
 						progressive.url + `?client_id=${clientId}`
 					).then(r => r.json())
-					const blob = await fetch(url).then(r => r.blob())
-					return triggerDownload(
-						URL.createObjectURL(blob),
-						result.title + '.mp3'
+					const resp = await fetch(url)
+					const ws = streamSaver.createWriteStream(
+						result.title + '.mp3',
+						{
+							size: resp.headers.get('Content-Length')
+						}
 					)
+					return resp.body.pipeTo(ws)
 				}
 				alert('Sorry, downloading this music is currently unsupported.')
 			}
