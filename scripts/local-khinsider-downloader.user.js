@@ -9,7 +9,7 @@
 // @match             https://downloads.khinsider.com/game-soundtracks/album/*
 // @require           https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js
 // @require           https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
-// @require           https://maple3142.github.io/StreamSaver.js/examples/zip-stream.js
+// @require           https://cdn.jsdelivr.net/gh/maple3142/StreamSaver.js/examples/zip-stream.min.js
 // @license           MIT
 // @connect           23.237.126.42
 // @grant             GM_xmlhttpRequest
