@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Local SoundCloud Downloader
 // @namespace    https://blog.maple3142.net/
-// @version      0.1.1
+// @version      0.1.2
 // @description  Download SoundCloud without external service.
 // @author       maple3142
 // @match        https://soundcloud.com/*
-// @require      https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js
+// @require      https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/polyfill.min.js
 // @require      https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
 // @grant        none
 // ==/UserScript==
@@ -82,7 +82,22 @@ function load() {
 							size: resp.headers.get('Content-Length')
 						}
 					)
-					return resp.body.pipeTo(ws)
+					const rs = resp.body
+					if (rs.pipeTo) {
+						return rs.pipeTo(ws)
+					}
+					const reader = rs.getReader()
+					const writer = ws.getWriter()
+					const pump = () =>
+						reader
+							.read()
+							.then(res =>
+								res.done
+									? writer.close()
+									: writer.write(res.value).then(pump)
+							)
+
+					return pump()
 				}
 				alert('Sorry, downloading this music is currently unsupported.')
 			}
