@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         i.pximg.net 403 Forbidden Fix
 // @namespace    https://blog.maple3142.net/
-// @version      0.2
+// @version      0.3
 // @description  Fix Pixiv raw image 403
 // @author       maple3142
 // @match        https://i.pximg.net/*
+// @match        https://img-comic.pximg.net/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -40,7 +41,9 @@
 		document.body.appendChild(msg)
 		const origlink = document.createElement('a')
 		origlink.textContent = 'Original Link'
-		origlink.href = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${/(\d+)/.exec(fname)[1]}`
+		origlink.href = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${
+			/(\d+)/.exec(fname)[1]
+		}`
 		origlink.target = '_blank'
 		origlink.style.display = 'block'
 		origlink.style.padding = '0px'
