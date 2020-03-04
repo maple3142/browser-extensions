@@ -11,7 +11,7 @@
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
-// @require      https://unpkg.com/@ffmpeg/ffmpeg@0.5.2/dist/ffmpeg.min.js
+// @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
 // @grant        GM_xmlhttpRequest
 // @connect      googlevideo.com
 // @compatible   firefox >=52
@@ -233,9 +233,8 @@ self.onmessage=${workerMessageHandler}`
 		let control, outrej
 		const promise = new Promise((res, rej) => {
 			if (typeof GM_xmlhttpRequest === 'undefined') {
-				return alert(
-					"Your userscript manager doesn't support this feature."
-				)
+				alert("Your userscript manager doesn't support this feature.")
+				return rej('GM_xmlhttpRequest not found')
 			}
 			// use gmxhr to bypass CORS problem when coming from home page
 			const start = Date.now()
@@ -274,13 +273,10 @@ self.onmessage=${workerMessageHandler}`
 		if (!ffWorkerLoaded) await ffWorker.load()
 		await ffWorker.write('video.mp4', video)
 		await ffWorker.write('audio.mp4', audio)
-		await ffWorker.run(
-			'-i /data/video.mp4 -i /data/audio.mp4 -c copy output.mp4',
-			{
-				input: ['video.mp4', 'audio.mp4'],
-				output: 'output.mp4'
-			}
-		)
+		await ffWorker.run('-i video.mp4 -i audio.mp4 -c copy output.mp4', {
+			input: ['video.mp4', 'audio.mp4'],
+			output: 'output.mp4'
+		})
 		const { data } = await ffWorker.read('output.mp4')
 		return data
 	}
@@ -358,6 +354,7 @@ self.onmessage=${workerMessageHandler}`
 							v.fps = fps ? parseInt(fps) : 30
 							return v
 						})
+						.filter(v => v.qualityNum <= 1080) // because big file may exceed browser's limitation
 						.sort((a, b) => {
 							if (a.qualityNum === b.qualityNum)
 								return b.fps - a.fps // ex: 30-60=-30, then a will be put before b
