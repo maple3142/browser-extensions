@@ -3,8 +3,8 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.17
-// @description  Get youtube raw link without external service.
+// @version      0.9.18
+// @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @author       maple3142
@@ -229,40 +229,43 @@ self.onmessage=${workerMessageHandler}`
 	}
 
 	// video downloader
-	const xhrDownloadBuffer = (url, progressCb) => {
-		let control, outrej
-		const promise = new Promise((res, rej) => {
-			if (typeof GM_xmlhttpRequest === 'undefined') {
-				alert("Your userscript manager doesn't support this feature.")
-				return rej('GM_xmlhttpRequest not found')
-			}
-			// use gmxhr to bypass CORS problem when coming from home page
-			const start = Date.now()
-			const xhr = {}
-			xhr.responseType = 'arraybuffer'
-			xhr.onload = resp => res(resp.response)
-			xhr.onerror = rej
-			xhr.onprogress = e => {
-				if (!e.lengthComputable) return
-				const dt = (Date.now() - start) / 1000 // unit: second
-				progressCb({
-					total: e.total, // bytes
-					loaded: e.loaded, // bytes
-					speed: e.loaded / dt // bytes/s
-				})
-			}
-			xhr.method = 'GET'
-			xhr.url = url
-
-			// abort hack
-			control = GM_xmlhttpRequest(xhr)
-			outrej = rej
-		})
-		promise.abort = () => {
-			control.abort()
-			outrej('aborted')
+	const xhrDownloadBuffer = async ({ url, contentLength }, progressCb) => {
+		if (typeof contentLength === 'string')
+			contentLength = parseInt(contentLength)
+		const chunkSize = Math.floor(contentLength / 20)
+		const getBuffer = (start, end) =>
+			new Promise((res, rej) => {
+				const xhr = {}
+				xhr.responseType = 'arraybuffer'
+				xhr.method = 'GET'
+				xhr.url = url
+				xhr.headers = {
+					'User-Agent':
+						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.124 Safari/537.36',
+					Range: `bytes=${start}-${end ? end - 1 : ''}`,
+					'Accept-Encoding': 'identity',
+					'Accept-Language': 'en-us,en;q=0.5',
+					'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7'
+				}
+				xhr.onload = obj => res(obj.response)
+				GM_xmlhttpRequest(xhr)
+			})
+		const data = new Uint8Array(contentLength)
+		const startTime = Date.now()
+		for (let start = 0; start < contentLength; start += chunkSize) {
+			const end =
+				start + chunkSize > contentLength ? null : start + chunkSize
+			const buf = await getBuffer(start, end)
+			const endTime = Date.now()
+			data.set(new Uint8Array(buf), start)
+			const ds = (endTime - startTime + 1) / 1000
+			progressCb({
+				loaded: start,
+				total: contentLength,
+				speed: start / ds
+			})
 		}
-		return promise
+		return data
 	}
 
 	const ffWorker = FFmpeg.createWorker({
@@ -278,6 +281,7 @@ self.onmessage=${workerMessageHandler}`
 			output: 'output.mp4'
 		})
 		const { data } = await ffWorker.read('output.mp4')
+		await ffWorker.remove('output.mp4')
 		return data
 	}
 	const triggerDownload = (url, filename) => {
@@ -344,7 +348,7 @@ self.onmessage=${workerMessageHandler}`
 				async start(adaptive, title) {
 					win.onbeforeunload = () => true
 					// YouTube's default order is descending by video quality
-					const vUrl = adaptive
+					const videoObj = adaptive
 						.filter(x => x.mimeType.includes('video/mp4'))
 						.map(v => {
 							const [_, quality, fps] = /(\d+)p(\d*)/.exec(
@@ -359,31 +363,33 @@ self.onmessage=${workerMessageHandler}`
 							if (a.qualityNum === b.qualityNum)
 								return b.fps - a.fps // ex: 30-60=-30, then a will be put before b
 							return b.qualityNum - a.qualityNum
-						})[0].url
-					const aUrl = adaptive.find(x =>
+						})[0]
+					const audioObj = adaptive.find(x =>
 						x.mimeType.includes('audio/mp4')
-					).url
-					const vPromise = xhrDownloadBuffer(vUrl, e => {
+					)
+					const vPromise = xhrDownloadBuffer(videoObj, e => {
 						this.video.progress = (e.loaded / e.total) * 100
 						this.video.loaded = (e.loaded / 1024 / 1024).toFixed(2)
 						this.video.total = (e.total / 1024 / 1024).toFixed(2)
 						this.video.speed = (e.speed / 1024).toFixed(2)
 					})
-					const aPromise = xhrDownloadBuffer(aUrl, e => {
+					const aPromise = xhrDownloadBuffer(audioObj, e => {
 						this.audio.progress = (e.loaded / e.total) * 100
 						this.audio.loaded = (e.loaded / 1024 / 1024).toFixed(2)
 						this.audio.total = (e.total / 1024 / 1024).toFixed(2)
 						this.audio.speed = (e.speed / 1024).toFixed(2)
 					})
-					win.onunload = () => {
-						// because GM_xmlhttpRequest won't automatically stop when window closes
-						vPromise.abort()
-						aPromise.abort()
-					}
 					const [vbuf, abuf] = await Promise.all([vPromise, aPromise])
 					this.merging = true
 					const varr = new Uint8Array(vbuf)
 					const aarr = new Uint8Array(abuf)
+					win.onunload = () => {
+						// trigger download when user close it
+						const bvurl = URL.createObjectURL(new Blob([varr]))
+						const baurl = URL.createObjectURL(new Blob([aarr]))
+						triggerDownload(bvurl, title + '-videoonly.mp4')
+						triggerDownload(baurl, title + '-audioonly.mp4')
+					}
 					const result = await Promise.race([
 						mergeVideo(varr, aarr),
 						sleep(1000 * 25).then(() => null)
@@ -400,6 +406,7 @@ self.onmessage=${workerMessageHandler}`
 					const url = URL.createObjectURL(new Blob([result]))
 					triggerDownload(url, title + '.mp4')
 					win.onbeforeunload = null
+					win.onunload = null
 					win.close()
 				}
 			}
