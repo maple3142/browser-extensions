@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.19
+// @version      0.9.18
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -12,7 +12,7 @@
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
-// @require      https://gitcdn.xyz/cdn/maple3142/d4ea6c9b344a23254a587e5aa7d611a9/raw/a4fa51b40ef6d51bb793239d730031912b71b672/p-queue@6.3.0.min.js
+// @require      https://bundle.run/p-queue@6.3.0
 // @grant        GM_xmlhttpRequest
 // @connect      googlevideo.com
 // @compatible   firefox >=52
@@ -240,6 +240,11 @@ self.onmessage=${workerMessageHandler}`
 	) => {
 		if (typeof contentLength === 'string')
 			contentLength = parseInt(contentLength)
+		progressCb({
+			loaded: 0,
+			total: contentLength,
+			speed: 0
+		})
 		const chunkSize = Math.floor(
 			contentLength / determineChunksNum(contentLength)
 		)
