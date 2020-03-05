@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.18
+// @version      0.9.19
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -12,6 +12,7 @@
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
+// @require      https://gitcdn.xyz/cdn/maple3142/d4ea6c9b344a23254a587e5aa7d611a9/raw/a4fa51b40ef6d51bb793239d730031912b71b672/p-queue@6.3.0.min.js
 // @grant        GM_xmlhttpRequest
 // @connect      googlevideo.com
 // @compatible   firefox >=52
@@ -228,11 +229,20 @@ self.onmessage=${workerMessageHandler}`
 		})
 	}
 
+	const determineChunksNum = size => {
+		const n = Math.ceil(size / (1024 * 1024 * 3)) // 3 MB
+		return n
+	}
 	// video downloader
-	const xhrDownloadBuffer = async ({ url, contentLength }, progressCb) => {
+	const xhrDownloadUint8Array = async (
+		{ url, contentLength },
+		progressCb
+	) => {
 		if (typeof contentLength === 'string')
 			contentLength = parseInt(contentLength)
-		const chunkSize = Math.floor(contentLength / 20)
+		const chunkSize = Math.floor(
+			contentLength / determineChunksNum(contentLength)
+		)
 		const getBuffer = (start, end) =>
 			new Promise((res, rej) => {
 				const xhr = {}
@@ -251,20 +261,27 @@ self.onmessage=${workerMessageHandler}`
 				GM_xmlhttpRequest(xhr)
 			})
 		const data = new Uint8Array(contentLength)
+		let downloaded = 0
+		const queue = new pQueue.default({ concurrency: 5 })
 		const startTime = Date.now()
 		for (let start = 0; start < contentLength; start += chunkSize) {
-			const end =
-				start + chunkSize > contentLength ? null : start + chunkSize
-			const buf = await getBuffer(start, end)
-			const endTime = Date.now()
-			data.set(new Uint8Array(buf), start)
-			const ds = (endTime - startTime + 1) / 1000
-			progressCb({
-				loaded: start,
-				total: contentLength,
-				speed: start / ds
-			})
+			const exceeded = start + chunkSize > contentLength
+			const curChunkSize = exceeded ? contentLength - start : chunkSize
+			const end = exceeded ? null : start + chunkSize
+			queue.add(() =>
+				getBuffer(start, end).then(buf => {
+					downloaded += curChunkSize
+					data.set(new Uint8Array(buf), start)
+					const ds = (Date.now() - startTime + 1) / 1000
+					progressCb({
+						loaded: downloaded,
+						total: contentLength,
+						speed: downloaded / ds
+					})
+				})
+			)
 		}
+		await queue.onEmpty()
 		return data
 	}
 
@@ -358,7 +375,6 @@ self.onmessage=${workerMessageHandler}`
 							v.fps = fps ? parseInt(fps) : 30
 							return v
 						})
-						.filter(v => v.qualityNum <= 1080) // because big file may exceed browser's limitation
 						.sort((a, b) => {
 							if (a.qualityNum === b.qualityNum)
 								return b.fps - a.fps // ex: 30-60=-30, then a will be put before b
@@ -367,22 +383,20 @@ self.onmessage=${workerMessageHandler}`
 					const audioObj = adaptive.find(x =>
 						x.mimeType.includes('audio/mp4')
 					)
-					const vPromise = xhrDownloadBuffer(videoObj, e => {
+					const vPromise = xhrDownloadUint8Array(videoObj, e => {
 						this.video.progress = (e.loaded / e.total) * 100
 						this.video.loaded = (e.loaded / 1024 / 1024).toFixed(2)
 						this.video.total = (e.total / 1024 / 1024).toFixed(2)
 						this.video.speed = (e.speed / 1024).toFixed(2)
 					})
-					const aPromise = xhrDownloadBuffer(audioObj, e => {
+					const aPromise = xhrDownloadUint8Array(audioObj, e => {
 						this.audio.progress = (e.loaded / e.total) * 100
 						this.audio.loaded = (e.loaded / 1024 / 1024).toFixed(2)
 						this.audio.total = (e.total / 1024 / 1024).toFixed(2)
 						this.audio.speed = (e.speed / 1024).toFixed(2)
 					})
-					const [vbuf, abuf] = await Promise.all([vPromise, aPromise])
+					const [varr, aarr] = await Promise.all([vPromise, aPromise])
 					this.merging = true
-					const varr = new Uint8Array(vbuf)
-					const aarr = new Uint8Array(abuf)
 					win.onunload = () => {
 						// trigger download when user close it
 						const bvurl = URL.createObjectURL(new Blob([varr]))
