@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.19
+// @version      0.9.20
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -269,11 +269,12 @@ self.onmessage=${workerMessageHandler}`
 		let downloaded = 0
 		const queue = new pQueue.default({ concurrency: 5 })
 		const startTime = Date.now()
+    const ps = []
 		for (let start = 0; start < contentLength; start += chunkSize) {
 			const exceeded = start + chunkSize > contentLength
 			const curChunkSize = exceeded ? contentLength - start : chunkSize
 			const end = exceeded ? null : start + chunkSize
-			queue.add(() =>
+			const p = queue.add(() =>
 				getBuffer(start, end).then(buf => {
 					downloaded += curChunkSize
 					data.set(new Uint8Array(buf), start)
@@ -285,8 +286,9 @@ self.onmessage=${workerMessageHandler}`
 					})
 				})
 			)
+      ps.push(p)
 		}
-		await queue.onEmpty()
+		await Promise.all(ps)
 		return data
 	}
 
