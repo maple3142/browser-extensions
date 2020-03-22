@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.19
+// @version      0.9.21
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -46,7 +46,9 @@
 			videoid: 'Video Id: ',
 			inbrowser_adaptive_merger:
 				'In browser adaptive video & audio merger (FFmpeg)',
-			dlmp4: 'Download highest resolution mp4 in one click'
+			dlmp4: 'Download highest resolution mp4 in one click',
+			adb_conflict:
+				'"Adblock" prevents Local YouTube Downloader from working. So it is recommended to use "uBlock Origin" instead, and uninstall "Adblock".'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -55,7 +57,9 @@
 			videoid: '影片 ID: ',
 			inbrowser_adaptive_merger:
 				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
-			dlmp4: '一鍵下載高畫質 mp4'
+			dlmp4: '一鍵下載高畫質 mp4',
+			adb_conflict:
+				'"Adblock" 使得本地 YouTube 下載器無法運作，建議改用 "uBlock Origin" 並把原本的 "Adblock" 移除。'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏链接',
@@ -64,7 +68,9 @@
 			videoid: '视频 ID: ',
 			inbrowser_adaptive_merger:
 				'浏览器版自适应视频及声音合成器 (FFmpeg)',
-			dlmp4: '一键下载高画质 mp4'
+			dlmp4: '一键下载高画质 mp4',
+			adb_conflict:
+				'"Adblock" 使得本地 YouTube 下载器无法运作，建议改用 "uBlock Origin" 并把原本的 "Adblock" 移除。'
 		},
 		kr: {
 			togglelinks: '링크 보이기/숨기기',
@@ -201,8 +207,12 @@
 			.json(r => r.items[0])
 	const workerMessageHandler = async e => {
 		const decsig = await xf.get(e.data.path).text(parseDecsig)
-		const result = await getVideo(e.data.id, decsig)
-		self.postMessage(result)
+		try {
+			const result = await getVideo(e.data.id, decsig)
+			self.postMessage(result)
+		} catch (e) {
+			self.postMessage('Adblock conflict')
+		}
 	}
 	const ytdlWorkerCode = `
 importScripts('https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js')
@@ -221,6 +231,9 @@ self.onmessage=${workerMessageHandler}`
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
+				if (e.data === 'Adblock conflict') {
+					return rej(e.data)
+				}
 				logger.log('workerGetVideo end: %o', e.data)
 				res(e.data)
 			}
@@ -269,11 +282,12 @@ self.onmessage=${workerMessageHandler}`
 		let downloaded = 0
 		const queue = new pQueue.default({ concurrency: 5 })
 		const startTime = Date.now()
+		const ps = []
 		for (let start = 0; start < contentLength; start += chunkSize) {
 			const exceeded = start + chunkSize > contentLength
 			const curChunkSize = exceeded ? contentLength - start : chunkSize
 			const end = exceeded ? null : start + chunkSize
-			queue.add(() =>
+			const p = queue.add(() =>
 				getBuffer(start, end).then(buf => {
 					downloaded += curChunkSize
 					data.set(new Uint8Array(buf), start)
@@ -285,8 +299,9 @@ self.onmessage=${workerMessageHandler}`
 					})
 				})
 			)
+			ps.push(p)
 		}
-		await queue.onEmpty()
+		await Promise.all(ps)
 		return data
 	}
 
@@ -563,6 +578,13 @@ self.onmessage=${workerMessageHandler}`
 				app.lang = lang
 			}
 		} catch (err) {
+			if (err === 'Adblock conflict') {
+				alert(app.strings.adb_conflict)
+				open(
+					'https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm',
+					'_blank'
+				)
+			}
 			logger.error('load', err)
 		}
 	}
