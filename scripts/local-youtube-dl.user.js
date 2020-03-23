@@ -573,7 +573,10 @@ self.onmessage=${workerMessageHandler}`
 					'%s',
 					`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`
 				)
-				prompt(str, '@@||youtube.com/get_video_info?$1p')
+				prompt(
+					str,
+					'@@||www.youtube.com/get_video_info?*=detailpage$xhr,domain=youtube.com'
+				)
 			}
 			logger.error('load', err)
 		}
