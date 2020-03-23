@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.21
+// @version      0.9.22
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -47,8 +47,8 @@
 			inbrowser_adaptive_merger:
 				'In browser adaptive video & audio merger (FFmpeg)',
 			dlmp4: 'Download highest resolution mp4 in one click',
-			adb_conflict:
-				'"Adblock" prevents Local YouTube Downloader from working. So it is recommended to use "uBlock Origin" instead, and uninstall "Adblock".'
+			get_video_failed:
+				'Unknown error\nSome extensions may conflicts with Local YouTube Downloader, please try to disable all the extensions other than UserScript manager.\nIf you have "Adblock" installed, please use "uBlock Origin" instead and uninstall "Adblock", because it prevents Local YouTube Downloader from working.'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -58,8 +58,8 @@
 			inbrowser_adaptive_merger:
 				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
-			adb_conflict:
-				'"Adblock" 使得本地 YouTube 下載器無法運作，建議改用 "uBlock Origin" 並把原本的 "Adblock" 移除。'
+			get_video_failed:
+				'未知錯誤\n有些擴充功能和本地 YouTube 下載器產生了衝突，請試著把腳本管理器之外的所有擴充功能停用。\n如有安裝 "Adblock"，請改用 "uBlock Origin" 並把原本的 "Adblock" 移除，因為它會使得本地 YouTube 下載器無法運作。'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏链接',
@@ -69,8 +69,8 @@
 			inbrowser_adaptive_merger:
 				'浏览器版自适应视频及声音合成器 (FFmpeg)',
 			dlmp4: '一键下载高画质 mp4',
-			adb_conflict:
-				'"Adblock" 使得本地 YouTube 下载器无法运作，建议改用 "uBlock Origin" 并把原本的 "Adblock" 移除。'
+			get_video_failed:
+				'未知错误\n有些扩充功能和本地 YouTube 下载器产生了冲突，请试着把脚本管理器之外的所有扩充功能停用。 \n如有安装 "Adblock"，请改用 "uBlock Origin" 并把原本的 "Adblock" 移除，因为它会使得本地 YouTube 下载器无法运作。'
 		},
 		kr: {
 			togglelinks: '링크 보이기/숨기기',
@@ -579,7 +579,7 @@ self.onmessage=${workerMessageHandler}`
 			}
 		} catch (err) {
 			if (err === 'Adblock conflict') {
-				alert(app.strings.adb_conflict)
+				alert(app.strings.get_video_failed)
 				open(
 					'https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm',
 					'_blank'
