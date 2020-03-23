@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.22
+// @version      0.9.23
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -48,7 +48,7 @@
 				'In browser adaptive video & audio merger (FFmpeg)',
 			dlmp4: 'Download highest resolution mp4 in one click',
 			get_video_failed:
-				'Unknown error\nSome extensions may conflicts with Local YouTube Downloader, please try to disable all the extensions other than UserScript manager.\nIf you have "Adblock" installed, please use "uBlock Origin" instead and uninstall "Adblock", because it prevents Local YouTube Downloader from working.'
+				'You seems to have AdBlocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -59,7 +59,7 @@
 				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
-				'未知錯誤\n有些擴充功能和本地 YouTube 下載器產生了衝突，請試著把腳本管理器之外的所有擴充功能停用。\n如有安裝 "Adblock"，請改用 "uBlock Origin" 並把原本的 "Adblock" 移除，因為它會使得本地 YouTube 下載器無法運作。'
+				'您看起來有安裝擋廣告的擴充功能，而它把 %s 給擋掉了。\n請把下方的規則加入你的該擴充功能中，否則本地 YouTube 下載器無法正常運作。'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏链接',
@@ -70,7 +70,7 @@
 				'浏览器版自适应视频及声音合成器 (FFmpeg)',
 			dlmp4: '一键下载高画质 mp4',
 			get_video_failed:
-				'未知错误\n有些扩充功能和本地 YouTube 下载器产生了冲突，请试着把脚本管理器之外的所有扩充功能停用。 \n如有安装 "Adblock"，请改用 "uBlock Origin" 并把原本的 "Adblock" 移除，因为它会使得本地 YouTube 下载器无法运作。'
+				'您看起来有安装挡广告的扩充功能，而它把 %s 给挡掉了。\n请把下方的规则加入你的该扩充功能中，否则本地 YouTube 下载器无法正常运作。'
 		},
 		kr: {
 			togglelinks: '링크 보이기/숨기기',
@@ -195,16 +195,6 @@
 				return { stream, adaptive, meta: obj }
 			})
 	}
-	const getVideoDetails = id =>
-		xf
-			.get('https://www.googleapis.com/youtube/v3/videos', {
-				qs: {
-					key: 'AIzaSyA_zdfwEy2ULfPCTlwk9DfhBVs2H5qGNU8',
-					part: 'snippet',
-					id
-				}
-			})
-			.json(r => r.items[0])
 	const workerMessageHandler = async e => {
 		const decsig = await xf.get(e.data.path).text(parseDecsig)
 		try {
@@ -579,11 +569,11 @@ self.onmessage=${workerMessageHandler}`
 			}
 		} catch (err) {
 			if (err === 'Adblock conflict') {
-				alert(app.strings.get_video_failed)
-				open(
-					'https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm',
-					'_blank'
+				const str = app.strings.get_video_failed.replace(
+					'%s',
+					`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`
 				)
+				prompt(str, '@@||youtube.com/get_video_info?$1p')
 			}
 			logger.error('load', err)
 		}
