@@ -3,7 +3,7 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.23
+// @version      0.9.24
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
@@ -48,7 +48,7 @@
 				'In browser adaptive video & audio merger (FFmpeg)',
 			dlmp4: 'Download highest resolution mp4 in one click',
 			get_video_failed:
-				'You seems to have AdBlocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.'
+				'You seems to have AdBlocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\nPS: If it refuse to add that rule, you should uninstall it and use "uBlock Origin" instead.'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -59,7 +59,7 @@
 				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
-				'您看起來有安裝擋廣告的擴充功能，而它把 %s 給擋掉了。\n請把下方的規則加入你的該擴充功能中，否則本地 YouTube 下載器無法正常運作。'
+				'您看起來有在使用擋廣告的擴充功能，而它將 %s 給阻擋了。\n請將下方的規則加入你的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏链接',
@@ -70,7 +70,7 @@
 				'浏览器版自适应视频及声音合成器 (FFmpeg)',
 			dlmp4: '一键下载高画质 mp4',
 			get_video_failed:
-				'您看起来有安装挡广告的扩充功能，而它把 %s 给挡掉了。\n请把下方的规则加入你的该扩充功能中，否则本地 YouTube 下载器无法正常运作。'
+				'您看起来有在使用挡广告的扩充功能，而它将 %s 给阻挡了。 \n请将下方的规则加入你的广告阻挡器中，否则本地 YouTube 下载器无法正常运作。 \nPS: 如它拒绝加入该规则，请将它移除并改为使用 "uBlock Origin"。'
 		},
 		kr: {
 			togglelinks: '링크 보이기/숨기기',
