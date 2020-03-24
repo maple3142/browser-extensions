@@ -153,47 +153,47 @@
 			{}
 		)
 	const getVideo = async (id, decsig) => {
-		return xf
+		const data = await xf
 			.get(
 				`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`
 			)
 			.text()
-			.then(async data => {
-				const obj = parseQuery(data)
-				const playerResponse = JSON.parse(obj.player_response)
-				logger.log(`video %s data: %o`, id, obj)
-				logger.log(`video %s playerResponse: %o`, id, playerResponse)
-				if (obj.status === 'fail') {
-					throw obj
-				}
-				let stream = []
-				if (playerResponse.streamingData.formats) {
-					stream = playerResponse.streamingData.formats.map(x =>
-						Object.assign(x, parseQuery(x.cipher))
-					)
-					logger.log(`video %s stream: %o`, id, stream)
-					if (stream[0].sp && stream[0].sp.includes('sig')) {
-						stream = stream
-							.map(x => ({ ...x, s: decsig(x.s) }))
-							.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
-					}
-				}
+			.catch(err => null)
+		if (!data) return 'Adblock conflict'
+		const obj = parseQuery(data)
+		const playerResponse = JSON.parse(obj.player_response)
+		logger.log(`video %s data: %o`, id, obj)
+		logger.log(`video %s playerResponse: %o`, id, playerResponse)
+		if (obj.status === 'fail') {
+			throw obj
+		}
+		let stream = []
+		if (playerResponse.streamingData.formats) {
+			stream = playerResponse.streamingData.formats.map(x =>
+				Object.assign(x, parseQuery(x.cipher))
+			)
+			logger.log(`video %s stream: %o`, id, stream)
+			if (stream[0].sp && stream[0].sp.includes('sig')) {
+				stream = stream
+					.map(x => ({ ...x, s: decsig(x.s) }))
+					.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
+			}
+		}
 
-				let adaptive = []
-				if (playerResponse.streamingData.adaptiveFormats) {
-					adaptive = playerResponse.streamingData.adaptiveFormats.map(
-						x => Object.assign(x, parseQuery(x.cipher))
-					)
-					logger.log(`video %s adaptive: %o`, id, adaptive)
-					if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
-						adaptive = adaptive
-							.map(x => ({ ...x, s: decsig(x.s) }))
-							.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
-					}
-				}
-				logger.log(`video %s result: %o`, id, { stream, adaptive })
-				return { stream, adaptive, meta: obj }
-			})
+		let adaptive = []
+		if (playerResponse.streamingData.adaptiveFormats) {
+			adaptive = playerResponse.streamingData.adaptiveFormats.map(x =>
+				Object.assign(x, parseQuery(x.cipher))
+			)
+			logger.log(`video %s adaptive: %o`, id, adaptive)
+			if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
+				adaptive = adaptive
+					.map(x => ({ ...x, s: decsig(x.s) }))
+					.map(x => ({ ...x, url: x.url + `&sig=${x.s}` }))
+			}
+		}
+		logger.log(`video %s result: %o`, id, { stream, adaptive })
+		return { stream, adaptive, meta: obj }
 	}
 	const workerMessageHandler = async e => {
 		const decsig = await xf.get(e.data.path).text(parseDecsig)
@@ -201,7 +201,7 @@
 			const result = await getVideo(e.data.id, decsig)
 			self.postMessage(result)
 		} catch (e) {
-			self.postMessage('Adblock conflict')
+			self.postMessage(e)
 		}
 	}
 	const ytdlWorkerCode = `
