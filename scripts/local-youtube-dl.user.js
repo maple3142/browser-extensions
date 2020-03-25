@@ -7,6 +7,7 @@
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
+// @description:ru  Получите прямую ссылку на YouTube без внешнего сервиса.
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
@@ -90,7 +91,18 @@
 			stream: 'סטרים',
 			adaptive: 'אדפטיבי',
 			videoid: 'מזהה סרטון: '
-		}
+		},
+		ru: {
+			togglelinks: 'Показать/Скрыть ссылки',
+			stream: 'Stream',
+			adaptive: 'Адаптивная',
+			videoid: 'Индетификатор видео: ',
+			inbrowser_adaptive_merger:
+				'Адаптивное слияние аудио и видио в браузере (FFmpeg)',
+			dlmp4: 'Скачать mp4 в высоком разрешении в один клик',
+			get_video_failed:
+				'Похоже у вас установлено расширение AdBlock, которое блокирует %s.\nДобавьте следующее правило в набор правил, иначе это помешает работе локального загрузчика YouTube.\n\nЗЫ: Если оно отказывается добавить это правило, его следует удалить и использовать "uBlock Origin".\nЕсли вы все ещё не понимаете, о чём я говорю, просто отключите или удалите все свои блокировщики рекламы...'
+		},
 	}
 	const findLang = l => {
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
