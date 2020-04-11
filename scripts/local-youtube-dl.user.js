@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         Local YouTube Downloader
 // @name:zh-TW   本地 YouTube 下載器
+// @name:zh-HK   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
 // @version      0.9.26
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
+// @description:zh-HK  唔需要透過第三方服務就能夠下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
 // @description:ru  Получите прямую ссылку на YouTube без внешнего сервиса.
 // @author       maple3142
@@ -61,6 +63,17 @@
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
 				'您看起來有在使用擋廣告的擴充功能，而它將 %s 給阻擋了。\n請將下方的規則加入你的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n如果你仍無法理解我在說什麼，那就直接把全部的廣告阻擋器停用或是移除掉...'
+		},
+		'zh-hk': {
+			togglelinks: '顯示 / 隱藏連結',
+			stream: '串流 Stream',
+			adaptive: '自適應 Adaptive',
+			videoid: '影片 ID: ',
+			inbrowser_adaptive_merger:
+				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
+			dlmp4: '一鍵下載高畫質 mp4',
+			get_video_failed:
+				'您睇來有用阻擋廣告嘅擴充功能，而佢阻擋咗 %s。\n請將下面嘅規則加到你嘅廣告阻擋器，否則本地 YouTube 下載器唔能夠正常運作。\n\nPS: 如果佢拒絕加入呢個規則，請將佢移除並改用 "uBlock Origin"。\n如果你仍然唔明我講乜，咁就直接停用或者移除全部廣告阻擋器...'
 		},
 		zh: {
 			togglelinks: '显示 / 隐藏链接',
