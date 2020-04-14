@@ -39,7 +39,7 @@ const btn = {
 		this.el.classList.add('sc-button')
 		this.el.classList.add('sc-button-medium')
 		this.el.classList.add('sc-button-responsive')
-		this.el.classList.add('sc-button-download
+		this.el.classList.add('sc-button-download')
 	},
 	attach() {
 		const par = document.querySelector(
