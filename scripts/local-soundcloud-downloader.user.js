@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Local SoundCloud Downloader
 // @namespace    https://blog.maple3142.net/
-// @version      0.1.2
+// @version      0.1.3
 // @description  Download SoundCloud without external service.
 // @author       maple3142
 // @match        https://soundcloud.com/*
-// @require      https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/polyfill.min.js
+// @require      https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js
 // @require      https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
 // @grant        none
 // @icon         https://a-v2.sndcdn.com/assets/images/sc-icons/favicon-2cadd14bdb.ico
@@ -14,7 +14,7 @@
 streamSaver.mitm = 'https://maple3142.github.io/StreamSaver.js/mitm.html'
 function hook(obj, name, callback) {
 	const fn = obj[name]
-	obj[name] = function(...args) {
+	obj[name] = function (...args) {
 		callback.apply(this, args)
 		fn.apply(this, args)
 	}
@@ -86,6 +86,7 @@ function load() {
 					)
 					const rs = resp.body
 					if (rs.pipeTo) {
+						console.log(rs, ws)
 						return rs.pipeTo(ws)
 					}
 					const reader = rs.getReader()
