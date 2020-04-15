@@ -8,6 +8,7 @@
 // @require      https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/polyfill.min.js
 // @require      https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
 // @grant        none
+// @icon         https://a-v2.sndcdn.com/assets/images/sc-icons/favicon-2cadd14bdb.ico
 // ==/UserScript==
 
 streamSaver.mitm = 'https://maple3142.github.io/StreamSaver.js/mitm.html'
@@ -38,12 +39,13 @@ const btn = {
 		this.el.classList.add('sc-button')
 		this.el.classList.add('sc-button-medium')
 		this.el.classList.add('sc-button-responsive')
+		this.el.classList.add('sc-button-download')
 	},
 	attach() {
 		const par = document.querySelector(
 			'.listenEngagement__footer .sc-button-toolbar .sc-button-group'
 		)
-		if (par) par.insertAdjacentElement('afterbegin', this.el)
+		if (par) par.insertAdjacentElement('beforeend', this.el)
 	}
 }
 btn.init()
