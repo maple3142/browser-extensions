@@ -1,15 +1,12 @@
 // ==UserScript==
 // @name         Local YouTube Downloader
 // @name:zh-TW   本地 YouTube 下載器
-// @name:zh-HK   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.26
+// @version      0.9.27
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
-// @description:zh-HK  唔需要透過第三方服務就能夠下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
-// @description:ru  Получите прямую ссылку на YouTube без внешнего сервиса.
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
@@ -23,7 +20,7 @@
 // @license      MIT
 // ==/UserScript==
 
-;(function() {
+;(function () {
 	'use strict'
 	const DEBUG = true
 	const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
@@ -64,17 +61,6 @@
 			get_video_failed:
 				'您看起來有在使用擋廣告的擴充功能，而它將 %s 給阻擋了。\n請將下方的規則加入你的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n如果你仍無法理解我在說什麼，那就直接把全部的廣告阻擋器停用或是移除掉...'
 		},
-		'zh-hk': {
-			togglelinks: '顯示 / 隱藏連結',
-			stream: '串流 Stream',
-			adaptive: '自適應 Adaptive',
-			videoid: '影片 ID: ',
-			inbrowser_adaptive_merger:
-				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
-			dlmp4: '一鍵下載高畫質 mp4',
-			get_video_failed:
-				'您睇來有用阻擋廣告嘅擴充功能，而佢阻擋咗 %s。\n請將下面嘅規則加到你嘅廣告阻擋器，否則本地 YouTube 下載器唔能夠正常運作。\n\nPS: 如果佢拒絕加入呢個規則，請將佢移除並改用 "uBlock Origin"。\n如果你仍然唔明我講乜，咁就直接停用或者移除全部廣告阻擋器...'
-		},
 		zh: {
 			togglelinks: '显示 / 隐藏链接',
 			stream: '串流 Stream',
@@ -104,17 +90,6 @@
 			stream: 'סטרים',
 			adaptive: 'אדפטיבי',
 			videoid: 'מזהה סרטון: '
-		},
-		ru: {
-			togglelinks: 'Показать/Скрыть ссылки',
-			stream: 'Stream',
-			adaptive: 'Адаптивная',
-			videoid: 'Индетификатор видео: ',
-			inbrowser_adaptive_merger:
-				'Адаптивное слияние аудио и видио в браузере (FFmpeg)',
-			dlmp4: 'Скачать mp4 в высоком разрешении в один клик',
-			get_video_failed:
-				'Похоже у вас установлено расширение AdBlock, которое блокирует %s.\nДобавьте следующее правило в исключение, иначе это помешает работе локального загрузчика YouTube.\n\nЗЫ: Если расширение отказывается добавить это правило, его следует удалить и использовать "uBlock Origin".\nЕсли вы все ещё не понимаете, о чём я говорю, просто отключите или удалите все свои блокировщики рекламы...'
 		}
 	}
 	const findLang = l => {
@@ -195,7 +170,7 @@
 		let stream = []
 		if (playerResponse.streamingData.formats) {
 			stream = playerResponse.streamingData.formats.map(x =>
-				Object.assign({}, x, parseQuery(x.cipher))
+				Object.assign({}, x, parseQuery(x.cipher || x.signatureCipher))
 			)
 			logger.log(`video %s stream: %o`, id, stream)
 			if (stream[0].sp && stream[0].sp.includes('sig')) {
@@ -209,7 +184,7 @@
 		let adaptive = []
 		if (playerResponse.streamingData.adaptiveFormats) {
 			adaptive = playerResponse.streamingData.adaptiveFormats.map(x =>
-				Object.assign({}, x, parseQuery(x.cipher))
+				Object.assign({}, x, parseQuery(x.cipher || x.signatureCipher))
 			)
 			logger.log(`video %s adaptive: %o`, id, adaptive)
 			if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
@@ -373,8 +348,9 @@ self.onmessage=${workerMessageHandler}`
 		const win = open(
 			'',
 			'Video Download',
-			`toolbar=no,height=${screen.height / 2},width=${screen.width /
-				2},left=${screenLeft},top=${screenTop}`
+			`toolbar=no,height=${screen.height / 2},width=${
+				screen.width / 2
+			},left=${screenLeft},top=${screenTop}`
 		)
 		const div = win.document.createElement('div')
 		win.document.body.appendChild(div)
