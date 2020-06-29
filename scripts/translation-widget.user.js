@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         翻譯小工具
 // @namespace    https://blog.maple3142.net/
-// @version      1.2
+// @version      1.3
 // @description  選字時會出現小懸浮窗以方便翻譯
 // @author       maple3142
 // @include      *
@@ -13,7 +13,7 @@
 
 'use strict'
 const googleUrl =
-	'https://translate.google.com/translate_a/single?client=gtx&dt=t&dt=bd&dj=1&source=input&hl=en&sl=auto'
+	'https://translate.google.com/translate_a/single?client=gtx&dt=t&dt=bd&dt=rm&dj=1&source=input&hl=en&sl=auto'
 const reHZ = /^[\u4E00-\u9FA5\uFF00-\uFF20\u3000-\u301C]$/
 
 const countOfWord = str => (str ? str.split(/\W+/).length : 0)
@@ -67,7 +67,9 @@ z-index:2147483647!important;`
 		div.style.top = ev.pageY + 'px'
 		// 最大寬度為 350px
 		div.style.left =
-			(ev.pageX + 350 <= document.body.clientWidth ? ev.pageX : document.body.clientWidth - 350) + 'px'
+			(ev.pageX + 350 <= document.body.clientWidth
+				? ev.pageX
+				: document.body.clientWidth - 350) + 'px'
 		document.body.appendChild(div)
 		this._tip = div
 		this._tip_root = div.attachShadow({ mode: 'open' })
@@ -94,13 +96,10 @@ icon.hidden = true
 icon.addEventListener('mousedown', e => e.preventDefault(), true)
 icon.addEventListener('mouseup', e => e.preventDefault(), true)
 
-document.addEventListener('mouseup', function(e) {
+document.addEventListener('mouseup', function (e) {
 	// 若點擊的是翻譯面板，不用再出現 Google Translate Icon
 	if (translateTip.isOverTip(e)) return
-	const text = window
-		.getSelection()
-		.toString()
-		.trim()
+	const text = window.getSelection().toString().trim()
 	if (!text) {
 		icon.hidden = true
 		translateTip.destroy()
@@ -115,7 +114,7 @@ document.addEventListener('mouseup', function(e) {
 	}
 })
 // Google Translate Icon 點擊事件
-const clickIcon = function(e) {
+const clickIcon = function (e) {
 	const text = window
 		.getSelection()
 		.toString()
@@ -167,7 +166,13 @@ function showTranslate(text, dest, originaldest = dest) {
 		.then(res => {
 			console.log(res)
 			let html = ''
-			for (const s of res.sentences) html += s.trans + '</br>'
+			for (const s of res.sentences) {
+				if (s.trans) {
+					html += s.trans + '</br>'
+				} else if (s.src_translit && res.src === 'ja') {
+					html += '<i>' + s.src_translit + '</i></br>'
+				}
+			}
 			const translatedTexts = document.createElement('div')
 			translatedTexts.innerHTML = html
 			translatedTexts.style.fontSize = '14px'
@@ -178,15 +183,23 @@ function showTranslate(text, dest, originaldest = dest) {
 			const a1 = document.createElement('a')
 			a1.textContent = dest === 'en' ? '還原' : '翻譯為英文'
 			a1.href = 'javascript:void(0)'
-			a1.onclick = () => showTranslate(text, dest === 'en' ? originaldest : 'en', originaldest)
+			a1.onclick = () =>
+				showTranslate(
+					text,
+					dest === 'en' ? originaldest : 'en',
+					originaldest
+				)
 			if (originaldest == 'en') a1.style.display = 'none'
 			const a2 = document.createElement('a')
 			a2.textContent = '在 Google 翻譯中檢視'
-			a2.href = `https://translate.google.com/#${res.src}|${dest}|${encodeURIComponent(text)}`
+			a2.href = `https://translate.google.com/#${
+				res.src
+			}|${dest}|${encodeURIComponent(text)}`
 			a2.target = '_blank'
 			const linksWrapper = document.createElement('div')
 			linksWrapper.appendChild(a1)
-			if (originaldest != 'en') linksWrapper.appendChild(document.createTextNode(' '))
+			if (originaldest != 'en')
+				linksWrapper.appendChild(document.createTextNode(' '))
 			linksWrapper.appendChild(a2)
 			translateTip.appendElement(linksWrapper)
 
@@ -197,7 +210,9 @@ function showTranslate(text, dest, originaldest = dest) {
 			translateTip.appendElement(document.createTextNode('連接失敗'))
 			const a2 = document.createElement('a')
 			a2.textContent = '在 Google 翻譯中檢視'
-			a2.href = `https://translate.google.com/#${res.src}|${dest}|${encodeURIComponent(text)}`
+			a2.href = `https://translate.google.com/#${
+				res.src
+			}|${dest}|${encodeURIComponent(text)}`
 			a2.target = '_blank'
 			translateTip.appendElement(a2)
 
