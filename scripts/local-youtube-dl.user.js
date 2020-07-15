@@ -1,13 +1,19 @@
 // ==UserScript==
 // @name         Local YouTube Downloader
 // @name:zh-TW   本地 YouTube 下載器
+// @name:zh-HK   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
+// @name:ja      ローカル YouTube ダウンローダー
+// @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.28
-// @description  Get YouTube raw link without external service.
-// @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
-// @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
-// @description:fr Obtenez un lien brut YouTube sans service externe.
+// @version      0.9.29
+// @description        Download YouTube videos without external service.
+// @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
+// @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
+// @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 视频。
+// @description:ja     外部サービスなしで YouTube 動画をダウンロード
+// @description:kr     외부 서비스없이 YouTube 동영상을 다운로드
+// @description:fr     Obtenez un lien brut YouTube sans service externe.
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
@@ -44,12 +50,12 @@
 			togglelinks: 'Show/Hide Links',
 			stream: 'Stream',
 			adaptive: 'Adaptive',
-			videoid: 'Video Id: ',
+			videoid: 'Video ID: ',
 			inbrowser_adaptive_merger:
-				'In browser adaptive video & audio merger (FFmpeg)',
-			dlmp4: 'Download highest resolution mp4 in one click',
+				'Online Adaptive Video & Audio Merger (FFmpeg)',
+			dlmp4: 'Download high-resolution mp4 in one click',
 			get_video_failed:
-				'You seems to have AdBlocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\n\nPS: If it refuse to add that rule, you should uninstall it and use "uBlock Origin" instead.\nIf you still don\'t understand what I am saying, just disable or uninstall all your ad blockers...'
+				'You seems to have ad-blocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\n\nP.S.: If adding of the rule is being refused, you should uninstall it and use “uBlock Origin” instead.\nIf you still don’t understand what I am saying, just disable or uninstall all your ad-blockers...'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -60,24 +66,50 @@
 				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
-				'您看起來有在使用擋廣告的擴充功能，而它將 %s 給阻擋了。\n請將下方的規則加入你的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n如果你仍無法理解我在說什麼，那就直接把全部的廣告阻擋器停用或是移除掉...'
+				'看來您用來擋廣告的擴充功能把 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n若您仍無法理解前面的指示是什麼意思，那請直接將全部的廣告阻擋器停用或是移除。'
+		},
+		'zh-hk': {
+			togglelinks: '顯示／隱藏連結',
+			stream: '串流 Stream',
+			adaptive: '自動適應 Adaptive',
+			videoid: '影片 ID: ',
+			inbrowser_adaptive_merger:
+				'網上自動適應影片及音訊合成工具 (FFmpeg)',
+			dlmp4: '一 click 下載高畫質 mp4',
+			get_video_failed:
+				'看來您使用的廣告封鎖擴充功能封鎖了 %s。\n請將下面的規則加入您的廣告封鎖器中，否則本地 YouTube 下載器將無法正常運作。\n\nP.S.: 如果規則被拒絕加入，請將廣告封鎖器解除安裝並改為使用「uBlock Origin」。\n如果您仍然對此一頭霧水，請直接停用或者解除安裝所有廣告封鎖器。'
 		},
 		zh: {
-			togglelinks: '显示 / 隐藏链接',
+			togglelinks: '显示／隐藏链接',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
 			videoid: '视频 ID: ',
-			inbrowser_adaptive_merger:
-				'浏览器版自适应视频及声音合成器 (FFmpeg)',
+			inbrowser_adaptive_merger: '线上自适应视频及音频合成工具 (FFmpeg)',
 			dlmp4: '一键下载高画质 mp4',
 			get_video_failed:
-				'您看起来有在使用挡广告的扩充功能，而它将 %s 给阻挡了。\n请将下方的规则加入你的广告阻挡器中，否则本地 YouTube 下载器无法正常运作。\n\nPS: 如它拒绝加入该规则，请将它移除并改为使用 "uBlock Origin"。\n如果你仍无法理解我在说什么，那就直接把全部的广告阻挡器停用或是移除掉...'
+				'您看起来有在使用广告拦截扩充功能，而它将 %s 给拦截了。\n请将下方的规则加入你的广告拦截器中，否则本地 YouTube 下载器无法正常运作。\n\nP.S.: 如规则被拒绝加入，请将它卸载并改为使用“uBlock Origin”。\n如果你仍无法理解我在说什么，那就直接把全部的广告拦截器禁用或是卸载掉...'
 		},
-		kr: {
-			togglelinks: '링크 보이기/숨기기',
+		ja: {
+			togglelinks: 'リンク表示・非表示',
+			stream: 'ストリーミング',
+			adaptive: 'アダプティブ',
+			videoid: 'ビデオ ID: ',
+			inbrowser_adaptive_merger:
+				'ビデオとオーディオを合併するオンラインツール (FFmpeg)',
+			dlmp4: 'ワンクリックで高解像度の mp4 をダウンロード',
+			get_video_failed:
+				'%s をブロックする広告ブロック拡張機能がインストールされているようです。\n次のルールをルールセットに追加してください。追加しない場合、ローカル YouTube ダウンローダーが機能しなくなります。\n\nP.S.: ルールの追加が拒否された場合は、アンインストールして「uBlock Origin」を代わりに使用してください。\nそれでも理解できない場合は、すべての広告ブロッカーを無効にするかアンインストールしてください。'
+		},
+		kkr: {
+			togglelinks: '링크 보이기 · 숨기기',
 			stream: '스트리밍',
-			adaptive: '조정 가능한',
-			videoid: 'Video Id: '
+			adaptive: '적응 (어댑티브)',
+			videoid: '비디오 ID: ',
+			inbrowser_adaptive_merger:
+				'비디오와 오디오를 합병하는 온라인 도구 (FFmpeg)',
+			dlmp4: '한 번의 클릭으로 고해상도 mp4 다운로드',
+			get_video_failed:
+				'%s 를 차단하는 광고 차단 확장 기능이 설치되어있는 것 같습니다.\n다음의 규칙을 규칙 세트에 추가하십시오. 추가하지 않으면 로컬 YouTube 다운로더가 작동하지 않습니다.\n\nP.S.: 규칙의 추가가 거부 된 경우 제거하고 "uBlock Origin"을 대신 사용하십시오.\n그래도 이해할 수없는 경우 모든 광고 차단기를 비활성화하거나 제거하십시오.'
 		},
 		es: {
 			togglelinks: 'Mostrar/Ocultar Links',
@@ -119,7 +151,6 @@
 			videoid: 'वीडियो आईडी: {{id}}'
 		}
 	}
-	LOCALE['zh-hk'] = LOCALE['zh-tw'] // alias
 	const findLang = l => {
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
 		l = l.toLowerCase().replace('_', '-')
