@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.29
+// @version      0.9.30
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -55,7 +55,9 @@
 				'Online Adaptive Video & Audio Merger (FFmpeg)',
 			dlmp4: 'Download high-resolution mp4 in one click',
 			get_video_failed:
-				'You seems to have ad-blocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\n\nP.S.: If adding of the rule is being refused, you should uninstall it and use “uBlock Origin” instead.\nIf you still don’t understand what I am saying, just disable or uninstall all your ad-blockers...'
+				'You seems to have ad-blocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\n\nP.S.: If adding of the rule is being refused, you should uninstall it and use “uBlock Origin” instead.\nIf you still don’t understand what I am saying, just disable or uninstall all your ad-blockers...',
+			live_stream_disabled_message:
+				'This is a live stream, so Local YouTube Downloader functionality is disabled.'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -66,7 +68,9 @@
 				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
-				'看來您用來擋廣告的擴充功能把 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n若您仍無法理解前面的指示是什麼意思，那請直接將全部的廣告阻擋器停用或是移除。'
+				'看來您用來擋廣告的擴充功能把 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n若您仍無法理解前面的指示是什麼意思，那請直接將全部的廣告阻擋器停用或是移除。',
+			live_stream_disabled_message:
+				'因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
 		},
 		'zh-hk': {
 			togglelinks: '顯示／隱藏連結',
@@ -77,7 +81,9 @@
 				'網上自動適應影片及音訊合成工具 (FFmpeg)',
 			dlmp4: '一 click 下載高畫質 mp4',
 			get_video_failed:
-				'看來您使用的廣告封鎖擴充功能封鎖了 %s。\n請將下面的規則加入您的廣告封鎖器中，否則本地 YouTube 下載器將無法正常運作。\n\nP.S.: 如果規則被拒絕加入，請將廣告封鎖器解除安裝並改為使用「uBlock Origin」。\n如果您仍然對此一頭霧水，請直接停用或者解除安裝所有廣告封鎖器。'
+				'看來您使用的廣告封鎖擴充功能封鎖了 %s。\n請將下面的規則加入您的廣告封鎖器中，否則本地 YouTube 下載器將無法正常運作。\n\nP.S.: 如果規則被拒絕加入，請將廣告封鎖器解除安裝並改為使用「uBlock Origin」。\n如果您仍然對此一頭霧水，請直接停用或者解除安裝所有廣告封鎖器。',
+			live_stream_disabled_message:
+				'因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
 		},
 		zh: {
 			togglelinks: '显示／隐藏链接',
@@ -87,7 +93,9 @@
 			inbrowser_adaptive_merger: '线上自适应视频及音频合成工具 (FFmpeg)',
 			dlmp4: '一键下载高画质 mp4',
 			get_video_failed:
-				'您看起来有在使用广告拦截扩充功能，而它将 %s 给拦截了。\n请将下方的规则加入你的广告拦截器中，否则本地 YouTube 下载器无法正常运作。\n\nP.S.: 如规则被拒绝加入，请将它卸载并改为使用“uBlock Origin”。\n如果你仍无法理解我在说什么，那就直接把全部的广告拦截器禁用或是卸载掉...'
+				'您看起来有在使用广告拦截扩充功能，而它将 %s 给拦截了。\n请将下方的规则加入你的广告拦截器中，否则本地 YouTube 下载器无法正常运作。\n\nP.S.: 如规则被拒绝加入，请将它卸载并改为使用“uBlock Origin”。\n如果你仍无法理解我在说什么，那就直接把全部的广告拦截器禁用或是卸载掉...',
+			live_stream_disabled_message:
+				'因为是直播的缘故，本地 YouTube 下载器的功能是停用的。 '
 		},
 		ja: {
 			togglelinks: 'リンク表示・非表示',
@@ -98,9 +106,11 @@
 				'ビデオとオーディオを合併するオンラインツール (FFmpeg)',
 			dlmp4: 'ワンクリックで高解像度の mp4 をダウンロード',
 			get_video_failed:
-				'%s をブロックする広告ブロック拡張機能がインストールされているようです。\n次のルールをルールセットに追加してください。追加しない場合、ローカル YouTube ダウンローダーが機能しなくなります。\n\nP.S.: ルールの追加が拒否された場合は、アンインストールして「uBlock Origin」を代わりに使用してください。\nそれでも理解できない場合は、すべての広告ブロッカーを無効にするかアンインストールしてください。'
+				'%s をブロックする広告ブロック拡張機能がインストールされているようです。\n次のルールをルールセットに追加してください。追加しない場合、ローカル YouTube ダウンローダーが機能しなくなります。\n\nP.S.: ルールの追加が拒否された場合は、アンインストールして「uBlock Origin」を代わりに使用してください。\nそれでも理解できない場合は、すべての広告ブロッカーを無効にするかアンインストールしてください。',
+			live_stream_disabled_message:
+				'ライブ配信ですから、ローカル YouTube ダウンローダーの機能は無効になっています。'
 		},
-		kkr: {
+		kr: {
 			togglelinks: '링크 보이기 · 숨기기',
 			stream: '스트리밍',
 			adaptive: '적응 (어댑티브)',
@@ -254,7 +264,7 @@
 			}
 		}
 		logger.log(`video %s result: %o`, id, { stream, adaptive })
-		return { stream, adaptive, meta: obj }
+		return { stream, adaptive, meta: obj, playerResponse }
 	}
 	const workerMessageHandler = async e => {
 		const decsig = await xf.get(e.data.path).text(parseDecsig)
@@ -502,26 +512,31 @@ self.onmessage=${workerMessageHandler}`
 
 	const template = `
 <div class="box" :class="{'dark':dark}">
-	<div v-if="adaptive.length" class="of-h t-center c-pointer lh-20">
-		<a class="fs-14px" @click="dlmp4" v-text="strings.dlmp4"></a>
-	</div>
-	<div @click="hide=!hide" class="box-toggle div-a t-center fs-14px c-pointer lh-20" v-text="strings.togglelinks"></div>
-	<div :class="{'hide':hide}">
-		<div class="t-center fs-14px" v-text="strings.videoid+id"></div>
-		<div class="d-flex">
-			<div class="f-1 of-h">
-				<div class="t-center fs-14px" v-text="strings.stream"></div>
-				<a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in stream" :href="vid.url" :title="vid.type" v-text="vid.quality||vid.type"></a>
-			</div>
-			<div class="f-1 of-h">
-				<div class="t-center fs-14px" v-text="strings.adaptive"></div>
-				<a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in adaptive" :href="vid.url" :title="vid.type" v-text="[vid.qualityLabel,vid.mimeType].filter(x=>x).join(':')"></a>
-			</div>
-		</div>
-		<div class="of-h t-center">
-			<a class="fs-14px" href="https://maple3142.github.io/mergemp4/" target="_blank" v-text="strings.inbrowser_adaptive_merger"></a>
-		</div>
-	</div>
+  <template v-if="!isLiveStream">
+    <div v-if="adaptive.length" class="of-h t-center c-pointer lh-20">
+      <a class="fs-14px" @click="dlmp4" v-text="strings.dlmp4"></a>
+    </div>
+    <div @click="hide=!hide" class="box-toggle div-a t-center fs-14px c-pointer lh-20" v-text="strings.togglelinks"></div>
+    <div :class="{'hide':hide}">
+      <div class="t-center fs-14px" v-text="strings.videoid+id"></div>
+      <div class="d-flex">
+        <div class="f-1 of-h">
+          <div class="t-center fs-14px" v-text="strings.stream"></div>
+          <a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in stream" :href="vid.url" :title="vid.type" v-text="vid.quality||vid.type"></a>
+        </div>
+        <div class="f-1 of-h">
+          <div class="t-center fs-14px" v-text="strings.adaptive"></div>
+          <a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in adaptive" :href="vid.url" :title="vid.type" v-text="[vid.qualityLabel,vid.mimeType].filter(x=>x).join(':')"></a>
+        </div>
+      </div>
+      <div class="of-h t-center">
+        <a class="fs-14px" href="https://maple3142.github.io/mergemp4/" target="_blank" v-text="strings.inbrowser_adaptive_merger"></a>
+      </div>
+    </div>
+  </template>
+  <template v-else>
+    <div class="t-center fs-14px lh-20" v-text="strings.live_stream_disabled_message"></div>
+  </template>
 </div>
 `.slice(1)
 	const app = new Vue({
@@ -529,6 +544,7 @@ self.onmessage=${workerMessageHandler}`
 			return {
 				hide: true,
 				id: '',
+				isLiveStream: false,
 				stream: [],
 				adaptive: [],
 				meta: null,
@@ -610,6 +626,8 @@ self.onmessage=${workerMessageHandler}`
 					: $('script[src$="base.js"]').src
 			const data = await workerGetVideo(id, basejs)
 			logger.log('video loaded: %s', id)
+			app.isLiveStream =
+				data.playerResponse.playabilityStatus.liveStreamability != null
 			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) {
 				try {
 					applyOriginalTitle(data.meta)
@@ -696,6 +714,8 @@ self.onmessage=${workerMessageHandler}`
 	overflow: hidden;
 }
 .box{
+  padding-top: .5em;
+  padding-bottom: .5em;
 	border-bottom: 1px solid var(--yt-border-color);
 	font-family: Arial;
 }
