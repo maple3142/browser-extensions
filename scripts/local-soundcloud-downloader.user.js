@@ -4,6 +4,7 @@
 // @version      0.1.3
 // @description  Download SoundCloud without external service.
 // @author       maple3142
+// @downloadURL  https://github.com/maple3142/browser-extensions/raw/master/scripts/local-soundcloud-downloader.user.js
 // @match        https://soundcloud.com/*
 // @require      https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js
 // @require      https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
