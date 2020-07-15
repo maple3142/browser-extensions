@@ -3,10 +3,11 @@
 // @name:zh-TW   本地 YouTube 下載器
 // @name:zh-CN   本地 YouTube 下载器
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.27
+// @version      0.9.28
 // @description  Get YouTube raw link without external service.
 // @description:zh-TW  不需要透過第三方的服務就能下載 YouTube 影片。
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 影片。
+// @description:fr Obtenez un lien brut YouTube sans service externe.
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
@@ -90,8 +91,35 @@
 			stream: 'סטרים',
 			adaptive: 'אדפטיבי',
 			videoid: 'מזהה סרטון: '
+		},
+		fr: {
+			togglelinks: 'Afficher/Masquer les liens',
+			stream: 'Stream',
+			adaptive: 'Adaptative',
+			videoid: 'ID vidéo: ',
+			inbrowser_adaptive_merger:
+				'Fusionner vidéos et audios adaptatifs dans le navigateur (FFmpeg)',
+			dlmp4: 'Téléchargez la plus haute résolution mp4 en un clic',
+			get_video_failed:
+				'Il semble qu\'une extension de blocage de pubs soit installée, ce qui bloque %s.\nVeuillez ajouter la règle suivante au jeu de règles, ou cela empêchera Local YouTube Downloader de fonctionner.\n\nPS: Si votre bloqueur refuse d\'ajouter cette règle, vous devez le désinstaller et utiliser plutôt "uBlock Origin".\nSi vous ne comprenez toujours pas ce que je dis, désinstallez ou désactivez simplement votre bloqueur de pubs ...'
+		},
+		pl: {
+			togglelinks: 'Pokaż/Ukryj Linki',
+			stream: 'Stream',
+			adaptive: 'Adaptywne',
+			videoid: 'ID filmu: ',
+			inbrowser_adaptive_merger:
+				'Połącz audio i wideo adaptywne w przeglądarce (FFmpeg)',
+			dlmp4: 'Pobierz .mp4 w najwyższej jakości'
+		},
+		hi: {
+			togglelinks: 'लिंक टॉगल करें',
+			stream: 'स्ट्रीमिंग (Stream)',
+			adaptive: 'अनुकूली (Adaptive)',
+			videoid: 'वीडियो आईडी: {{id}}'
 		}
 	}
+	LOCALE['zh-hk'] = LOCALE['zh-tw'] // alias
 	const findLang = l => {
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
 		l = l.toLowerCase().replace('_', '-')
