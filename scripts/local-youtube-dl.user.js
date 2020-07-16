@@ -5,6 +5,11 @@
 // @name:zh-CN   本地 YouTube 下载器
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
+// @name:es      Local YouTube Downloader
+// @name:he      הורדת YouTube מקומית
+// @name:fr      Local YouTube Downloader
+// @name:pl      Lokalny YouTube Downloader
+// @name:hi      स्थानीय YouTube डाउनलोडर
 // @namespace    https://blog.maple3142.net/
 // @version      0.9.30
 // @description        Download YouTube videos without external service.
@@ -13,7 +18,11 @@
 // @description:zh-CN  不需要透过第三方的服务就能下载 YouTube 视频。
 // @description:ja     外部サービスなしで YouTube 動画をダウンロード
 // @description:kr     외부 서비스없이 YouTube 동영상을 다운로드
+// @description:es     Descarga videos de YouTube sin servicio externo.
+// @description:he     הורד סרטוני YouTube ללא שירות חיצוני.
 // @description:fr     Obtenez un lien brut YouTube sans service externe.
+// @description:pl     Pobierz filmy z YouTube bez zewnętrznego serwisu.
+// @description:hi     बाहरी सेवा के बिना YouTube वीडियो डाउनलोड करें।
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
