@@ -47,6 +47,7 @@
 	const LANG_FALLBACK = 'en'
 	const LOCALE = {
 		en: {
+			appname: 'Local YouTube Downloader',
 			togglelinks: 'Show/Hide Links',
 			stream: 'Stream',
 			adaptive: 'Adaptive',
@@ -57,35 +58,38 @@
 			get_video_failed:
 				'You seems to have ad-blocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\n\nP.S.: If adding of the rule is being refused, you should uninstall it and use “uBlock Origin” instead.\nIf you still don’t understand what I am saying, just disable or uninstall all your ad-blockers...',
 			live_stream_disabled_message:
-				'This is a live stream, so Local YouTube Downloader functionality is disabled.'
+				'Local YouTube Downloader is not available for live stream.'
 		},
 		'zh-tw': {
-			togglelinks: '顯示 / 隱藏連結',
+			appname: '本地 YouTube 下載器',
+			togglelinks: '顯示／隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 ID: ',
 			inbrowser_adaptive_merger:
-				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
+				'線上自適應影片及音訊合成工具 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
-				'看來您用來擋廣告的擴充功能把 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n若您仍無法理解前面的指示是什麼意思，那請直接將全部的廣告阻擋器停用或是移除。',
+				'您看起來有在使用擋廣告的擴充功能，而它將 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nP.S.: 如規則被拒絕加入，請將它移除並改為使用「uBlock Origin」。\n如果您仍無法理解我在說什麼，那就直接把全部的廣告阻擋器停用或是移除掉...',
 			live_stream_disabled_message:
 				'因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
 		},
 		'zh-hk': {
+			appname: '本地 YouTube 下載器',
 			togglelinks: '顯示／隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自動適應 Adaptive',
 			videoid: '影片 ID: ',
 			inbrowser_adaptive_merger:
 				'網上自動適應影片及音訊合成工具 (FFmpeg)',
-			dlmp4: '一 click 下載高畫質 mp4',
+			dlmp4: '一 click 下載高畫質 mp4',
 			get_video_failed:
 				'看來您使用的廣告封鎖擴充功能封鎖了 %s。\n請將下面的規則加入您的廣告封鎖器中，否則本地 YouTube 下載器將無法正常運作。\n\nP.S.: 如果規則被拒絕加入，請將廣告封鎖器解除安裝並改為使用「uBlock Origin」。\n如果您仍然對此一頭霧水，請直接停用或者解除安裝所有廣告封鎖器。',
 			live_stream_disabled_message:
-				'因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
+				'本地 YouTube 下載器無法用於直播。'
 		},
 		zh: {
+			appname: '本地 YouTube 下载器',
 			togglelinks: '显示／隐藏链接',
 			stream: '串流 Stream',
 			adaptive: '自适应 Adaptive',
@@ -95,9 +99,10 @@
 			get_video_failed:
 				'您看起来有在使用广告拦截扩充功能，而它将 %s 给拦截了。\n请将下方的规则加入你的广告拦截器中，否则本地 YouTube 下载器无法正常运作。\n\nP.S.: 如规则被拒绝加入，请将它卸载并改为使用“uBlock Origin”。\n如果你仍无法理解我在说什么，那就直接把全部的广告拦截器禁用或是卸载掉...',
 			live_stream_disabled_message:
-				'因为是直播的缘故，本地 YouTube 下载器的功能是停用的。 '
+				'因为是直播，本地 YouTube 下载器的功能已被禁用。'
 		},
 		ja: {
+			appname: 'ローカル YouTube ダウンローダー',
 			togglelinks: 'リンク表示・非表示',
 			stream: 'ストリーミング',
 			adaptive: 'アダプティブ',
@@ -108,9 +113,10 @@
 			get_video_failed:
 				'%s をブロックする広告ブロック拡張機能がインストールされているようです。\n次のルールをルールセットに追加してください。追加しない場合、ローカル YouTube ダウンローダーが機能しなくなります。\n\nP.S.: ルールの追加が拒否された場合は、アンインストールして「uBlock Origin」を代わりに使用してください。\nそれでも理解できない場合は、すべての広告ブロッカーを無効にするかアンインストールしてください。',
 			live_stream_disabled_message:
-				'ライブ配信ですから、ローカル YouTube ダウンローダーの機能は無効になっています。'
+				'ライブ配信のため、ローカル YouTube ダウンローダーは無効になっています。'
 		},
 		kr: {
+			appname: '로컬 YouTube 다운로더',
 			togglelinks: '링크 보이기 · 숨기기',
 			stream: '스트리밍',
 			adaptive: '적응 (어댑티브)',
@@ -119,22 +125,40 @@
 				'비디오와 오디오를 합병하는 온라인 도구 (FFmpeg)',
 			dlmp4: '한 번의 클릭으로 고해상도 mp4 다운로드',
 			get_video_failed:
-				'%s 를 차단하는 광고 차단 확장 기능이 설치되어있는 것 같습니다.\n다음의 규칙을 규칙 세트에 추가하십시오. 추가하지 않으면 로컬 YouTube 다운로더가 작동하지 않습니다.\n\nP.S.: 규칙의 추가가 거부 된 경우 제거하고 "uBlock Origin"을 대신 사용하십시오.\n그래도 이해할 수없는 경우 모든 광고 차단기를 비활성화하거나 제거하십시오.'
+				'%s를 차단하는 광고 차단 확장 기능이 설치되어있는 것 같습니다.\n다음의 규칙을 규칙 세트에 추가하십시오. 추가하지 않으면 로컬 YouTube 다운로더가 작동하지 않습니다.\n\nP.S.: 규칙의 추가가 거부 된 경우 제거하고 "uBlock Origin"을 대신 사용하십시오.\n그래도 이해할 수없는 경우 모든 광고 차단기를 비활성화하거나 제거하십시오.',
+			live_stream_disabled_message:
+				'생방송을 위한 로컬 YouTube 다운로더는 비활성화되어 있습니다.'
 		},
 		es: {
+			appname: 'Local YouTube Downloader',
 			togglelinks: 'Mostrar/Ocultar Links',
 			stream: 'Stream',
 			adaptive: 'Adaptable',
 			videoid: 'Id del Video: ',
-			inbrowser_adaptive_merger: 'Acoplar Audio a Video (FFmpeg)'
+			inbrowser_adaptive_merger:
+				'Acoplar Audio a Video (FFmpeg)',
+			dlmp4: 'Descargue mp4 de alta resolución con un clic',
+			get_video_failed:
+				'Parece que tiene instalada la extensión de bloqueo de anuncios, que bloquea %s.\nAgregue la siguiente regla al conjunto de reglas, o evitará que Local YouTube Downloader funcione.\n\nP.S.: Si agregar la regla es rechazado, debe desinstalarlo y usar "uBlock Origin" en su lugar.\nSi aún no entiende lo que estoy diciendo, simplemente desactive o desinstale todos sus bloqueadores de anuncios...',
+			live_stream_disabled_message:
+				'Local YouTube Downloader no está disponible para transmisión en vivo.'
 		},
 		he: {
+			appname: 'הורדת YouTube מקומית',
 			togglelinks: 'הצג/הסתר קישורים',
 			stream: 'סטרים',
 			adaptive: 'אדפטיבי',
-			videoid: 'מזהה סרטון: '
+			videoid: 'מזהה סרטון: ',
+			inbrowser_adaptive_merger:
+				'מיזוג וידאו ושמע אדפטיבי מקוון (FFmpeg)',
+			dlmp4: 'הורד mp4 ברזולוציה גבוהה בלחיצה אחת',
+			get_video_failed:
+				'נראה שיש לך התקנה של הרחבת חסימת מודעות, החוסמת את %s.\nאנא הוסף את הכלל הבא לערכת הכללים, אחרת זה ימנע מההורדה המקומית של YouTube לעבוד.\n\nP.S.: אם הוספה של הכלל מסורבת, עליך להסיר אותה ולהשתמש במקום זאת ב- "uBlock Origin".\nאם אתה עדיין לא מבין מה אני אומר, פשוט השבת או הסר את ההתקנה של כל חוסמי המודעות שלך ...',
+			live_stream_disabled_message:
+				'הורדת YouTube מקומית אינה זמינה לשידור חי.'
 		},
 		fr: {
+			appname: 'Local YouTube Downloader',
 			togglelinks: 'Afficher/Masquer les liens',
 			stream: 'Stream',
 			adaptive: 'Adaptative',
@@ -143,22 +167,37 @@
 				'Fusionner vidéos et audios adaptatifs dans le navigateur (FFmpeg)',
 			dlmp4: 'Téléchargez la plus haute résolution mp4 en un clic',
 			get_video_failed:
-				'Il semble qu\'une extension de blocage de pubs soit installée, ce qui bloque %s.\nVeuillez ajouter la règle suivante au jeu de règles, ou cela empêchera Local YouTube Downloader de fonctionner.\n\nPS: Si votre bloqueur refuse d\'ajouter cette règle, vous devez le désinstaller et utiliser plutôt "uBlock Origin".\nSi vous ne comprenez toujours pas ce que je dis, désinstallez ou désactivez simplement votre bloqueur de pubs ...'
+				'Il semble qu\'une extension de blocage de pubs soit installée, ce qui bloque %s.\nVeuillez ajouter la règle suivante au jeu de règles, ou cela empêchera Local YouTube Downloader de fonctionner.\n\nP.S.: Si votre bloqueur refuse d\'ajouter cette règle, vous devez le désinstaller et utiliser plutôt "uBlock Origin".\nSi vous ne comprenez toujours pas ce que je dis, désinstallez ou désactivez simplement votre bloqueur de pubs...',
+			live_stream_disabled_message:
+				'Local YouTube Downloader n\'est pas disponible pour la diffusion en direct.'
 		},
 		pl: {
+			appname: 'Lokalny YouTube Downloader',
 			togglelinks: 'Pokaż/Ukryj Linki',
 			stream: 'Stream',
 			adaptive: 'Adaptywne',
 			videoid: 'ID filmu: ',
 			inbrowser_adaptive_merger:
 				'Połącz audio i wideo adaptywne w przeglądarce (FFmpeg)',
-			dlmp4: 'Pobierz .mp4 w najwyższej jakości'
+			dlmp4: 'Pobierz .mp4 w najwyższej jakości',
+			get_video_failed:
+				'Wygląda na to, że masz zainstalowane blokowanie reklam, które blokuje %s.\nDodaj następującą regułę do zestawu reguł, w przeciwnym razie uniemożliwi działanie lokalnego narzędzia do pobierania YouTube.\n\nP.S.: Jeśli odmawia się dodania reguły, należy ją odinstalować i zamiast tego użyć „uBlock Origin”.\nJeśli nadal nie rozumiesz, co mówię, po prostu wyłącz lub odinstaluj wszystkie programy blokujące reklamy...',
+			live_stream_disabled_message:
+				'Lokalny YouTube Downloader nie jest dostępny do transmisji na żywo.'
 		},
 		hi: {
+			appname: 'स्थानीय YouTube डाउनलोडर',
 			togglelinks: 'लिंक टॉगल करें',
 			stream: 'स्ट्रीमिंग (Stream)',
 			adaptive: 'अनुकूली (Adaptive)',
-			videoid: 'वीडियो आईडी: {{id}}'
+			videoid: 'वीडियो आईडी: ',
+			inbrowser_adaptive_merger:
+				'ऑनलाइन अनुकूली वीडियो और ऑडियो विलय (FFmpeg)',
+			dlmp4: 'एक क्लिक में उच्च-रिज़ॉल्यूशन mp4 डाउनलोड करें',
+			get_video_failed:
+				'आपको लगता है कि विज्ञापन-अवरुद्ध एक्सटेंशन स्थापित है, जो %s को अवरुद्ध करता है।\nकृपया निम्न नियम को नियम सेट में जोड़ें, या यह स्थानीय YouTube डाउनलोडर को काम करने से रोकेगा।\n\nपी। एस।: यदि नियम को जोड़ने से इनकार किया जा रहा है, तो आपको इसे अनइंस्टॉल करना चाहिए और इसके स्थान पर "uBlock उत्पत्ति" का उपयोग करना चाहिए।\nयदि आप अभी भी यह नहीं समझ पा रहे हैं कि मैं क्या कह रहा हूं, तो अपने सभी विज्ञापन-ब्लॉकर्स को अक्षम या अनइंस्टॉल करें ...',
+			live_stream_disabled_message:
+				'स्थानीय YouTube डाउनलोडर लाइव प्रसारण के लिए उपलब्ध नहीं है।'
 		}
 	}
 	const findLang = l => {
