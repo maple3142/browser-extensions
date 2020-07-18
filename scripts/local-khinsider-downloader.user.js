@@ -4,16 +4,18 @@
 // @namespace         https://blog.maple3142.net/
 // @description       batch download for downloads.khinsider.com originalsoundtracks
 // @description:zh-TW 批量下載 downloads.khinsider.com 的原聲帶
-// @version           0.2.0
+// @version           0.2.1
 // @author            maple3142
 // @match             https://downloads.khinsider.com/game-soundtracks/album/*
 // @require           https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js
 // @require           https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
 // @require           https://cdn.jsdelivr.net/gh/maple3142/StreamSaver.js/examples/zip-stream.min.js
 // @license           MIT
-// @connect           23.237.126.42
+// @connect           vgmdownloads.com
 // @grant             GM_xmlhttpRequest
 // ==/UserScript==
+
+streamSaver.mitm = 'https://maple3142.github.io/StreamSaver.js/mitm.html'
 
 function download(url) {
 	return new Promise((resolve, reject) => {
@@ -35,11 +37,7 @@ $('a:contains("click to download")').on('click', async e => {
 	const title = $('h2')[0].textContent
 	const files = $('tr>td.clickable-row:not([align])')
 		.toArray()
-		.map(el =>
-			$(el)
-				.find('a')
-				.attr('href')
-		)
+		.map(el => $(el).find('a').attr('href'))
 		.map(url => {
 			const obj = {}
 			obj.pageUrl = url
