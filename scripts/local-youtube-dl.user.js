@@ -522,11 +522,11 @@ self.onmessage=${workerMessageHandler}`
       <div class="d-flex">
         <div class="f-1 of-h">
           <div class="t-center fs-14px" v-text="strings.stream"></div>
-          <a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in stream" :href="vid.url" :title="vid.type" v-text="vid.quality||vid.type"></a>
+          <a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in stream" :href="vid.url" :title="vid.type" v-text="formatStreamText(vid)"></a>
         </div>
         <div class="f-1 of-h">
           <div class="t-center fs-14px" v-text="strings.adaptive"></div>
-          <a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in adaptive" :href="vid.url" :title="vid.type" v-text="[vid.qualityLabel,vid.mimeType].filter(x=>x).join(':')"></a>
+          <a class="ytdl-link-btn fs-14px" target="_blank" v-for="vid in adaptive" :href="vid.url" :title="vid.type" v-text="formatAdaptiveText(vid)"></a>
         </div>
       </div>
       <div class="of-h t-center">
@@ -561,6 +561,18 @@ self.onmessage=${workerMessageHandler}`
 			dlmp4() {
 				const r = JSON.parse(this.meta.player_response)
 				openDownloadModel(this.adaptive, r.videoDetails.title)
+			},
+			formatStreamText(vid) {
+				return [vid.qualityLabel, vid.quality].filter(x => x).join(': ')
+			},
+			formatAdaptiveText(vid) {
+				let str = [vid.qualityLabel, vid.mimeType]
+					.filter(x => x)
+					.join(': ')
+				if (vid.mimeType.includes('audio')) {
+					str += ` ${Math.round(vid.bitrate / 1000)}kbps`
+				}
+				return str
 			}
 		},
 		template
