@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.30
+// @version      0.9.31
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -612,29 +612,16 @@ self.onmessage=${workerMessageHandler}`
 		} else {
 			return navigator.language
 		}
-		return null
-	}
-	const textToHtml = t => {
-		// URLs starting with http://, https://
-		t = t.replace(
-			/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim,
-			'<a href="$1" target="_blank">$1</a>'
-		)
-		t = t.replace(/\n/g, '<br>')
-		return t
 	}
 	const applyOriginalTitle = meta => {
+		console.log(meta.player_response)
 		const data = eval(`(${meta.player_response})`).videoDetails // not a valid json, so JSON.parse won't work
 		if ($('#eow-title')) {
 			// legacy youtube
 			$('#eow-title').textContent = data.title
-			$('#eow-description').innerHTML = textToHtml(data.shortDescription)
 		} else if ($('h1.title')) {
 			// new youtube (polymer)
 			$('h1.title').textContent = data.title
-			$('yt-formatted-string.content').innerHTML = textToHtml(
-				data.shortDescription
-			)
 		}
 	}
 	const load = async id => {
