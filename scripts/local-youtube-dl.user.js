@@ -57,18 +57,17 @@
 			get_video_failed:
 				'You seems to have ad-blocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\n\nP.S.: If adding of the rule is being refused, you should uninstall it and use “uBlock Origin” instead.\nIf you still don’t understand what I am saying, just disable or uninstall all your ad-blockers...',
 			live_stream_disabled_message:
-				'This is a live stream, so Local YouTube Downloader functionality is disabled.'
+				'Local YouTube Downloader is not available for live stream'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自適應 Adaptive',
 			videoid: '影片 ID: ',
-			inbrowser_adaptive_merger:
-				'瀏覽器版自適應影片及聲音合成器 (FFmpeg)',
+			inbrowser_adaptive_merger: '線上自適應影片及音訊合成工具 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
-				'看來您用來擋廣告的擴充功能把 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n若您仍無法理解前面的指示是什麼意思，那請直接將全部的廣告阻擋器停用或是移除。',
+				'看來您用的擋廣告擴充功能把 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n若您仍未能理解前面的指示是什麼意思，那請直接將全部的廣告阻擋器停用或是移除。',
 			live_stream_disabled_message:
 				'因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
 		},
@@ -82,8 +81,7 @@
 			dlmp4: '一 click 下載高畫質 mp4',
 			get_video_failed:
 				'看來您使用的廣告封鎖擴充功能封鎖了 %s。\n請將下面的規則加入您的廣告封鎖器中，否則本地 YouTube 下載器將無法正常運作。\n\nP.S.: 如果規則被拒絕加入，請將廣告封鎖器解除安裝並改為使用「uBlock Origin」。\n如果您仍然對此一頭霧水，請直接停用或者解除安裝所有廣告封鎖器。',
-			live_stream_disabled_message:
-				'因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
+			live_stream_disabled_message: '本地 YouTube 下載器無法用於直播。'
 		},
 		zh: {
 			togglelinks: '显示／隐藏链接',
@@ -95,7 +93,7 @@
 			get_video_failed:
 				'您看起来有在使用广告拦截扩充功能，而它将 %s 给拦截了。\n请将下方的规则加入你的广告拦截器中，否则本地 YouTube 下载器无法正常运作。\n\nP.S.: 如规则被拒绝加入，请将它卸载并改为使用“uBlock Origin”。\n如果你仍无法理解我在说什么，那就直接把全部的广告拦截器禁用或是卸载掉...',
 			live_stream_disabled_message:
-				'因为是直播的缘故，本地 YouTube 下载器的功能是停用的。 '
+				'因为是直播，本地 YouTube 下载器的功能已被禁用。'
 		},
 		ja: {
 			togglelinks: 'リンク表示・非表示',
@@ -108,7 +106,7 @@
 			get_video_failed:
 				'%s をブロックする広告ブロック拡張機能がインストールされているようです。\n次のルールをルールセットに追加してください。追加しない場合、ローカル YouTube ダウンローダーが機能しなくなります。\n\nP.S.: ルールの追加が拒否された場合は、アンインストールして「uBlock Origin」を代わりに使用してください。\nそれでも理解できない場合は、すべての広告ブロッカーを無効にするかアンインストールしてください。',
 			live_stream_disabled_message:
-				'ライブ配信ですから、ローカル YouTube ダウンローダーの機能は無効になっています。'
+				'ライブ配信のため、ローカル YouTube ダウンローダーは無効になっています。'
 		},
 		kr: {
 			togglelinks: '링크 보이기 · 숨기기',
