@@ -161,6 +161,15 @@
 			videoid: 'वीडियो आईडी: {{id}}'
 		}
 	}
+	for (const [lang, data] of Object.entries(LOCALE)) {
+		if (lang === LANG_FALLBACK) continue
+		for (const key of Object.keys(LOCALE[LANG_FALLBACK])) {
+			if (!(key in data)) {
+				data[key] = LOCALE[LANG_FALLBACK][key]
+			}
+		}
+	}
+
 	const findLang = l => {
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
 		l = l.toLowerCase().replace('_', '-')
