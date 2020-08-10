@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub one-click sync fork
 // @namespace    https://blog.maple3142.net/
-// @version      0.4
+// @version      0.5
 // @description  Sync your GitHub fork repo within one click
 // @author       maple3142
 // @match        https://github.com/*
@@ -42,23 +42,18 @@
 		const currentUser = $('.user-profile-link>strong').textContent
 		const currentRepoOwner = location.pathname.split('/')[1]
 		const isUserMatch = currentUser === currentRepoOwner
-		const isFork = !!$('.fork-flag')
+		const forkText = $('.flex-auto>.text-small')
+		const isFork =
+			!!forkText && forkText.textContent.includes('forked from')
 
 		if (!isUserMatch || !isFork) return
-		$$('.one-click-sync-fork').forEach(btn => btn.remove())
+		$$('#one-click-sync-fork').forEach(btn => btn.remove())
 		const repo = location.pathname.split('/').slice(1, 3).join('/')
-		const upstream = $('.fork-flag a').getAttribute('href').slice(1)
+		const upstream = forkText.querySelector('a').textContent.trim()
 		const fnav = $('.file-navigation')
-		const branchbtn = $('#branch-select-menu')
-		console.log(branchbtn)
-		if (!branchbtn) return
-		const branch =
-			fnav.querySelector('a').href.split('/').pop() ||
-			branchbtn.querySelector('summary>span').textContent
-		const el = document.createElement('div')
-		el.classList.add('one-click-sync-fork')
+		const branch = document.title.split(' ').pop()
+		const el = document.createElement('a')
 		el.classList.add('btn')
-		el.classList.add('btn-sm')
 		el.classList.add('btn-primary')
 		el.textContent = `Update fork from ${upstream}/${branch}`
 		el.onclick = async () => {
@@ -79,7 +74,12 @@
 				.json()
 			location.reload()
 		}
-		branchbtn.insertAdjacentElement('afterend', el)
+		const wrapper = document.createElement('div')
+		wrapper.style.marginLeft = '6px'
+		wrapper.id = 'one-click-sync-fork'
+		wrapper.appendChild(el)
+		const branchbtn = $('#branch-select-menu')
+		branchbtn.insertAdjacentElement('afterend', wrapper)
 	}
 	addBtn()
 	new MutationObserver(addBtn).observe(document.body, { childList: true })
