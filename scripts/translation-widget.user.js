@@ -283,7 +283,6 @@ function showTranslate(text, dest, originaldest = dest) {
 					dest === 'en' ? originaldest : 'en',
 					originaldest
 				)
-			if (originaldest == 'en') a1.style.display = 'none'
 			const a2 = document.createElement('a')
 			a2.textContent = '在 Google 翻譯中檢視'
 			a2.href = `https://translate.google.com/#${
@@ -309,9 +308,10 @@ function showTranslate(text, dest, originaldest = dest) {
 				}
 			}
 
-			linksWrapper.appendChild(a1)
-			if (originaldest != 'en')
+			if (originaldest !== 'en') {
+				linksWrapper.appendChild(a1)
 				linksWrapper.appendChild(document.createTextNode(' '))
+			}
 			linksWrapper.appendChild(a2)
 			linksWrapper.appendChild(document.createTextNode(' '))
 			linksWrapper.appendChild(a3)
