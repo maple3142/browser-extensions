@@ -51,7 +51,7 @@
 		const repo = location.pathname.split('/').slice(1, 3).join('/')
 		const upstream = forkText.querySelector('a').textContent.trim()
 		const fnav = $('.file-navigation')
-		const branch = document.title.split(' ').pop()
+		const branch = $('link[href$=atom]').href.split('/').pop().split('.')[0]
 		const el = document.createElement('a')
 		el.classList.add('btn')
 		el.classList.add('btn-primary')
