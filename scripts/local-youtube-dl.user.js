@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.31
+// @version      0.9.32
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -627,9 +627,12 @@ self.onmessage=${workerMessageHandler}`
 	const load = async id => {
 		try {
 			const basejs =
-				typeof ytplayer !== 'undefined' && ytplayer.config
+				(typeof ytplayer !== 'undefined' && ytplayer.config.assets
 					? 'https://' + location.host + ytplayer.config.assets.js
-					: $('script[src$="base.js"]').src
+					: 'https://' +
+					  location.host +
+					  ytplayer.web_player_context_config.jsUrl) ||
+				$('script[src$="base.js"]').src
 			const data = await workerGetVideo(id, basejs)
 			logger.log('video loaded: %s', id)
 			app.isLiveStream =
