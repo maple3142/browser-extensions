@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         翻譯小工具
 // @namespace    https://blog.maple3142.net/
-// @version      1.4
+// @version      1.5
 // @description  選字時會出現小懸浮窗以方便翻譯
 // @author       maple3142
 // @include      *
@@ -285,26 +285,33 @@ function showTranslate(text, dest, originaldest = dest) {
 				)
 			const a2 = document.createElement('a')
 			a2.textContent = '在 Google 翻譯中檢視'
-			a2.href = `https://translate.google.com/#${
+			a2.href = `https://translate.google.com/#view=home&op=translate&sl=${
 				res.src
-			}|${dest}|${encodeURIComponent(text)}`
+			}&tl=${dest}&text=${encodeURIComponent(text)}`
 			a2.target = '_blank'
 			const linksWrapper = document.createElement('div')
 			const a3 = document.createElement('a')
 			a3.textContent = '播放語音'
 			a3.href = 'javascript:void(0)'
 			a3.onclick = async () => {
-				const link = generateGoogleTTSLink(
-					text,
-					res.src,
-					await getTKK()
-				)
-				const blob = await gmGetAsBlob(link)
-				const url = URL.createObjectURL(blob)
-				const aud = new Audio(url)
-				aud.play()
-				aud.onended = () => {
-					URL.revokeObjectURL(url)
+				const tryPlay = async forceRefresh => {
+					const link = generateGoogleTTSLink(
+						text,
+						res.src,
+						await getTKK(forceRefresh)
+					)
+					const blob = await gmGetAsBlob(link)
+					const url = URL.createObjectURL(blob)
+					const aud = new Audio(url)
+					aud.play()
+					aud.onended = () => {
+						URL.revokeObjectURL(url)
+					}
+				}
+				try {
+					await tryPlay(false)
+				} catch (e) {
+					await tryPlay(true)
 				}
 			}
 
@@ -324,9 +331,9 @@ function showTranslate(text, dest, originaldest = dest) {
 			translateTip.appendElement(document.createTextNode('連接失敗'))
 			const a2 = document.createElement('a')
 			a2.textContent = '在 Google 翻譯中檢視'
-			a2.href = `https://translate.google.com/#${
+			a2.href = `https://translate.google.com/#view=home&op=translate&sl=${
 				res.src
-			}|${dest}|${encodeURIComponent(text)}`
+			}&tl=${dest}&text=${encodeURIComponent(text)}`
 			a2.target = '_blank'
 			translateTip.appendElement(a2)
 
@@ -351,7 +358,7 @@ function getTKK(forceRefresh = false) {
 	return new Promise((res, rej) => {
 		let tkk = GM_getValue('tkk')
 		if (!forceRefresh && tkk) {
-			res(tkk)
+			return res(tkk)
 		}
 		GM_xmlhttpRequest({
 			method: 'GET',
@@ -361,13 +368,11 @@ function getTKK(forceRefresh = false) {
 				const html = r.response
 				const idx = html.indexOf('tkk')
 				const tkk = html.slice(idx + 5, idx + 5 + 16)
+				console.log('update tkk', tkk)
 				GM_setValue('tkk', tkk)
 				res(tkk)
 			},
-			onerror: err => {
-				if (!forceRefresh) rej(err)
-				else res(getTKK(true))
-			}
+			onerror: err => rej(err)
 		})
 	})
 }
