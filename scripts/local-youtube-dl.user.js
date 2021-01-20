@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.32
+// @version      0.9.33
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -33,13 +33,7 @@
 	const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
 	const createLogger = (console, tag) =>
 		Object.keys(console)
-			.map(k => [
-				k,
-				(...args) =>
-					DEBUG
-						? console[k](tag + ': ' + args[0], ...args.slice(1))
-						: void 0
-			])
+			.map(k => [k, (...args) => (DEBUG ? console[k](tag + ': ' + args[0], ...args.slice(1)) : void 0)])
 			.reduce((acc, [k, fn]) => ((acc[k] = fn), acc), {})
 	const logger = createLogger(console, 'YTDL')
 	const sleep = ms => new Promise(res => setTimeout(res, ms))
@@ -51,13 +45,11 @@
 			stream: 'Stream',
 			adaptive: 'Adaptive',
 			videoid: 'Video ID: ',
-			inbrowser_adaptive_merger:
-				'Online Adaptive Video & Audio Merger (FFmpeg)',
+			inbrowser_adaptive_merger: 'Online Adaptive Video & Audio Merger (FFmpeg)',
 			dlmp4: 'Download high-resolution mp4 in one click',
 			get_video_failed:
 				'You seems to have ad-blocking extension installed, which blocks %s.\nPlease add the following rule to the rule set, or it will prevent Local YouTube Downloader from working.\n\nP.S.: If adding of the rule is being refused, you should uninstall it and use “uBlock Origin” instead.\nIf you still don’t understand what I am saying, just disable or uninstall all your ad-blockers...',
-			live_stream_disabled_message:
-				'Local YouTube Downloader is not available for live stream'
+			live_stream_disabled_message: 'Local YouTube Downloader is not available for live stream'
 		},
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
@@ -68,16 +60,14 @@
 			dlmp4: '一鍵下載高畫質 mp4',
 			get_video_failed:
 				'看來您用的擋廣告擴充功能把 %s 給阻擋了。\n請將下方的規則加入您的廣告阻擋器中，否則本地 YouTube 下載器無法正常運作。\n\nPS: 如它拒絕加入該規則，請將它移除並改為使用 "uBlock Origin"。\n若您仍未能理解前面的指示是什麼意思，那請直接將全部的廣告阻擋器停用或是移除。',
-			live_stream_disabled_message:
-				'因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
+			live_stream_disabled_message: '因為是直播的緣故，本地 YouTube 下載器的功能是停用的。'
 		},
 		'zh-hk': {
 			togglelinks: '顯示／隱藏連結',
 			stream: '串流 Stream',
 			adaptive: '自動適應 Adaptive',
 			videoid: '影片 ID: ',
-			inbrowser_adaptive_merger:
-				'網上自動適應影片及音訊合成工具 (FFmpeg)',
+			inbrowser_adaptive_merger: '網上自動適應影片及音訊合成工具 (FFmpeg)',
 			dlmp4: '一 click 下載高畫質 mp4',
 			get_video_failed:
 				'看來您使用的廣告封鎖擴充功能封鎖了 %s。\n請將下面的規則加入您的廣告封鎖器中，否則本地 YouTube 下載器將無法正常運作。\n\nP.S.: 如果規則被拒絕加入，請將廣告封鎖器解除安裝並改為使用「uBlock Origin」。\n如果您仍然對此一頭霧水，請直接停用或者解除安裝所有廣告封鎖器。',
@@ -92,29 +82,25 @@
 			dlmp4: '一键下载高画质 mp4',
 			get_video_failed:
 				'您看起来有在使用广告拦截扩充功能，而它将 %s 给拦截了。\n请将下方的规则加入你的广告拦截器中，否则本地 YouTube 下载器无法正常运作。\n\nP.S.: 如规则被拒绝加入，请将它卸载并改为使用“uBlock Origin”。\n如果你仍无法理解我在说什么，那就直接把全部的广告拦截器禁用或是卸载掉...',
-			live_stream_disabled_message:
-				'因为是直播，本地 YouTube 下载器的功能已被禁用。'
+			live_stream_disabled_message: '因为是直播，本地 YouTube 下载器的功能已被禁用。'
 		},
 		ja: {
 			togglelinks: 'リンク表示・非表示',
 			stream: 'ストリーミング',
 			adaptive: 'アダプティブ',
 			videoid: 'ビデオ ID: ',
-			inbrowser_adaptive_merger:
-				'ビデオとオーディオを合併するオンラインツール (FFmpeg)',
+			inbrowser_adaptive_merger: 'ビデオとオーディオを合併するオンラインツール (FFmpeg)',
 			dlmp4: 'ワンクリックで高解像度の mp4 をダウンロード',
 			get_video_failed:
 				'%s をブロックする広告ブロック拡張機能がインストールされているようです。\n次のルールをルールセットに追加してください。追加しない場合、ローカル YouTube ダウンローダーが機能しなくなります。\n\nP.S.: ルールの追加が拒否された場合は、アンインストールして「uBlock Origin」を代わりに使用してください。\nそれでも理解できない場合は、すべての広告ブロッカーを無効にするかアンインストールしてください。',
-			live_stream_disabled_message:
-				'ライブ配信のため、ローカル YouTube ダウンローダーは無効になっています。'
+			live_stream_disabled_message: 'ライブ配信のため、ローカル YouTube ダウンローダーは無効になっています。'
 		},
 		kr: {
 			togglelinks: '링크 보이기 · 숨기기',
 			stream: '스트리밍',
 			adaptive: '적응 (어댑티브)',
 			videoid: '비디오 ID: ',
-			inbrowser_adaptive_merger:
-				'비디오와 오디오를 합병하는 온라인 도구 (FFmpeg)',
+			inbrowser_adaptive_merger: '비디오와 오디오를 합병하는 온라인 도구 (FFmpeg)',
 			dlmp4: '한 번의 클릭으로 고해상도 mp4 다운로드',
 			get_video_failed:
 				'%s 를 차단하는 광고 차단 확장 기능이 설치되어있는 것 같습니다.\n다음의 규칙을 규칙 세트에 추가하십시오. 추가하지 않으면 로컬 YouTube 다운로더가 작동하지 않습니다.\n\nP.S.: 규칙의 추가가 거부 된 경우 제거하고 "uBlock Origin"을 대신 사용하십시오.\n그래도 이해할 수없는 경우 모든 광고 차단기를 비활성화하거나 제거하십시오.'
@@ -137,8 +123,7 @@
 			stream: 'Stream',
 			adaptive: 'Adaptative',
 			videoid: 'ID vidéo: ',
-			inbrowser_adaptive_merger:
-				'Fusionner vidéos et audios adaptatifs dans le navigateur (FFmpeg)',
+			inbrowser_adaptive_merger: 'Fusionner vidéos et audios adaptatifs dans le navigateur (FFmpeg)',
 			dlmp4: 'Téléchargez la plus haute résolution mp4 en un clic',
 			get_video_failed:
 				'Il semble qu\'une extension de blocage de pubs soit installée, ce qui bloque %s.\nVeuillez ajouter la règle suivante au jeu de règles, ou cela empêchera Local YouTube Downloader de fonctionner.\n\nPS: Si votre bloqueur refuse d\'ajouter cette règle, vous devez le désinstaller et utiliser plutôt "uBlock Origin".\nSi vous ne comprenez toujours pas ce que je dis, désinstallez ou désactivez simplement votre bloqueur de pubs ...'
@@ -148,8 +133,7 @@
 			stream: 'Stream',
 			adaptive: 'Adaptywne',
 			videoid: 'ID filmu: ',
-			inbrowser_adaptive_merger:
-				'Połącz audio i wideo adaptywne w przeglądarce (FFmpeg)',
+			inbrowser_adaptive_merger: 'Połącz audio i wideo adaptywne w przeglądarce (FFmpeg)',
 			dlmp4: 'Pobierz .mp4 w najwyższej jakości'
 		},
 		hi: {
@@ -194,26 +178,15 @@
 				eval(data)
 				data = obj.innerHTML
 			}
-			const fnnameresult = /=([a-zA-Z0-9\$]+?)\(decodeURIComponent/.exec(
-				data
-			)
+			const fnnameresult = /=([a-zA-Z0-9\$]+?)\(decodeURIComponent/.exec(data)
 			const fnname = fnnameresult[1]
-			const _argnamefnbodyresult = new RegExp(
-				escapeRegExp(fnname) + '=function\\((.+?)\\){(.+?)}'
-			).exec(data)
+			const _argnamefnbodyresult = new RegExp(escapeRegExp(fnname) + '=function\\((.+?)\\){(.+?)}').exec(data)
 			const [_, argname, fnbody] = _argnamefnbodyresult
 			const helpernameresult = /;(.+?)\..+?\(/.exec(fnbody)
 			const helpername = helpernameresult[1]
-			const helperresult = new RegExp(
-				'var ' + escapeRegExp(helpername) + '={[\\s\\S]+?};'
-			).exec(data)
+			const helperresult = new RegExp('var ' + escapeRegExp(helpername) + '={[\\s\\S]+?};').exec(data)
 			const helper = helperresult[0]
-			logger.log(
-				`parsedecsig result: %s=>{%s\n%s}`,
-				argname,
-				helper,
-				fnbody
-			)
+			logger.log(`parsedecsig result: %s=>{%s\n%s}`, argname, helper, fnbody)
 			return new Function([argname], helper + '\n' + fnbody)
 		} catch (e) {
 			logger.error('parsedecsig error: %o', e)
@@ -223,16 +196,10 @@
 			)
 		}
 	}
-	const parseQuery = s =>
-		[...new URLSearchParams(s).entries()].reduce(
-			(acc, [k, v]) => ((acc[k] = v), acc),
-			{}
-		)
+	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
 		const data = await xf
-			.get(
-				`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`
-			)
+			.get(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
 			.text()
 			.catch(err => null)
 		if (!data) return 'Adblock conflict'
@@ -291,9 +258,7 @@ const parseQuery=${parseQuery}
 const parseDecsig=${parseDecsig}
 const getVideo=${getVideo}
 self.onmessage=${workerMessageHandler}`
-	const ytdlWorker = new Worker(
-		URL.createObjectURL(new Blob([ytdlWorkerCode]))
-	)
+	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
 	const workerGetVideo = (id, path) => {
 		logger.log(`workerGetVideo start: %s %s`, id, path)
 		return new Promise((res, rej) => {
@@ -315,20 +280,14 @@ self.onmessage=${workerMessageHandler}`
 		return n
 	}
 	// video downloader
-	const xhrDownloadUint8Array = async (
-		{ url, contentLength },
-		progressCb
-	) => {
-		if (typeof contentLength === 'string')
-			contentLength = parseInt(contentLength)
+	const xhrDownloadUint8Array = async ({ url, contentLength }, progressCb) => {
+		if (typeof contentLength === 'string') contentLength = parseInt(contentLength)
 		progressCb({
 			loaded: 0,
 			total: contentLength,
 			speed: 0
 		})
-		const chunkSize = Math.floor(
-			contentLength / determineChunksNum(contentLength)
-		)
+		const chunkSize = Math.floor(contentLength / determineChunksNum(contentLength))
 		const getBuffer = (start, end) =>
 			new Promise((res, rej) => {
 				const xhr = {}
@@ -424,9 +383,7 @@ self.onmessage=${workerMessageHandler}`
 		const win = open(
 			'',
 			'Video Download',
-			`toolbar=no,height=${screen.height / 2},width=${
-				screen.width / 2
-			},left=${screenLeft},top=${screenTop}`
+			`toolbar=no,height=${screen.height / 2},width=${screen.width / 2},left=${screenLeft},top=${screenTop}`
 		)
 		const div = win.document.createElement('div')
 		win.document.body.appendChild(div)
@@ -457,21 +414,16 @@ self.onmessage=${workerMessageHandler}`
 					const videoObj = adaptive
 						.filter(x => x.mimeType.includes('video/mp4'))
 						.map(v => {
-							const [_, quality, fps] = /(\d+)p(\d*)/.exec(
-								v.qualityLabel
-							)
+							const [_, quality, fps] = /(\d+)p(\d*)/.exec(v.qualityLabel)
 							v.qualityNum = parseInt(quality)
 							v.fps = fps ? parseInt(fps) : 30
 							return v
 						})
 						.sort((a, b) => {
-							if (a.qualityNum === b.qualityNum)
-								return b.fps - a.fps // ex: 30-60=-30, then a will be put before b
+							if (a.qualityNum === b.qualityNum) return b.fps - a.fps // ex: 30-60=-30, then a will be put before b
 							return b.qualityNum - a.qualityNum
 						})[0]
-					const audioObj = adaptive.find(x =>
-						x.mimeType.includes('audio/mp4')
-					)
+					const audioObj = adaptive.find(x => x.mimeType.includes('audio/mp4'))
 					const vPromise = xhrDownloadUint8Array(videoObj, e => {
 						this.video.progress = (e.loaded / e.total) * 100
 						this.video.loaded = (e.loaded / 1024 / 1024).toFixed(2)
@@ -493,10 +445,7 @@ self.onmessage=${workerMessageHandler}`
 						triggerDownload(bvurl, title + '-videoonly.mp4')
 						triggerDownload(baurl, title + '-audioonly.mp4')
 					}
-					const result = await Promise.race([
-						mergeVideo(varr, aarr),
-						sleep(1000 * 25).then(() => null)
-					])
+					const result = await Promise.race([mergeVideo(varr, aarr), sleep(1000 * 25).then(() => null)])
 					if (!result) {
 						alert('An error has occurred when merging video')
 						const bvurl = URL.createObjectURL(new Blob([varr]))
@@ -573,9 +522,7 @@ self.onmessage=${workerMessageHandler}`
 				return [vid.qualityLabel, vid.quality].filter(x => x).join(': ')
 			},
 			formatAdaptiveText(vid) {
-				let str = [vid.qualityLabel, vid.mimeType]
-					.filter(x => x)
-					.join(': ')
+				let str = [vid.qualityLabel, vid.mimeType].filter(x => x).join(': ')
 				if (vid.mimeType.includes('audio')) {
 					str += ` ${Math.round(vid.bitrate / 1000)}kbps`
 				}
@@ -588,9 +535,7 @@ self.onmessage=${workerMessageHandler}`
 
 	// attach element
 	const shadowHost = $el('div')
-	const shadow = shadowHost.attachShadow
-		? shadowHost.attachShadow({ mode: 'closed' })
-		: shadowHost // no shadow dom
+	const shadow = shadowHost.attachShadow ? shadowHost.attachShadow({ mode: 'closed' }) : shadowHost // no shadow dom
 	logger.log('shadowHost: %o', shadowHost)
 	const container = $el('div')
 	shadow.appendChild(container)
@@ -627,16 +572,14 @@ self.onmessage=${workerMessageHandler}`
 	const load = async id => {
 		try {
 			const basejs =
-				(typeof ytplayer !== 'undefined' && ytplayer.config.assets
+				(typeof ytplayer !== 'undefined' && 'config' in ytplayer && ytplayer.config.assets
 					? 'https://' + location.host + ytplayer.config.assets.js
-					: 'https://' +
-					  location.host +
-					  ytplayer.web_player_context_config.jsUrl) ||
-				$('script[src$="base.js"]').src
+					: 'web_player_context_config' in ytplayer
+					? 'https://' + location.host + ytplayer.web_player_context_config.jsUrl
+					: null) || $('script[src$="base.js"]').src
 			const data = await workerGetVideo(id, basejs)
 			logger.log('video loaded: %s', id)
-			app.isLiveStream =
-				data.playerResponse.playabilityStatus.liveStreamability != null
+			app.isLiveStream = data.playerResponse.playabilityStatus.liveStreamability != null
 			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) {
 				try {
 					applyOriginalTitle(data.meta)
@@ -662,10 +605,7 @@ self.onmessage=${workerMessageHandler}`
 					'%s',
 					`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`
 				)
-				prompt(
-					str,
-					'@@||www.youtube.com/get_video_info?*=detailpage$xhr,domain=youtube.com'
-				)
+				prompt(str, '@@||www.youtube.com/get_video_info?*=detailpage$xhr,domain=youtube.com')
 			}
 			logger.error('load', err)
 		}
@@ -675,9 +615,7 @@ self.onmessage=${workerMessageHandler}`
 		const el =
 			$('#info-contents') ||
 			$('#watch-header') ||
-			$(
-				'.page-container:not([hidden]) ytm-item-section-renderer>lazy-list'
-			)
+			$('.page-container:not([hidden]) ytm-item-section-renderer>lazy-list')
 		if (el && !el.contains(shadowHost)) {
 			el.appendChild(shadowHost)
 		}
