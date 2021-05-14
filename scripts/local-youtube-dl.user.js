@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.34
+// @version      0.9.35
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -695,10 +695,10 @@ a:hover, .div-a:hover{
 	color: var(--yt-spec-call-to-action, blue);
 }
 .box.dark{
-	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+	color: var(--yt-endpoint-color, var(--yt-spec-text-primary));
 }
 .box.dark .ytdl-link-btn{
-	color: var(--ytd-video-primary-info-renderer-title-color, var(--yt-primary-text-color));
+	color: var(--yt-endpoint-color, var(--yt-spec-text-primary));
 }
 .box.dark .ytdl-link-btn:hover{
 	color: rgba(200, 200, 255, 0.8);
