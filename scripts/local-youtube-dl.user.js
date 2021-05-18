@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.35
+// @version      0.9.36
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -20,6 +20,7 @@
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
 // @require      https://bundle.run/p-queue@6.3.0
+// @require      https://unpkg.com/gmxhr-fetch@0.1.0/gmxhr-fetch.js
 // @grant        GM_xmlhttpRequest
 // @connect      googlevideo.com
 // @compatible   firefox >=52
@@ -29,11 +30,6 @@
 
 ;(function () {
 	'use strict'
-
-	// temp fix regression cause by youtube a/b testing
-	document.cookie = 'VISITOR_INFO1_LIVE=7g1YwOIccoE'
-	document.cookie = 'YSC=E7lbjQFSIbk'
-
 	const DEBUG = true
 	const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
 	const createLogger = (console, tag) =>
@@ -42,6 +38,7 @@
 			.reduce((acc, [k, fn]) => ((acc[k] = fn), acc), {})
 	const logger = createLogger(console, 'YTDL')
 	const sleep = ms => new Promise(res => setTimeout(res, ms))
+	const gxf = xf.extend({ fetch: gmfetch })
 
 	const LANG_FALLBACK = 'en'
 	const LOCALE = {
@@ -203,8 +200,18 @@
 	}
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
-		const data = await xf
-			.get(`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`)
+		const data = await gxf
+			.get(`https://www.youtube.com/get_video_info?video_id=${id}`, {
+				headers: {
+					Cookie: 'PREF=tz=Asia.Taipei',
+					'x-client-data': 'abc',
+					'User-Agent': 'curl/7.71.1',
+					'sec-fetch-mode': '',
+					'sec-fetch-site': '',
+					'sec-fetch-dest': '',
+					Accept: '*/*'
+				}
+			})
 			.text()
 			.catch(err => null)
 		if (!data) return 'Adblock conflict'
@@ -582,7 +589,7 @@ self.onmessage=${workerMessageHandler}`
 					: 'web_player_context_config' in ytplayer
 					? 'https://' + location.host + ytplayer.web_player_context_config.jsUrl
 					: null) || $('script[src$="base.js"]').src
-			const data = await workerGetVideo(id, basejs)
+			const data = await getVideo(id, basejs)
 			logger.log('video loaded: %s', id)
 			app.isLiveStream = data.playerResponse.playabilityStatus.liveStreamability != null
 			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) {
@@ -608,9 +615,9 @@ self.onmessage=${workerMessageHandler}`
 			if (err === 'Adblock conflict') {
 				const str = app.strings.get_video_failed.replace(
 					'%s',
-					`https://www.youtube.com/get_video_info?video_id=${id}&el=detailpage`
+					`https://www.youtube.com/get_video_info?video_id=${id}&el=embedded`
 				)
-				prompt(str, '@@||www.youtube.com/get_video_info?*=detailpage$xhr,domain=youtube.com')
+				prompt(str, '@@||www.youtube.com/get_video_info?*=embedded$xhr,domain=youtube.com')
 			}
 			logger.error('load', err)
 		}
