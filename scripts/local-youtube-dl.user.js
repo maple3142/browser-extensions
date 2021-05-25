@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.37
+// @version      0.9.38
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -412,7 +412,7 @@ self.onmessage=${workerMessageHandler}`
 					win.onbeforeunload = () => true
 					// YouTube's default order is descending by video quality
 					const videoObj = adaptive
-						.filter(x => x.mimeType.includes('video/mp4'))
+						.filter(x => x.mimeType.includes('video/mp4') || x.mimeType.includes('video/webm'))
 						.map(v => {
 							const [_, quality, fps] = /(\d+)p(\d*)/.exec(v.qualityLabel)
 							v.qualityNum = parseInt(quality)
@@ -577,7 +577,7 @@ self.onmessage=${workerMessageHandler}`
 					: 'web_player_context_config' in ytplayer
 					? 'https://' + location.host + ytplayer.web_player_context_config.jsUrl
 					: null) || $('script[src$="base.js"]').src
-			const data = await getVideo(id, basejs)
+			const data = await workerGetVideo(id, basejs)
 			logger.log('video loaded: %s', id)
 			app.isLiveStream = data.playerResponse.playabilityStatus.liveStreamability != null
 			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) {
@@ -593,7 +593,7 @@ self.onmessage=${workerMessageHandler}`
 			app.meta = data.meta
 
 			const actLang = getLangCode()
-			if (actLang !== null) {
+			if (actLang != null) {
 				const lang = findLang(actLang)
 				logger.log('youtube ui lang: %s', actLang)
 				logger.log('ytdl lang:', lang)
