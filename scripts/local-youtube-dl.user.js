@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.39
+// @version      0.9.40
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -95,7 +95,7 @@
 			adaptive: '적응 (어댑티브)',
 			videoid: '비디오 ID: ',
 			inbrowser_adaptive_merger: '비디오와 오디오를 합병하는 온라인 도구 (FFmpeg)',
-			dlmp4: '한 번의 클릭으로 고해상도 mp4 다운로드',
+			dlmp4: '한 번의 클릭으로 고해상도 mp4 다운로드'
 		},
 		es: {
 			togglelinks: 'Mostrar/Ocultar Links',
@@ -116,7 +116,7 @@
 			adaptive: 'Adaptative',
 			videoid: 'ID vidéo: ',
 			inbrowser_adaptive_merger: 'Fusionner vidéos et audios adaptatifs dans le navigateur (FFmpeg)',
-			dlmp4: 'Téléchargez la plus haute résolution mp4 en un clic',
+			dlmp4: 'Téléchargez la plus haute résolution mp4 en un clic'
 		},
 		pl: {
 			togglelinks: 'Pokaż/Ukryj Linki',
@@ -189,7 +189,9 @@
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
 		const data = await xf
-			.get(`https://www.youtube.com/get_video_info?video_id=${id}&html5=1`)
+			.get(
+				`https://www.youtube.com/get_video_info?video_id=${id}&html5=1&eurl=https%3A%2F%2Fyoutube.googleapis.com%2Fv%2F${id}`
+			)
 			.text()
 			.catch(err => null)
 		if (!data) return 'Adblock conflict'
