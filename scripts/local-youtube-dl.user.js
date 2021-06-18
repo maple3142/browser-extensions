@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.40
+// @version      0.9.41
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -30,7 +30,6 @@
 ;(function () {
 	'use strict'
 	const DEBUG = true
-	const RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO = true
 	const createLogger = (console, tag) =>
 		Object.keys(console)
 			.map(k => [k, (...args) => (DEBUG ? console[k](tag + ': ' + args[0], ...args.slice(1)) : void 0)])
@@ -188,16 +187,21 @@
 	}
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const getVideo = async (id, decsig) => {
-		const data = await xf
-			.get(
-				`https://www.youtube.com/get_video_info?video_id=${id}&html5=1&eurl=https%3A%2F%2Fyoutube.googleapis.com%2Fv%2F${id}`
-			)
-			.text()
-			.catch(err => null)
-		if (!data) return 'Adblock conflict'
-		const obj = parseQuery(data)
-		const playerResponse = JSON.parse(obj.player_response)
-		logger.log(`video %s data: %o`, id, obj)
+		const playerResponse = await xf
+			.post('https://www.youtube.com/youtubei/v1/player', {
+				qs: { key: ytplayer.web_player_context_config.innertubeApiKey },
+				json: {
+					videoId: id,
+					context: {
+						client: {
+							clientName: 'WEB',
+							clientVersion: ytplayer.web_player_context_config.innertubeContextClientVersion
+						}
+					}
+				}
+			})
+			.then(r => r.json())
+		const obj = {}
 		logger.log(`video %s playerResponse: %o`, id, playerResponse)
 		if (obj.status === 'fail') {
 			throw obj
@@ -211,7 +215,7 @@
 			if (stream[0].sp && stream[0].sp.includes('sig')) {
 				for (const obj of stream) {
 					obj.s = decsig(obj.s)
-					obj.url += `&sig=${obj.s}`
+					obj.url += `&sig=${encodeURIComponent(obj.s)}`
 				}
 			}
 		}
@@ -225,14 +229,17 @@
 			if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
 				for (const obj of adaptive) {
 					obj.s = decsig(obj.s)
-					obj.url += `&sig=${obj.s}`
+					obj.url += `&sig=${encodeURIComponent(obj.s)}`
 				}
 			}
 		}
 		logger.log(`video %s result: %o`, id, { stream, adaptive })
-		return { stream, adaptive, meta: obj, playerResponse }
+		return { stream, adaptive, details: playerResponse.videoDetails, playerResponse }
 	}
 	const workerMessageHandler = async e => {
+		if (e.data.ytplayer) {
+			self.ytplayer = e.data.ytplayer
+		}
 		const decsig = await xf.get(e.data.path).text(parseDecsig)
 		try {
 			const result = await getVideo(e.data.id, decsig)
@@ -251,19 +258,16 @@ const parseDecsig=${parseDecsig}
 const getVideo=${getVideo}
 self.onmessage=${workerMessageHandler}`
 	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
-	const workerGetVideo = (id, path) => {
+	const workerGetVideo = (id, path, ytplayer) => {
 		logger.log(`workerGetVideo start: %s %s`, id, path)
 		return new Promise((res, rej) => {
 			const callback = e => {
 				ytdlWorker.removeEventListener('message', callback)
-				if (e.data === 'Adblock conflict') {
-					return rej(e.data)
-				}
 				logger.log('workerGetVideo end: %o', e.data)
 				res(e.data)
 			}
 			ytdlWorker.addEventListener('message', callback)
-			ytdlWorker.postMessage({ id, path })
+			ytdlWorker.postMessage({ id, path, ytplayer })
 		})
 	}
 
@@ -294,7 +298,13 @@ self.onmessage=${workerMessageHandler}`
 					'Accept-Language': 'en-us,en;q=0.5',
 					'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7'
 				}
-				xhr.onload = obj => res(obj.response)
+				xhr.onload = obj => {
+					if (obj.status >= 200 && obj.status < 300) {
+						res(obj.response)
+					} else {
+						rej(obj)
+					}
+				}
 				GM_xmlhttpRequest(xhr)
 			})
 		const data = new Uint8Array(contentLength)
@@ -307,16 +317,22 @@ self.onmessage=${workerMessageHandler}`
 			const curChunkSize = exceeded ? contentLength - start : chunkSize
 			const end = exceeded ? null : start + chunkSize
 			const p = queue.add(() =>
-				getBuffer(start, end).then(buf => {
-					downloaded += curChunkSize
-					data.set(new Uint8Array(buf), start)
-					const ds = (Date.now() - startTime + 1) / 1000
-					progressCb({
-						loaded: downloaded,
-						total: contentLength,
-						speed: downloaded / ds
+				getBuffer(start, end)
+					.then(buf => {
+						downloaded += curChunkSize
+						data.set(new Uint8Array(buf), start)
+						const ds = (Date.now() - startTime + 1) / 1000
+						progressCb({
+							loaded: downloaded,
+							total: contentLength,
+							speed: downloaded / ds
+						})
 					})
-				})
+					.catch(err => {
+						console.log('Download error')
+						queue.clear()
+						alert('Download error')
+					})
 			)
 			ps.push(p)
 		}
@@ -495,7 +511,7 @@ self.onmessage=${workerMessageHandler}`
 				isLiveStream: false,
 				stream: [],
 				adaptive: [],
-				meta: null,
+				details: null,
 				dark: false,
 				lang: findLang(navigator.language)
 			}
@@ -507,8 +523,7 @@ self.onmessage=${workerMessageHandler}`
 		},
 		methods: {
 			dlmp4() {
-				const r = JSON.parse(this.meta.player_response)
-				openDownloadModel(this.adaptive, r.videoDetails.title)
+				openDownloadModel(this.adaptive, this.details.title)
 			},
 			formatStreamText(vid) {
 				return [vid.qualityLabel, vid.quality].filter(x => x).join(': ')
@@ -550,17 +565,6 @@ self.onmessage=${workerMessageHandler}`
 			return navigator.language
 		}
 	}
-	const applyOriginalTitle = meta => {
-		console.log(meta.player_response)
-		const data = eval(`(${meta.player_response})`).videoDetails // not a valid json, so JSON.parse won't work
-		if ($('#eow-title')) {
-			// legacy youtube
-			$('#eow-title').textContent = data.title
-		} else if ($('h1.title')) {
-			// new youtube (polymer)
-			$('h1.title').textContent = data.title
-		}
-	}
 	const load = async id => {
 		try {
 			const basejs =
@@ -569,20 +573,13 @@ self.onmessage=${workerMessageHandler}`
 					: 'web_player_context_config' in ytplayer
 					? 'https://' + location.host + ytplayer.web_player_context_config.jsUrl
 					: null) || $('script[src$="base.js"]').src
-			const data = await workerGetVideo(id, basejs)
+			const data = await workerGetVideo(id, basejs, JSON.parse(JSON.stringify(ytplayer)))
 			logger.log('video loaded: %s', id)
 			app.isLiveStream = data.playerResponse.playabilityStatus.liveStreamability != null
-			if (RESTORE_ORIGINAL_TITLE_FOR_CURRENT_VIDEO) {
-				try {
-					applyOriginalTitle(data.meta)
-				} catch (e) {
-					// just make sure the main function will work even if original title applier doesn't work
-				}
-			}
 			app.id = id
 			app.stream = data.stream
 			app.adaptive = data.adaptive
-			app.meta = data.meta
+			app.details = data.details
 
 			const actLang = getLangCode()
 			if (actLang != null) {
@@ -592,9 +589,7 @@ self.onmessage=${workerMessageHandler}`
 				app.lang = lang
 			}
 		} catch (err) {
-			if (err === 'Adblock conflict') {
-				alert(app.strings.get_video_failed)
-			}
+			alert(app.strings.get_video_failed)
 			logger.error('load', err)
 		}
 	}
