@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.41
+// @version      0.9.42
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -21,6 +21,8 @@
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
 // @require      https://bundle.run/p-queue@6.3.0
 // @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
+// @run-at       document-start
 // @connect      googlevideo.com
 // @compatible   firefox >=52
 // @compatible   chrome >=55
@@ -186,36 +188,18 @@
 		}
 	}
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
-	const getVideo = async (id, decsig) => {
-		const playerResponse = await xf
-			.post('https://www.youtube.com/youtubei/v1/player', {
-				qs: { key: ytplayer.web_player_context_config.innertubeApiKey },
-				json: {
-					videoId: id,
-					context: {
-						client: {
-							clientName: 'WEB',
-							clientVersion: ytplayer.web_player_context_config.innertubeContextClientVersion
-						}
-					}
-				}
-			})
-			.then(r => r.json())
-		const obj = {}
+	const parseResponse = (id, playerResponse, decsig) => {
 		logger.log(`video %s playerResponse: %o`, id, playerResponse)
-		if (obj.status === 'fail') {
-			throw obj
-		}
 		let stream = []
 		if (playerResponse.streamingData.formats) {
 			stream = playerResponse.streamingData.formats.map(x =>
 				Object.assign({}, x, parseQuery(x.cipher || x.signatureCipher))
 			)
 			logger.log(`video %s stream: %o`, id, stream)
-			if (stream[0].sp && stream[0].sp.includes('sig')) {
-				for (const obj of stream) {
+			for (const obj of stream) {
+				if (obj.s) {
 					obj.s = decsig(obj.s)
-					obj.url += `&sig=${encodeURIComponent(obj.s)}`
+					obj.url += `&${obj.sp}=${encodeURIComponent(obj.s)}`
 				}
 			}
 		}
@@ -226,49 +210,15 @@
 				Object.assign({}, x, parseQuery(x.cipher || x.signatureCipher))
 			)
 			logger.log(`video %s adaptive: %o`, id, adaptive)
-			if (adaptive[0].sp && adaptive[0].sp.includes('sig')) {
-				for (const obj of adaptive) {
+			for (const obj of adaptive) {
+				if (obj.s) {
 					obj.s = decsig(obj.s)
-					obj.url += `&sig=${encodeURIComponent(obj.s)}`
+					obj.url += `&${obj.sp}=${encodeURIComponent(obj.s)}`
 				}
 			}
 		}
 		logger.log(`video %s result: %o`, id, { stream, adaptive })
 		return { stream, adaptive, details: playerResponse.videoDetails, playerResponse }
-	}
-	const workerMessageHandler = async e => {
-		if (e.data.ytplayer) {
-			self.ytplayer = e.data.ytplayer
-		}
-		const decsig = await xf.get(e.data.path).text(parseDecsig)
-		try {
-			const result = await getVideo(e.data.id, decsig)
-			self.postMessage(result)
-		} catch (e) {
-			self.postMessage(e)
-		}
-	}
-	const ytdlWorkerCode = `
-importScripts('https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js')
-const DEBUG=${DEBUG}
-const logger=(${createLogger})(console, 'YTDL')
-const escapeRegExp=${escapeRegExp}
-const parseQuery=${parseQuery}
-const parseDecsig=${parseDecsig}
-const getVideo=${getVideo}
-self.onmessage=${workerMessageHandler}`
-	const ytdlWorker = new Worker(URL.createObjectURL(new Blob([ytdlWorkerCode])))
-	const workerGetVideo = (id, path, ytplayer) => {
-		logger.log(`workerGetVideo start: %s %s`, id, path)
-		return new Promise((res, rej) => {
-			const callback = e => {
-				ytdlWorker.removeEventListener('message', callback)
-				logger.log('workerGetVideo end: %o', e.data)
-				res(e.data)
-			}
-			ytdlWorker.addEventListener('message', callback)
-			ytdlWorker.postMessage({ id, path, ytplayer })
-		})
 	}
 
 	const determineChunksNum = size => {
@@ -329,7 +279,6 @@ self.onmessage=${workerMessageHandler}`
 						})
 					})
 					.catch(err => {
-						console.log('Download error')
 						queue.clear()
 						alert('Download error')
 					})
@@ -553,7 +502,7 @@ self.onmessage=${workerMessageHandler}`
 		unsafeWindow.$app = app
 		unsafeWindow.parseQuery = parseQuery
 		unsafeWindow.parseDecsig = parseDecsig
-		unsafeWindow.getVideo = getVideo
+		unsafeWindow.parseResponse = parseResponse
 	}
 
 	const getLangCode = () => {
@@ -565,7 +514,7 @@ self.onmessage=${workerMessageHandler}`
 			return navigator.language
 		}
 	}
-	const load = async id => {
+	const load = async playerResponse => {
 		try {
 			const basejs =
 				(typeof ytplayer !== 'undefined' && 'config' in ytplayer && ytplayer.config.assets
@@ -573,7 +522,9 @@ self.onmessage=${workerMessageHandler}`
 					: 'web_player_context_config' in ytplayer
 					? 'https://' + location.host + ytplayer.web_player_context_config.jsUrl
 					: null) || $('script[src$="base.js"]').src
-			const data = await workerGetVideo(id, basejs, JSON.parse(JSON.stringify(ytplayer)))
+			const decsig = await xf.get(basejs).text(parseDecsig)
+			const id = parseQuery(location.search).v
+			const data = parseResponse(id, playerResponse, decsig)
 			logger.log('video loaded: %s', id)
 			app.isLiveStream = data.playerResponse.playabilityStatus.liveStreamability != null
 			app.id = id
@@ -593,7 +544,22 @@ self.onmessage=${workerMessageHandler}`
 			logger.error('load', err)
 		}
 	}
-	let prev = null
+
+	// hook fetch response
+	const ff = fetch
+	unsafeWindow.fetch = (...args) => {
+		if (args[0] instanceof Request) {
+			return ff(...args).then(resp => {
+				if (resp.url.includes('player')) {
+					resp.clone().json().then(load)
+				}
+				return resp
+			})
+		}
+		return ff(...args)
+	}
+
+	// attach element
 	setInterval(() => {
 		const el =
 			$('#info-contents') ||
@@ -602,20 +568,15 @@ self.onmessage=${workerMessageHandler}`
 		if (el && !el.contains(shadowHost)) {
 			el.appendChild(shadowHost)
 		}
-		if (location.href !== prev) {
-			logger.log(`page change: ${prev} -> ${location.href}`)
-			prev = location.href
-			if (location.pathname === '/watch') {
-				shadowHost.style.display = 'block'
-				const id = parseQuery(location.search).v
-				logger.log('start loading new video: %s', id)
-				app.hide = true // fold it
-				load(id)
-			} else {
-				shadowHost.style.display = 'none'
-			}
+	}, 100)
+
+	// init
+	unsafeWindow.addEventListener('load', () => {
+		const firstResp = unsafeWindow?.ytplayer?.config?.args?.raw_player_response
+		if (firstResp) {
+			load(firstResp)
 		}
-	}, 1000)
+	})
 
 	// listen to dark mode toggle
 	const $html = $('html')
