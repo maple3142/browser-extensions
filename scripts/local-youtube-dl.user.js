@@ -190,11 +190,13 @@
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const parseResponse = (id, playerResponse, decsig) => {
 		logger.log(`video %s playerResponse: %o`, id, playerResponse)
-		if (!playerResponse || !playerResponse.streamingData) {
-			return { [], [], details: null, playerResponse };
+    
+    let stream = []
+    let adaptive = []
+    if (!playerResponse || !playerResponse.streamingData) {
+			return { stream, adaptive, details: null, playerResponse }
 		}
-		
-		let stream = []
+    
 		if (playerResponse.streamingData.formats) {
 			stream = playerResponse.streamingData.formats.map(x =>
 				Object.assign({}, x, parseQuery(x.cipher || x.signatureCipher))
@@ -208,7 +210,6 @@
 			}
 		}
 
-		let adaptive = []
 		if (playerResponse.streamingData.adaptiveFormats) {
 			adaptive = playerResponse.streamingData.adaptiveFormats.map(x =>
 				Object.assign({}, x, parseQuery(x.cipher || x.signatureCipher))
@@ -530,7 +531,7 @@
 			const id = parseQuery(location.search).v
 			const data = parseResponse(id, playerResponse, decsig)
 			logger.log('video loaded: %s', id)
-			app.isLiveStream = data.playerResponse.playabilityStatus.liveStreamability != null
+			app.isLiveStream = (data.playerResponse != null) && (data.playerResponse.playabilityStatus != null) && (data.playerResponse.playabilityStatus.liveStreamability != null)
 			app.id = id
 			app.stream = data.stream
 			app.adaptive = data.adaptive
