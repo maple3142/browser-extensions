@@ -191,9 +191,9 @@
 	const parseResponse = (id, playerResponse, decsig) => {
 		logger.log(`video %s playerResponse: %o`, id, playerResponse)
     
-    let stream = []
-    let adaptive = []
-    if (!playerResponse || !playerResponse.streamingData) {
+		let stream = []
+		let adaptive = []
+		if (!playerResponse || !playerResponse.streamingData) {
 			return { stream, adaptive, details: null, playerResponse }
 		}
     
@@ -530,19 +530,23 @@
 			const decsig = await xf.get(basejs).text(parseDecsig)
 			const id = parseQuery(location.search).v
 			const data = parseResponse(id, playerResponse, decsig)
-			logger.log('video loaded: %s', id)
-			app.isLiveStream = (data.playerResponse != null) && (data.playerResponse.playabilityStatus != null) && (data.playerResponse.playabilityStatus.liveStreamability != null)
-			app.id = id
-			app.stream = data.stream
-			app.adaptive = data.adaptive
-			app.details = data.details
+			if (data.playerResponse && data.details && (data.stream.length > 0 || data.adaptive.length > 0)) {
+				logger.log('video loaded: %s', id)
+				app.isLiveStream = (data.playerResponse.playabilityStatus != null) && (data.playerResponse.playabilityStatus.liveStreamability != null)
+				app.id = id
+				app.stream = data.stream
+				app.adaptive = data.adaptive
+				app.details = data.details
 
-			const actLang = getLangCode()
-			if (actLang != null) {
-				const lang = findLang(actLang)
-				logger.log('youtube ui lang: %s', actLang)
-				logger.log('ytdl lang:', lang)
-				app.lang = lang
+				const actLang = getLangCode()
+				if (actLang != null) {
+				  const lang = findLang(actLang)
+				  logger.log('youtube ui lang: %s', actLang)
+				  logger.log('ytdl lang:', lang)
+				  app.lang = lang
+				}
+			} else {
+				logger.error('load', data);
 			}
 		} catch (err) {
 			alert(app.strings.get_video_failed)
