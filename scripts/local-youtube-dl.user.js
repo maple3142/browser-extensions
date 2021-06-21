@@ -190,6 +190,10 @@
 	const parseQuery = s => [...new URLSearchParams(s).entries()].reduce((acc, [k, v]) => ((acc[k] = v), acc), {})
 	const parseResponse = (id, playerResponse, decsig) => {
 		logger.log(`video %s playerResponse: %o`, id, playerResponse)
+		if (!playerResponse || !playerResponse.streamingData) {
+			return { [], [], details: null, playerResponse };
+		}
+		
 		let stream = []
 		if (playerResponse.streamingData.formats) {
 			stream = playerResponse.streamingData.formats.map(x =>
