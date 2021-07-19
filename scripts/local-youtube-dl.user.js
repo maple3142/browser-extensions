@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.42
+// @version      0.9.43
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -132,6 +132,28 @@
 			stream: 'स्ट्रीमिंग (Stream)',
 			adaptive: 'अनुकूली (Adaptive)',
 			videoid: 'वीडियो आईडी: {{id}}'
+		},
+		ru: {
+			togglelinks: 'Показать/Cкрыть ссылки',
+			stream: 'Поток',
+			adaptive: 'Адаптивный',
+			videoid: 'Идентификатор видео: ',
+			inbrowser_adaptive_merger: 'Адаптивное слияние видео и аудио онлайн (FFmpeg)',
+			dlmp4: 'Скачать mp4 в высоком разрешении в один клик',
+			get_video_failed:
+				'Не удалось получить информацию о видео по неизвестной причине, попробуйте обновить страницу.',
+			live_stream_disabled_message: 'Локальный загрузчик YouTube недоступен для прямой трансляции'
+		},
+		ua: {
+			togglelinks: 'Показати/Приховати посилання',
+			stream: 'Потік',
+			adaptive: 'Адаптивний',
+			videoid: 'Ідентифікатор відео: ',
+			inbrowser_adaptive_merger: 'Адаптивне злиття відео і аудіо онлайн (FFmpeg)',
+			dlmp4: 'Завантажити mp4 у високій роздільній здатності в один клік',
+			get_video_failed:
+				'Не вдалося отримати інформацію про відео з невідомої причини, спробуйте оновити сторінку.',
+			live_stream_disabled_message: 'Локальний завантажувач YouTube недоступний для прямої трансляції'
 		}
 	}
 	for (const [lang, data] of Object.entries(LOCALE)) {
@@ -142,13 +164,21 @@
 			}
 		}
 	}
-
 	const findLang = l => {
+		l = l.replace('-Hant', '') // special case for zh-Hant-TW
 		// language resolution logic: zh-tw --(if not exists)--> zh --(if not exists)--> LANG_FALLBACK(en)
 		l = l.toLowerCase().replace('_', '-')
 		if (l in LOCALE) return l
 		else if (l.length > 2) return findLang(l.split('-')[0])
 		else return LANG_FALLBACK
+	}
+	const getLangCode = () => {
+		const html = document.querySelector('html')
+		if (html) {
+			return html.lang
+		} else {
+			return navigator.language
+		}
 	}
 	const $ = (s, x = document) => x.querySelector(s)
 	const $el = (tag, opts) => {
@@ -462,7 +492,7 @@
 				adaptive: [],
 				details: null,
 				dark: false,
-				lang: findLang(navigator.language)
+				lang: findLang(getLangCode())
 			}
 		},
 		computed: {
@@ -503,16 +533,6 @@
 		unsafeWindow.parseQuery = parseQuery
 		unsafeWindow.parseDecsig = parseDecsig
 		unsafeWindow.parseResponse = parseResponse
-	}
-
-	const getLangCode = () => {
-		if (typeof ytplayer !== 'undefined' && ytplayer.config) {
-			return ytplayer.config.args.host_language
-		} else if (typeof yt !== 'undefined') {
-			return yt.config_.GAPI_LOCALE
-		} else {
-			return navigator.language
-		}
 	}
 	const load = async playerResponse => {
 		try {
