@@ -14,6 +14,7 @@
 // @description:ja     外部サービスなしで YouTube 動画をダウンロード
 // @description:kr     외부 서비스없이 YouTube 동영상을 다운로드
 // @description:fr     Obtenez un lien brut YouTube sans service externe.
+// @description:cs     Stahujte YouTube videa bez externích služeb.
 // @author       maple3142
 // @match        https://*.youtube.com/*
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
@@ -154,6 +155,16 @@
 			get_video_failed:
 				'Не вдалося отримати інформацію про відео з невідомої причини, спробуйте оновити сторінку.',
 			live_stream_disabled_message: 'Локальний завантажувач YouTube недоступний для прямої трансляції'
+		},
+		cs: {
+			togglelinks: 'Zobrazit/Skrýt odkazy',
+			stream: 'Stream',
+			adaptive: 'Adaptivní',
+			videoid: 'ID videa: ',
+			inbrowser_adaptive_merger: 'Online nástroj pro sloučení videa a audia (FFmpeg)',
+			dlmp4: 'Stáhnout video mp4 jedním kliknutím ve vysokém rozlišení',
+			get_video_failed: 'Nepodařilo se nahrát informace o videu. Zkuste obnovit stránku (F5).',
+			live_stream_disabled_message: 'Local YouTube Downloader není dostupný pro živé vysílání'
 		}
 	}
 	for (const [lang, data] of Object.entries(LOCALE)) {
@@ -201,7 +212,9 @@
 			}
 			const fnnameresult = /=([a-zA-Z0-9\$]+?)\(decodeURIComponent/.exec(data)
 			const fnname = fnnameresult[1]
-			const _argnamefnbodyresult = new RegExp(escapeRegExp(fnname) + '=function\\((.+?)\\){((.+)=\\2.+?)}').exec(data)
+			const _argnamefnbodyresult = new RegExp(escapeRegExp(fnname) + '=function\\((.+?)\\){((.+)=\\2.+?)}').exec(
+				data
+			)
 			const [_, argname, fnbody] = _argnamefnbodyresult
 			const helpernameresult = /;(.+?)\..+?\(/.exec(fnbody)
 			const helpername = helpernameresult[1]
