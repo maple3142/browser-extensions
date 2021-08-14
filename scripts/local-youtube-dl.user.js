@@ -684,6 +684,16 @@ a:hover, .div-a:hover{
 .lh-20{
 	line-height: 20px;
 }
+
+/* https://greasyfork.org/zh-TW/scripts/369400-local-youtube-downloader/discussions/95744 */
+#meta-contents,
+#info-contents{
+	display: contents !important;
+}
+
+ytd-watch-metadata.style-scope {
+	display: none !important;
+}
 `
 	shadow.appendChild($el('style', { textContent: css }))
 })()
