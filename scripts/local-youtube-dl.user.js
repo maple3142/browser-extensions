@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.45
+// @version      0.9.46
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -684,7 +684,9 @@ a:hover, .div-a:hover{
 .lh-20{
 	line-height: 20px;
 }
-
+`
+	shadow.appendChild($el('style', { textContent: css }))
+	const css2 = `
 /* https://greasyfork.org/zh-TW/scripts/369400-local-youtube-downloader/discussions/95744 */
 #meta-contents,
 #info-contents{
@@ -695,5 +697,5 @@ ytd-watch-metadata.style-scope {
 	display: none !important;
 }
 `
-	shadow.appendChild($el('style', { textContent: css }))
+	document.body.appendChild($el('style', { textContent: css2 }))
 })()
