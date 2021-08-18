@@ -23,7 +23,7 @@
 // @require      https://bundle.run/p-queue@6.3.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
-// @run-at       document-start
+// @run-at       document-end
 // @connect      googlevideo.com
 // @compatible   firefox >=52
 // @compatible   chrome >=55
