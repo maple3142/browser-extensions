@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.47
+// @version      0.9.48
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -45,7 +45,7 @@
 		en: {
 			togglelinks: 'Show/Hide Links',
 			stream: 'Stream',
-			adaptive: 'Adaptive',
+			adaptive: 'Adaptive (No Sound)',
 			videoid: 'Video ID: ',
 			inbrowser_adaptive_merger: 'Online Adaptive Video & Audio Merger (FFmpeg)',
 			dlmp4: 'Download high-resolution mp4 in one click',
@@ -55,7 +55,7 @@
 		'zh-tw': {
 			togglelinks: '顯示 / 隱藏連結',
 			stream: '串流 Stream',
-			adaptive: '自適應 Adaptive',
+			adaptive: '自適應 Adaptive (沒有聲音)',
 			videoid: '影片 ID: ',
 			inbrowser_adaptive_merger: '線上自適應影片及音訊合成工具 (FFmpeg)',
 			dlmp4: '一鍵下載高畫質 mp4',
@@ -65,7 +65,7 @@
 		'zh-hk': {
 			togglelinks: '顯示／隱藏連結',
 			stream: '串流 Stream',
-			adaptive: '自動適應 Adaptive',
+			adaptive: '自動適應 Adaptive (沒有聲音)',
 			videoid: '影片 ID: ',
 			inbrowser_adaptive_merger: '網上自動適應影片及音訊合成工具 (FFmpeg)',
 			dlmp4: '一 click 下載高畫質 mp4',
@@ -75,7 +75,7 @@
 		zh: {
 			togglelinks: '显示／隐藏链接',
 			stream: '串流 Stream',
-			adaptive: '自适应 Adaptive',
+			adaptive: '自适应 Adaptive (没有声音)',
 			videoid: '视频 ID: ',
 			inbrowser_adaptive_merger: '线上自适应视频及音频合成工具 (FFmpeg)',
 			dlmp4: '一键下载高画质 mp4',
@@ -85,7 +85,7 @@
 		ja: {
 			togglelinks: 'リンク表示・非表示',
 			stream: 'ストリーミング',
-			adaptive: 'アダプティブ',
+			adaptive: 'アダプティブ（音無し）',
 			videoid: 'ビデオ ID: ',
 			inbrowser_adaptive_merger: 'ビデオとオーディオを合併するオンラインツール (FFmpeg)',
 			dlmp4: 'ワンクリックで高解像度の mp4 をダウンロード',
