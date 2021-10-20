@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.48
+// @version      0.9.49
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -285,11 +285,16 @@
 				xhr.url = url
 				xhr.headers = {
 					'User-Agent':
-						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.124 Safari/537.36',
+						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36 Edg/94.0.992.50',
 					Range: `bytes=${start}-${end ? end - 1 : ''}`,
+					Accept: '*/*',
 					'Accept-Encoding': 'identity',
 					'Accept-Language': 'en-us,en;q=0.5',
-					'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7'
+					Origin: 'https://www.youtube.com',
+					Referer: 'https://www.youtube.com/',
+					'sec-fetch-dest': 'empty',
+					'sec-fetch-mode': 'cors',
+					'sec-fetch-site': 'cross-site'
 				}
 				xhr.onload = obj => {
 					if (obj.status >= 200 && obj.status < 300) {
