@@ -619,9 +619,9 @@
 	// listen to dark mode toggle
 	const $html = $('html')
 	new MutationObserver(() => {
-		app.dark = $html.getAttribute('dark') === 'true'
+		app.dark = $html.getAttribute('dark') !== null
 	}).observe($html, { attributes: true })
-	app.dark = $html.getAttribute('dark') === 'true'
+	app.dark = $html.getAttribute('dark') !== null
 
 	const css = `
 .hide{
