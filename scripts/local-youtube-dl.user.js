@@ -264,10 +264,6 @@
 		return { stream, adaptive, details: playerResponse.videoDetails, playerResponse }
 	}
 
-	const determineChunksNum = size => {
-		const n = Math.ceil(size / (1024 * 1024 * 3)) // 3 MB
-		return n
-	}
 	// video downloader
 	const xhrDownloadUint8Array = async ({ url, contentLength }, progressCb) => {
 		if (typeof contentLength === 'string') contentLength = parseInt(contentLength)
@@ -276,47 +272,23 @@
 			total: contentLength,
 			speed: 0
 		})
-		const chunkSize = Math.floor(contentLength / determineChunksNum(contentLength))
-		const getBuffer = (start, end) =>
-			new Promise((res, rej) => {
-				const xhr = {}
-				xhr.responseType = 'arraybuffer'
-				xhr.method = 'GET'
-				xhr.url = url
-				xhr.headers = {
-					'User-Agent':
-						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36 Edg/94.0.992.50',
-					Range: `bytes=${start}-${end ? end - 1 : ''}`,
-					Accept: '*/*',
-					'Accept-Encoding': 'identity',
-					'Accept-Language': 'en-us,en;q=0.5',
-					Origin: 'https://www.youtube.com',
-					Referer: 'https://www.youtube.com/',
-					'sec-fetch-dest': 'empty',
-					'sec-fetch-mode': 'cors',
-					'sec-fetch-site': 'cross-site'
-				}
-				xhr.onload = obj => {
-					if (obj.status >= 200 && obj.status < 300) {
-						res(obj.response)
-					} else {
-						rej(obj)
-					}
-				}
-				GM_xmlhttpRequest(xhr)
-			})
+		const chunkSize = 65536
+    const getBuffer = (start, end) =>
+      fetch(url + `&range=${start}-${end ? end - 1 : ''}`).then(r=>r.arrayBuffer())
 		const data = new Uint8Array(contentLength)
 		let downloaded = 0
-		const queue = new pQueue.default({ concurrency: 5 })
+		const queue = new pQueue.default({ concurrency: 6 })
 		const startTime = Date.now()
 		const ps = []
 		for (let start = 0; start < contentLength; start += chunkSize) {
 			const exceeded = start + chunkSize > contentLength
 			const curChunkSize = exceeded ? contentLength - start : chunkSize
 			const end = exceeded ? null : start + chunkSize
-			const p = queue.add(() =>
-				getBuffer(start, end)
+			const p = queue.add(() => {
+        console.log('dl start', url, start, end)
+				return getBuffer(start, end)
 					.then(buf => {
+            console.log('dl done', url, start, end)
 						downloaded += curChunkSize
 						data.set(new Uint8Array(buf), start)
 						const ds = (Date.now() - startTime + 1) / 1000
@@ -330,7 +302,7 @@
 						queue.clear()
 						alert('Download error')
 					})
-			)
+      })
 			ps.push(p)
 		}
 		await Promise.all(ps)
