@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.50
+// @version      0.9.51
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -22,6 +22,7 @@
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
 // @require      https://bundle.run/p-queue@6.3.0
 // @grant        GM_xmlhttpRequest
+// @grant        GM_info
 // @grant        unsafeWindow
 // @run-at       document-end
 // @connect      googlevideo.com
@@ -32,6 +33,11 @@
 
 ;(function () {
 	'use strict'
+	if (GM_info.scriptHandler === 'Tampermonkey') {
+		alert(
+			`Please use Violentmonkey instead of Tampermonkey to use Local YouTube Downloader, because Tampermonkey recently release a breaking change that breaks this script.`
+		)
+	}
 	const DEBUG = true
 	const createLogger = (console, tag) =>
 		Object.keys(console)
@@ -273,8 +279,8 @@
 			speed: 0
 		})
 		const chunkSize = 65536
-    const getBuffer = (start, end) =>
-      fetch(url + `&range=${start}-${end ? end - 1 : ''}`).then(r=>r.arrayBuffer())
+		const getBuffer = (start, end) =>
+			fetch(url + `&range=${start}-${end ? end - 1 : ''}`).then(r => r.arrayBuffer())
 		const data = new Uint8Array(contentLength)
 		let downloaded = 0
 		const queue = new pQueue.default({ concurrency: 6 })
@@ -285,10 +291,10 @@
 			const curChunkSize = exceeded ? contentLength - start : chunkSize
 			const end = exceeded ? null : start + chunkSize
 			const p = queue.add(() => {
-        console.log('dl start', url, start, end)
+				console.log('dl start', url, start, end)
 				return getBuffer(start, end)
 					.then(buf => {
-            console.log('dl done', url, start, end)
+						console.log('dl done', url, start, end)
 						downloaded += curChunkSize
 						data.set(new Uint8Array(buf), start)
 						const ds = (Date.now() - startTime + 1) / 1000
@@ -302,7 +308,7 @@
 						queue.clear()
 						alert('Download error')
 					})
-      })
+			})
 			ps.push(p)
 		}
 		await Promise.all(ps)
