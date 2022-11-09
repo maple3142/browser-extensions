@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.51
+// @version      0.9.52
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -23,6 +23,8 @@
 // @require      https://bundle.run/p-queue@6.3.0
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @grant        unsafeWindow
 // @run-at       document-end
 // @connect      googlevideo.com
@@ -33,10 +35,15 @@
 
 ;(function () {
 	'use strict'
-	if (GM_info.scriptHandler === 'Tampermonkey') {
+	if (
+		window.top === window.self &&
+		GM_info.scriptHandler === 'Tampermonkey' &&
+		GM_getValue('tampermonkey_breaks_should_alert', true)
+	) {
 		alert(
-			`Please use Violentmonkey instead of Tampermonkey to use Local YouTube Downloader, because Tampermonkey recently release a breaking change that breaks this script.`
+			`Tampermonkey recently release a breaking change that breaks this script, which is fixed in Tampermonkey BETA right now. You should switch to Tampermonkey BETA or use Violentmonkey before the fix has been released in stable channel.`
 		)
+		GM_setValue('tampermonkey_breaks_should_alert', false)
 	}
 	const DEBUG = true
 	const createLogger = (console, tag) =>
