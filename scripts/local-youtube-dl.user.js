@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.53
+// @version      0.9.54
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -38,10 +38,11 @@
 	if (
 		window.top === window.self &&
 		GM_info.scriptHandler === 'Tampermonkey' &&
+		GM_info.version === '4.18.0' &&
 		GM_getValue('tampermonkey_breaks_should_alert', true)
 	) {
 		alert(
-			`Tampermonkey recently release a breaking change that breaks this script, which is fixed in Tampermonkey BETA right now. You should switch to Tampermonkey BETA or use Violentmonkey before the fix has been released in stable channel.`
+			`Tampermonkey recently release a breaking change / bug in version 4.18.0 that breaks this script, which is fixed in newer version of Tampermonkey right now. You should update it or switch to Violentmonkey instead.`
 		)
 		GM_setValue('tampermonkey_breaks_should_alert', false)
 	}
