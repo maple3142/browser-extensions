@@ -6,7 +6,7 @@
 // @name:ja      ローカル YouTube ダウンローダー
 // @name:kr      로컬 YouTube 다운로더
 // @namespace    https://blog.maple3142.net/
-// @version      0.9.54
+// @version      0.9.55
 // @description        Download YouTube videos without external service.
 // @description:zh-TW  不需透過第三方服務即可下載 YouTube 影片。
 // @description:zh-HK  不需透過第三方服務即可下載 YouTube 影片。
@@ -17,9 +17,9 @@
 // @description:cs     Stahujte YouTube videa bez externích služeb.
 // @author       maple3142
 // @match        https://*.youtube.com/*
-// @require      https://unpkg.com/vue@2.6.10/dist/vue.js
-// @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
-// @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
+// @require      https://unpkg.com/vue@2.7.14/dist/vue.min.js
+// @require      https://unpkg.com/xfetch-js@0.5.0/dist/xfetch.min.js
+// @require      https://unpkg.com/@ffmpeg/ffmpeg@0.7.0/dist/ffmpeg.min.js
 // @require      https://bundle.run/p-queue@6.3.0
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
