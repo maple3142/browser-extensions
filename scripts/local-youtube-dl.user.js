@@ -16,10 +16,11 @@
 // @description:fr     Obtenez un lien brut YouTube sans service externe.
 // @description:cs     Stahujte YouTube videa bez externích služeb.
 // @author       maple3142
-// @match        https://www.youtube.com/watch?*
-// @match        http://www.youtube.com/watch?*
-// @match        https://m.youtube.com/watch?*
-// @match        http://m.youtube.com/watch?*
+// @match        https://www.youtube.com/*
+// @match        http://www.youtube.com/*
+// @match        https://m.youtube.com/*
+// @match        http://m.youtube.com/*
+// @exclude      /^https?://www\.youtube\.com/embed//
 // @require      https://unpkg.com/vue@2.6.10/dist/vue.js
 // @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
 // @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
