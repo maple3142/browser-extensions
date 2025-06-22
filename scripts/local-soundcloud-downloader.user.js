@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Local SoundCloud Downloader
 // @namespace    https://blog.maple3142.net/
-// @version      0.1.4
+// @version      0.1.5
 // @description  Download SoundCloud without external service.
 // @author       maple3142
 // @match        https://soundcloud.com/*
@@ -9,6 +9,8 @@
 // @require      https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
 // @grant        none
 // @icon         https://a-v2.sndcdn.com/assets/images/sc-icons/favicon-2cadd14bdb.ico
+// @downloadURL https://update.greasyfork.org/scripts/394837/Local%20SoundCloud%20Downloader.user.js
+// @updateURL https://update.greasyfork.org/scripts/394837/Local%20SoundCloud%20Downloader.meta.js
 // ==/UserScript==
 
 streamSaver.mitm = 'https://maple3142.github.io/StreamSaver.js/mitm.html'
@@ -38,7 +40,9 @@ const btn = {
 		this.el.textContent = 'Download'
 		this.el.classList.add('sc-button')
 		this.el.classList.add('sc-button-medium')
+		this.el.classList.add('sc-button-icon')
 		this.el.classList.add('sc-button-responsive')
+		this.el.classList.add('sc-button-secondary')
 		this.el.classList.add('sc-button-download')
 	},
 	cb() {
