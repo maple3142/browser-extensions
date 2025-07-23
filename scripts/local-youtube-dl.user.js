@@ -17,9 +17,9 @@
 // @description:cs     Stahujte YouTube videa bez externích služeb.
 // @author       maple3142
 // @match        https://*.youtube.com/*
-// @require      https://unpkg.com/vue@2.6.10/dist/vue.js
-// @require      https://unpkg.com/xfetch-js@0.3.4/xfetch.min.js
-// @require      https://unpkg.com/@ffmpeg/ffmpeg@0.6.1/dist/ffmpeg.min.js
+// @require      https://unpkg.com/vue@2.7.14/dist/vue.min.js
+// @require      https://unpkg.com/xfetch-js@0.5.0/dist/xfetch.min.js
+// @require      https://unpkg.com/@ffmpeg/ffmpeg@0.7.0/dist/ffmpeg.min.js
 // @require      https://bundle.run/p-queue@6.3.0
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
