@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Local SoundCloud Downloader
 // @namespace    https://blog.maple3142.net/
-// @version      0.1.5
+// @version      0.1.6
 // @description  Download SoundCloud without external service.
 // @author       maple3142
 // @match        https://soundcloud.com/*
@@ -9,8 +9,6 @@
 // @require      https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js
 // @grant        none
 // @icon         https://a-v2.sndcdn.com/assets/images/sc-icons/favicon-2cadd14bdb.ico
-// @downloadURL https://update.greasyfork.org/scripts/394837/Local%20SoundCloud%20Downloader.user.js
-// @updateURL https://update.greasyfork.org/scripts/394837/Local%20SoundCloud%20Downloader.meta.js
 // ==/UserScript==
 
 streamSaver.mitm = 'https://maple3142.github.io/StreamSaver.js/mitm.html'
@@ -38,16 +36,14 @@ const btn = {
 	init() {
 		this.el = document.createElement('button')
 		this.el.textContent = 'Download'
-		this.el.classList.add('sc-button')
-		this.el.classList.add('sc-button-medium')
-		this.el.classList.add('sc-button-icon')
-		this.el.classList.add('sc-button-responsive')
-		this.el.classList.add('sc-button-secondary')
-		this.el.classList.add('sc-button-download')
+		this.cont = document.createElement('div')
+		this.cont.appendChild(this.el)
+		this.cont.classList = 'l-container'
 	},
 	cb() {
-		const par = document.querySelector('.sc-button-toolbar .sc-button-group')
-		if (par && this.el.parentElement !== par) par.insertAdjacentElement('beforeend', this.el)
+		const par = document.querySelector('header')
+		console.log('par', par)
+		if (par && this.cont.parentElement !== par) par.insertAdjacentElement('beforeend', this.cont)
 	},
 	attach() {
 		this.detach()
@@ -57,6 +53,7 @@ const btn = {
 	},
 	detach() {
 		if (this.observer) this.observer.disconnect()
+		if (this.cont.isConnected) this.cont.remove()
 	}
 }
 btn.init()
@@ -80,6 +77,7 @@ async function getClientId() {
 const clientIdPromise = getClientId()
 let controller = null
 async function load(by) {
+	console.log('lscd load', by)
 	btn.detach()
 	console.log('load by', by, location.href)
 	if (/^(\/(you|stations|discover|stream|upload|search|settings))/.test(location.pathname)) return
@@ -93,7 +91,7 @@ async function load(by) {
 		`https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(location.href)}&client_id=${clientId}`,
 		{ signal: controller.signal }
 	).then(r => r.json())
-	console.log('result', result)
+	console.log('lscd result', result)
 	if (result.kind !== 'track') return
 	btn.el.onclick = async () => {
 		const progressive = result.media.transcodings.find(t => t.format.protocol === 'progressive')
@@ -118,7 +116,7 @@ async function load(by) {
 		alert('Sorry, downloading this music is currently unsupported.')
 	}
 	btn.attach()
-	console.log('attached')
+	console.log('lscd attached')
 }
 load('init')
 hook(history, 'pushState', () => load('pushState'), 'after')
