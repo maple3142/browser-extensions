@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Local SoundCloud Downloader
 // @namespace    https://blog.maple3142.net/
-// @version      0.1.6
+// @version      0.1.7
 // @description  Download SoundCloud without external service.
 // @author       maple3142
 // @match        https://soundcloud.com/*
@@ -94,9 +94,11 @@ async function load(by) {
 	console.log('lscd result', result)
 	if (result.kind !== 'track') return
 	btn.el.onclick = async () => {
-		const progressive = result.media.transcodings.find(t => t.format.protocol === 'progressive')
-		if (progressive) {
-			const { url } = await fetch(progressive.url + `?client_id=${clientId}`).then(r => r.json())
+		const tr = result.media.transcodings.find(
+			t => t.format.protocol === 'hls' && t.format.mime_type.startsWith('audio/mp4')
+		)
+		if (tr) {
+			const { url } = await fetch(tr.url + `?client_id=${clientId}`).then(r => r.json())
 			const resp = await fetch(url)
 			const ws = streamSaver.createWriteStream(result.title + '.mp3', {
 				size: resp.headers.get('Content-Length')
